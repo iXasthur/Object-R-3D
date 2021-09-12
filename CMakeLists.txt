@@ -9,6 +9,20 @@ set(SDL2_LIB_DIR ${SDL2_DIR}/lib)
 include_directories(${SDL2_DIR}/include)
 add_definitions(-DSDL_MAIN_HANDLED)
 
-add_executable(Tamara_3D main.cpp)
+add_executable(
+        Tamara_3D
+        main.cpp
+        engine/scene/Scene.h
+        engine/object/Object.h
+        engine/camera/Camera.h
+        engine/utils/MyPolygon.h
+        engine/utils/Vector3.h
+        engine/utils/Vector4.h
+        engine/Engine.h
+        engine/utils/Color.h
+        engine/utils/EulerAngle.h
+        engine/object/ObjectLoader.h
+        engine/light/Light.h
+        engine/utils/Matrix4.h)
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIB_DIR}/libSDL2.dll.a ${SDL2_LIB_DIR}/libSDL2main.a)
