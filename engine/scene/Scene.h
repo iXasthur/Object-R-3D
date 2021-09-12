@@ -16,12 +16,12 @@
 class Scene {
 public:
     std::vector<Object> objects = {};
-    Camera camera = Camera({0 , 0, 0});
+    Camera camera = Camera({0 , 0, -10});
 
     Scene() = default;
 
     void resetCamera() {
-        camera.position = {0 , 0, 0};
+        camera.position = {0 , 0, -10};
         camera.eulerRotation = EulerAngle();
     }
 
