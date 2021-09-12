@@ -44,7 +44,7 @@ private:
             start = SDL_GetTicks();
 
             // Updates properties of the screen and camera
-            // Gets real size of the window(Fix for MacOS/Resizing)
+            // Gets real size of the window(Fix for macOS/Resizing)
             SDL_GetRendererOutputSize(renderer, &renderWidth, &renderHeight);
             const float fAspectRatio = (float)renderHeight / (float)renderWidth;
             matProj = Matrix4::makeProjection(scene.camera.fFOV, fAspectRatio, scene.camera.fNear, scene.camera.fFar);
