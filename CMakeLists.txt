@@ -3,4 +3,4 @@ project(Tamara_3D)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Tamara_3D src/main.cpp)
+add_executable(Tamara_3D src/main.cpp src/engine/Engine3D.h src/utils/Math3D.h)
