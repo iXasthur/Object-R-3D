@@ -6,13 +6,13 @@
 #define V_3D_OBJECT_H
 
 #include <vector>
-#include "../utils/MyPolygon.h"
+#include "../utils/Polygon.h"
 #include "../utils/Color.h"
 
 class Object {
 public:
     Vector3 position;
-    std::vector<MyPolygon> polygons;
+    std::vector<Polygon> polygons;
     std::string name;
 
     Color color = Color(255, 255, 255, 255);
@@ -21,7 +21,7 @@ public:
 
     std::vector<float> getVertices() {
         std::vector<float> vertices;
-        for (MyPolygon polygon : polygons) {
+        for (Polygon polygon : polygons) {
             for (Vector3 vertex : polygon.vertices) {
                 for (float v : vertex.toArray()) {
                     vertices.emplace_back(v);
@@ -33,7 +33,7 @@ public:
 
     std::vector<float> getNormals() {
         std::vector<float> normals;
-        for (MyPolygon polygon : polygons) {
+        for (Polygon polygon : polygons) {
             for (Vector3 normal : polygon.normals) {
                 for (float n : normal.toArray()) {
                     normals.emplace_back(n);
@@ -44,7 +44,7 @@ public:
     }
 
     void normalizePolygonVertices() {
-        for (MyPolygon &polygon : polygons) {
+        for (Polygon &polygon : polygons) {
             for (Vector3 &vertex : polygon.vertices) {
                 vertex.normalize();
             }
@@ -55,7 +55,7 @@ public:
         Vector3 dim = dimension();
         float delta = h / dim.y;
 
-        for (MyPolygon &polygon : polygons) {
+        for (Polygon &polygon : polygons) {
             for (Vector3 &vertex : polygon.vertices) {
                 vertex.x *= delta;
                 vertex.y *= delta;
@@ -67,7 +67,7 @@ public:
     void centerPolygonVertices() {
         Vector3 lowestVertex;
 
-        for (MyPolygon &polygon : polygons) {
+        for (Polygon &polygon : polygons) {
             for (Vector3 &vertex : polygon.vertices) {
                 if (vertex.y < lowestVertex.y) {
                     lowestVertex = vertex;
@@ -75,7 +75,7 @@ public:
             }
         }
 
-        for (MyPolygon &polygon : polygons) {
+        for (Polygon &polygon : polygons) {
             for (Vector3 &vertex : polygon.vertices) {
                 vertex.y -= lowestVertex.y;
             }
@@ -99,7 +99,7 @@ public:
             minZ = fv.z;
             maxZ = fv.z;
 
-            for (MyPolygon polygon : polygons) {
+            for (Polygon polygon : polygons) {
                 for (Vector3 vertex : polygon.vertices) {
                     if (vertex.x < minX) {
                         minX = vertex.x;
@@ -123,6 +123,36 @@ public:
         }
 
         return {maxX - minX, maxY - minY, maxZ - minZ};
+    }
+
+    static Object createCube() {
+        static int cube_c = 0;
+
+        Object cube = Object();
+        cube.name = "cube-" + std::to_string(cube_c++);
+        cube.position = Vector3();
+        cube.polygons = {
+                // SOUTH
+                {{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}},
+                {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+                // EAST
+                {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+                {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}},
+                // NORTH
+                {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f}},
+                {{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+                // WEST
+                {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
+                {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+                // TOP
+                {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}},
+                {{0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 0.0f}},
+                // BOTTOM
+                {{1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
+                {{1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+        };
+
+        return cube;
     }
 };
 

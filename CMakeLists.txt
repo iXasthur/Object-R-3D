@@ -15,7 +15,7 @@ add_executable(
         engine/scene/Scene.h
         engine/object/Object.h
         engine/camera/Camera.h
-        engine/utils/MyPolygon.h
+        engine/utils/Polygon.h
         engine/utils/Vector3.h
         engine/utils/Vector4.h
         engine/Engine.h

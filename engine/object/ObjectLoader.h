@@ -40,7 +40,7 @@ public:
         }
 
         std::vector<Vector3> vertices;
-        std::vector<MyPolygon> polygons;
+        std::vector<Polygon> polygons;
         std::vector<Vector3> normals;
 
         std::ifstream in(filename, std::ios::in);
@@ -114,9 +114,9 @@ public:
                             pNormals[0] = normals[n[0] - 1];
                             pNormals[1] = normals[n[1] - 1];
                             pNormals[2] = normals[n[2] - 1];
-                            polygons.emplace_back(MyPolygon(pVertices, pNormals));
+                            polygons.emplace_back(Polygon(pVertices, pNormals));
                         } else {
-                            polygons.emplace_back(MyPolygon(pVertices));
+                            polygons.emplace_back(Polygon(pVertices));
                         }
 
                     } else if (f.size() == 4) {
@@ -128,9 +128,9 @@ public:
                             pNormals[0] = normals[n[0] - 1];
                             pNormals[1] = normals[n[1] - 1];
                             pNormals[2] = normals[n[2] - 1];
-                            polygons.emplace_back(MyPolygon(pVertices, pNormals));
+                            polygons.emplace_back(Polygon(pVertices, pNormals));
                         } else {
-                            polygons.emplace_back(MyPolygon(pVertices));
+                            polygons.emplace_back(Polygon(pVertices));
                         }
 
                         pVertices[0] = vertices[f[0] - 1];
@@ -141,9 +141,9 @@ public:
                             pNormals[0] = normals[n[0] - 1];
                             pNormals[1] = normals[n[2] - 1];
                             pNormals[2] = normals[n[3] - 1];
-                            polygons.emplace_back(MyPolygon(pVertices, pNormals));
+                            polygons.emplace_back(Polygon(pVertices, pNormals));
                         } else {
-                            polygons.emplace_back(MyPolygon(pVertices));
+                            polygons.emplace_back(Polygon(pVertices));
                         }
                     } else {
                         std::cerr << "Object face must have 3 or 4 vertices" << std::endl;
