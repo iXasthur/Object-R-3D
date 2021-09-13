@@ -90,7 +90,7 @@ private:
                 Vector3 translatedV0 = polygon.vertices[0] + obj.position;
                 Vector3 translatedV1 = polygon.vertices[1] + obj.position;
                 Vector3 translatedV2 = polygon.vertices[2] + obj.position;
-
+                
                 Vector3 viewedV0 = Matrix4::multiplyVector(translatedV0, matView);
                 Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matView);
                 Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matView);
@@ -105,10 +105,12 @@ private:
                 projectedV1.y = -projectedV1.y;
                 projectedV2.y = -projectedV2.y;
 
+                // +0 ... +2
                 projectedV0.x += 1.0f; projectedV0.y += 1.0f;
                 projectedV1.x += 1.0f; projectedV1.y += 1.0f;
                 projectedV2.x += 1.0f; projectedV2.y += 1.0f;
 
+                // Convert +0 ... +2 to screen width and height
                 projectedV0.x *= 0.5f * (float)renderWidth; projectedV0.y *= 0.5f * (float)renderHeight;
                 projectedV1.x *= 0.5f * (float)renderWidth; projectedV1.y *= 0.5f * (float)renderHeight;
                 projectedV2.x *= 0.5f * (float)renderWidth; projectedV2.y *= 0.5f * (float)renderHeight;
