@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 if(WIN32) # Windows
     set(SDL2_DIR C:/SDL2-devel-2.0.16-mingw/SDL2-2.0.16/x86_64-w64-mingw32)
-else() # M1 Homebrew SDL2
+else(APPLE) # M1 Homebrew SDL2
     set(SDL2_DIR /opt/homebrew/Cellar/sdl2/2.0.16)
 endif()
 
@@ -33,6 +33,6 @@ add_executable(
 
 if(WIN32) # Windows
     target_link_libraries(${PROJECT_NAME} ${SDL2_LIB_DIR}/libSDL2.dll.a ${SDL2_LIB_DIR}/libSDL2main.a)
-else() # M1 Homebrew SDL2
+elseif(APPLE) # M1 Homebrew SDL2
     target_link_libraries(Tamara_3D ${SDL2_LIB_DIR}/libSDL2-2.0.0.dylib ${SDL2_LIB_DIR}/libSDL2main.a)
 endif()
