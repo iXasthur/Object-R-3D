@@ -65,13 +65,13 @@ private:
                 Vector3 viewedV0 = Matrix4::multiplyVector(translatedV0, matView);
                 Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matView);
                 Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matView);
-                
+
                 // -1 ... +1
                 Vector3 projectedV0 = Matrix4::multiplyVector(viewedV0, matProj);
                 Vector3 projectedV1 = Matrix4::multiplyVector(viewedV1, matProj);
                 Vector3 projectedV2 = Matrix4::multiplyVector(viewedV2, matProj);
 
-                // Mirror Y cord
+                // Mirror Y coordinate
                 projectedV0.y = -projectedV0.y;
                 projectedV1.y = -projectedV1.y;
                 projectedV2.y = -projectedV2.y;
