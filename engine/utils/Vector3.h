@@ -32,9 +32,9 @@ public:
 
     Vector3 operator+(const Vector3 &b) const {
         Vector3 vector;
-        vector.x = this->x - b.x;
-        vector.y = this->y - b.y;
-        vector.z = this->z - b.z;
+        vector.x = this->x + b.x;
+        vector.y = this->y + b.y;
+        vector.z = this->z + b.z;
         return vector;
     }
 

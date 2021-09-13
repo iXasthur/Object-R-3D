@@ -10,9 +10,9 @@
 
 class Camera {
 public:
-    const float fFOV = 90.0f;
-    const float fFar = 1000.0f;
-    const float fNear = 0.1f;
+    float fFOV = 90.0f;
+    float fFar = 1000.0f;
+    float fNear = 0.1f;
 
     Vector3 position;
     EulerAngle eulerRotation;

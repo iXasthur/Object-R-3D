@@ -15,7 +15,7 @@
 
 class Scene {
 public:
-    std::vector<Object> objects = {};
+    std::vector<Object> objects = {Object::createCube()};
     Camera camera = Camera({0 , 0, -10});
 
     Scene() = default;

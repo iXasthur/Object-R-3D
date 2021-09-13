@@ -23,6 +23,8 @@ add_executable(
         engine/utils/EulerAngle.h
         engine/object/ObjectLoader.h
         engine/light/Light.h
-        engine/utils/Matrix4.h)
+        engine/utils/Matrix4.h
+        engine/utils/Triangle2D.h
+)
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIB_DIR}/libSDL2.dll.a ${SDL2_LIB_DIR}/libSDL2main.a)
