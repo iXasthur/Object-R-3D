@@ -55,8 +55,6 @@ private:
 
 //        printf("Drawing %d objects to scene\n", scene.objects.size());
         for (Object &obj : scene.objects) {
-//            obj.position.x += 0.01f;
-//            obj.position.y += 0.01f;
             for (Polygon &polygon : obj.polygons) {
                 Vector3 translatedV0 = polygon.vertices[0] + obj.position;
                 Vector3 translatedV1 = polygon.vertices[1] + obj.position;
