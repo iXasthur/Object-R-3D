@@ -25,7 +25,7 @@ private:
     }
 
 public:
-    static Object LoadObjModel(const std::string &filename) {
+    static Object loadObjModel(const std::string &filename) {
         Object obj = Object();
         obj.name = filename;
 

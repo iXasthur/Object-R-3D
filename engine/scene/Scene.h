@@ -12,32 +12,44 @@
 #include "../light/Light.h"
 #include "../camera/Camera.h"
 #include "../utils/Color.h"
+#include "../object/ObjectLoader.h"
 
 class Scene {
 public:
-    std::vector<Object> objects = {Object::createCube()};
-    Camera camera = Camera({0 , 0, -10});
+    std::vector<Object> objects{};
+    Camera camera = Camera({0 , 0, -5}, {0, 0, 0});
 
-    Scene() = default;
+    Scene() {
+        std::string dir = "../objects/";
+
+//        std::vector<std::string> names = {"cube.obj", "stone.obj", "deer.obj", "monkey.obj"};
+
+        std::vector<std::string> names = {"deer.obj"};
+        for (auto &name : names) {
+            Object obj = ObjectLoader::loadObjModel(dir + name);
+            obj.centerPolygonVertices();
+            obj.resizeToHeight(2);
+            add(obj);
+        }
+    };
 
     void resetCamera() {
-        camera.position = {0 , 0, -10};
-        camera.eulerRotation = EulerAngle();
+        camera = Camera({0 , 0, -5}, {0, 0, 0});
     }
 
     void add(const Object &obj) {
         objects.emplace_back(obj);
-        reorderObjects();
+        reorderObjects(2);
     }
 
-    void reorderObjects() {
+    void reorderObjects(float delimiterSize) {
         Vector3 pos;
         for (int i = 0; i < objects.size(); ++i) {
             if (i > 0) {
                 Vector3 lastDim = objects[i - 1].dimension();
                 Vector3 dim = objects[i].dimension();
                 pos.x += lastDim.x / 2 + dim.x / 2;
-                pos.x += 5;
+                pos.x += delimiterSize;
             }
 
             objects[i].position.x = pos.x;

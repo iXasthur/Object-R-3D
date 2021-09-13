@@ -17,9 +17,9 @@ public:
     Vector3 position;
     EulerAngle eulerRotation;
 
-    explicit Camera(Vector3 position) {
+    Camera(Vector3 position, EulerAngle eulerRotation) {
         this->position = position;
-        this->eulerRotation = EulerAngle();
+        this->eulerRotation = eulerRotation;
     }
 };
 

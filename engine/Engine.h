@@ -186,8 +186,7 @@ private:
 
                 if (windowEvent.type == SDL_KEYDOWN) {
                     if (windowEvent.key.keysym.scancode == SDL_SCANCODE_R) {
-                        // Reset camera
-                        printf("Tapped SDL_SCANCODE_R\n");
+                        scene.resetCamera();
                     }
                 }
             }
@@ -220,7 +219,7 @@ private:
     }
 
 public:
-    const int targetFps = 30;
+    const int targetFps = 60;
 
     Engine() = default;
 
