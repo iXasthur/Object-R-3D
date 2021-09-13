@@ -23,10 +23,42 @@ private:
 
     Matrix4 matProj = Matrix4();
 
+    void drawLine(SDL_Renderer *renderer, SDL_Point p0, SDL_Point p1) {
+        int x0 = p0.x;
+        int y0 = p0.y;
+        int x1 = p1.x;
+        int y1 = p1.y;
+
+        int dx = abs(x1 - x0);
+        int sx = x0 < x1 ? 1 : -1;
+
+        int dy = -abs(y1 - y0);
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;  /* error value e_xy */
+        while (true) {
+            SDL_RenderDrawPoint(renderer, x0, y0);
+            if (x0 == x1 && y0 == y1) {
+                break;
+            }
+            int e2 = 2 * err;
+            if (e2 >= dy) { /* e_xy+e_x > 0 */
+                err += dy;
+                x0 += sx;
+            }
+            if (e2 <= dx) { /* e_xy+e_y < 0 */
+                err += dx;
+                y0 += sy;
+            }
+        }
+    }
+
     void drawTriangle2D(SDL_Renderer *renderer, Triangle2D tr) {
-        SDL_Point points[4] = { tr.points[0], tr.points[1], tr.points[2], tr.points[0] };
-        // TODO: USE OWN ALGORITHM
-        SDL_RenderDrawLines(renderer, points, 4);
+        drawLine(renderer, tr.points[0], tr.points[1]);
+        drawLine(renderer, tr.points[1], tr.points[2]);
+        drawLine(renderer, tr.points[2], tr.points[0]);
+
+//        SDL_Point points[4] = { tr.points[0], tr.points[1], tr.points[2], tr.points[0] };
+//        SDL_RenderDrawLines(renderer, points, 4);
     }
 
     void drawSceneL1(SDL_Renderer *renderer) {
