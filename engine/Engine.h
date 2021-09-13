@@ -23,7 +23,7 @@ private:
 
     Matrix4 matProj = Matrix4();
 
-    void drawLine(SDL_Renderer *renderer, SDL_Point p0, SDL_Point p1) {
+    static void drawLine(SDL_Renderer *renderer, SDL_Point p0, SDL_Point p1) {
         int x0 = p0.x;
         int y0 = p0.y;
         int x1 = p1.x;
@@ -52,11 +52,10 @@ private:
         }
     }
 
-    void drawTriangle2D(SDL_Renderer *renderer, Triangle2D tr) {
+    static void drawTriangle2D(SDL_Renderer *renderer, Triangle2D tr) {
         drawLine(renderer, tr.points[0], tr.points[1]);
         drawLine(renderer, tr.points[1], tr.points[2]);
         drawLine(renderer, tr.points[2], tr.points[0]);
-
 //        SDL_Point points[4] = { tr.points[0], tr.points[1], tr.points[2], tr.points[0] };
 //        SDL_RenderDrawLines(renderer, points, 4);
     }
