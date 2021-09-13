@@ -208,6 +208,8 @@ private:
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
             drawSceneL1(renderer);
 
+            updateWindowTitle();
+
             // Renders window
             SDL_RenderPresent(renderer);
             Uint32 ticks = SDL_GetTicks();
@@ -216,6 +218,10 @@ private:
             }
         }
         SDL_DestroyRenderer(renderer);
+    }
+
+    void updateWindowTitle() {
+        SDL_SetWindowTitle(window, description().c_str());
     }
 
 public:
