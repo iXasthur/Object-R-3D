@@ -18,7 +18,7 @@ class Scene {
 public:
     std::vector<Object> objects{};
     Camera camera = Camera({0 , 0, -5}, {0, 0, 0});
-    DirectionalLight light = DirectionalLight({-8, -5, 10});
+    DirectionalLight light = DirectionalLight({1, 1, 1});
 
     Scene() {
         std::string dir = "../objects/";

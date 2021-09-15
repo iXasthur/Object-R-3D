@@ -20,9 +20,60 @@ private:
     SDL_Window *window = nullptr;
     Renderer renderer = Renderer(nullptr);
 
-    int selectedSceneRenderer = 0;
+    int selectedSceneRenderer = 1;
 
     Scene scene = Scene();
+
+    std::vector<Polygon> createRasterizedPolygons(Object &obj, Matrix4 &matProj, Matrix4 &matCamView, Matrix4 &matScreen) {
+        std::vector<Polygon> rasterizedPolygons;
+
+        Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
+
+        for (Polygon &polygon: obj.polygons) {
+            Vector3 normal = polygon.getNormal();
+            normal = Vector3::normalize(normal);
+
+            Vector3 translatedV0 = Matrix4::multiplyVector(polygon.vertices[0], moveMatrix);
+            Vector3 translatedV1 = Matrix4::multiplyVector(polygon.vertices[1], moveMatrix);
+            Vector3 translatedV2 = Matrix4::multiplyVector(polygon.vertices[2], moveMatrix);
+
+            Vector3 translatedCenter = translatedV0 + translatedV1 + translatedV2;
+            translatedCenter = Vector3::div(translatedCenter, 3);
+
+            Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
+
+            if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
+                // How similar is normal to light direction
+                float dp = normal.x * -scene.light.direction.x + normal.y * -scene.light.direction.y + normal.z * -scene.light.direction.z;
+                if (dp < 0.1f) {
+                    dp = 0.1f;
+                }
+
+                Color color = polygon.color.exposed(dp);
+
+                // Apply camera transformations
+                Vector3 viewedV0 = Matrix4::multiplyVector(translatedV0, matCamView);
+                Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matCamView);
+                Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matCamView);
+
+                // -1 ... +1
+                Vector3 projectedV0 = Matrix4::multiplyVector(viewedV0, matProj);
+                Vector3 projectedV1 = Matrix4::multiplyVector(viewedV1, matProj);
+                Vector3 projectedV2 = Matrix4::multiplyVector(viewedV2, matProj);
+
+                // Screen width and height coordinates with inverted Y
+                Vector3 screenV0 = Matrix4::multiplyVector(projectedV0, matScreen);
+                Vector3 screenV1 = Matrix4::multiplyVector(projectedV1, matScreen);
+                Vector3 screenV2 = Matrix4::multiplyVector(projectedV2, matScreen);
+
+                Polygon p = {screenV0, screenV1, screenV2};
+                p.color = color;
+                rasterizedPolygons.emplace_back(p);
+            }
+        }
+
+        return rasterizedPolygons;
+    }
 
     void fillPolygonsToRasterVector(std::vector<Polygon> &vecPolygonsToRaster, Polygon &polygon, Matrix4 &matWorld, Matrix4 &matView, Matrix4 &matProj) {
         // World Matrix Transform
@@ -106,44 +157,29 @@ private:
     }
 
     void renderSceneL2() {
-        return;
-
-        Matrix4 matRotX, matRotY, matRotZ;
-
-        // Rotation X
-        matRotX = Matrix4::makeRotationX(0);
-        // Rotation Y
-        matRotY = Matrix4::makeRotationY(0);
-        // Rotation Z
-        matRotZ = Matrix4::makeRotationZ(0);
-
-        Matrix4 matTrans = Matrix4::makeMove(0.0f, 0.0f, 5.0f);
-
-        Matrix4 matWorld = Matrix4::makeIdentity();	// Form World Matrix
-        matWorld = Matrix4::multiplyMatrix(matRotX, matRotY); // Transform by rotation by X and Y
-        matWorld = Matrix4::multiplyMatrix(matWorld, matRotZ); // Transform by rotation by Y
-        matWorld = Matrix4::multiplyMatrix(matWorld, matTrans); // Transform by translation
-
-        Matrix4 matProj = Matrix4::makeProjection(scene.camera.fFOV, renderer.getAspectRatio(), scene.camera.fNear,
-                                                  scene.camera.fFar);
+        Matrix4 matProj = Matrix4::makeProjection(
+                scene.camera.fFOV,
+                renderer.getAspectRatio(),
+                scene.camera.fNear,
+                scene.camera.fFar
+        );
         Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
         Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
         // Store triagles for rastering later
-        std::vector<Polygon> polygonsToRaster;
+        std::vector<Polygon> rasterizedPolygons;
         for (Object &obj: scene.objects) {
-            for (Polygon &polygon: obj.polygons) {
-                fillPolygonsToRasterVector(polygonsToRaster, polygon, matWorld, matCameraView, matProj);
-            }
+            auto rasterized = createRasterizedPolygons(obj, matProj, matCameraView, matScreen);
+            rasterizedPolygons.insert(std::end(rasterizedPolygons), std::begin(rasterized), std::end(rasterized));
         }
 
-        sort(polygonsToRaster.begin(), polygonsToRaster.end(), [](Polygon &p0, Polygon &p1) {
+        sort(rasterizedPolygons.begin(), rasterizedPolygons.end(), [](Polygon &p0, Polygon &p1) {
             float z0 = (p0.vertices[0].z + p0.vertices[1].z + p0.vertices[2].z) / 3.0f;
             float z1 = (p1.vertices[0].z + p1.vertices[1].z + p1.vertices[2].z) / 3.0f;
             return z0 > z1;
         });
 
-        for (Polygon &polygon: polygonsToRaster) {
+        for (Polygon &polygon: rasterizedPolygons) {
             SDL_Point point0 = {(int) polygon.vertices[0].x, (int) polygon.vertices[0].y};
             SDL_Point point1 = {(int) polygon.vertices[1].x, (int) polygon.vertices[1].y};
             SDL_Point point2 = {(int) polygon.vertices[2].x, (int) polygon.vertices[2].y};
@@ -224,8 +260,12 @@ private:
     }
 
     void renderSceneL1() {
-        Matrix4 matProj = Matrix4::makeProjection(scene.camera.fFOV, renderer.getAspectRatio(), scene.camera.fNear,
-                                                  scene.camera.fFar);
+        Matrix4 matProj = Matrix4::makeProjection(
+                scene.camera.fFOV,
+                renderer.getAspectRatio(),
+                scene.camera.fNear,
+                scene.camera.fFar
+        );
         Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
         Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
