@@ -186,8 +186,11 @@ private:
 
             Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
 
-            renderer.drawFilledTriangle2D(triangleOnScreen, polygon.color);
-//            renderer.drawTriangle2D(triangleOnScreen, polygon.color);
+            if (selectedSceneRenderer == 1) {
+                renderer.drawFilledTriangle2D(triangleOnScreen, polygon.color);
+            } else {
+                renderer.drawTriangle2D(triangleOnScreen, polygon.color);
+            }
         }
     }
 
@@ -339,7 +342,11 @@ private:
                             selectedSceneRenderer = 0;
                             break;
                         case SDL_SCANCODE_2:
-                            selectedSceneRenderer = 1;
+                            if (selectedSceneRenderer != 1) {
+                                selectedSceneRenderer = 1;
+                            } else {
+                                selectedSceneRenderer = 2;
+                            }
                             break;
                     }
                 }
@@ -360,6 +367,7 @@ private:
                     renderSceneL1();
                     break;
                 case 1:
+                case 2:
                     renderSceneL2();
                     break;
                 default:
@@ -420,7 +428,8 @@ public:
         for (const Object &obj : scene.objects) {
             s += obj.name + ", ";
         }
-        s += scene.camera.position.toString();
+        s += scene.camera.position.toString() + ", ";
+        s += "renderer: " + std::to_string(selectedSceneRenderer);
         return s;
     }
 };
