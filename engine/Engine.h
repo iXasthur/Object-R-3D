@@ -98,8 +98,8 @@ private:
 //        return v;
 //    }
 
-    std::vector<Polygon> createRasterizedPolygons(Object &obj, Matrix4 &matProj, Matrix4 &matCamView, Matrix4 &matScreen) {
-        std::vector<Polygon> rasterizedPolygons;
+    std::vector<Polygon> createPolygonsToRaster(Object &obj, Matrix4 &matProj, Matrix4 &matCamView, Matrix4 &matScreen) {
+        std::vector<Polygon> polygonsToRaster;
 
         Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
@@ -143,7 +143,7 @@ private:
 
                 Polygon screenPolygon = {screenV0, screenV1, screenV2};
                 screenPolygon.color = color;
-                rasterizedPolygons.emplace_back(screenPolygon);
+                polygonsToRaster.emplace_back(screenPolygon);
 
 //                Polygon viewedPolygon = {viewedV0, viewedV1, viewedV2};
 //                for (auto &clippedViewedPolygon: clipPolygonByCamera(viewedPolygon)) {
@@ -160,14 +160,14 @@ private:
 //                    Polygon screenPolygon = {screenV0, screenV1, screenV2};
 //                    for (auto clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
 //                        clippedScreenPolygon.color = color;
-//                        rasterizedPolygons.emplace_back(clippedScreenPolygon);
+//                        polygonsToRaster.emplace_back(clippedScreenPolygon);
 //                    }
 //                }
 
             }
         }
 
-        return rasterizedPolygons;
+        return polygonsToRaster;
     }
 
     void renderSceneL2() {
@@ -181,19 +181,19 @@ private:
         Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
         // Store triagles for rastering later
-        std::vector<Polygon> rasterizedPolygons;
+        std::vector<Polygon> polygonsToRaster;
         for (Object &obj: scene.objects) {
-            auto rasterized = createRasterizedPolygons(obj, matProj, matCameraView, matScreen);
-            rasterizedPolygons.insert(std::end(rasterizedPolygons), std::begin(rasterized), std::end(rasterized));
+            auto polygons = createPolygonsToRaster(obj, matProj, matCameraView, matScreen);
+            polygonsToRaster.insert(std::end(polygonsToRaster), std::begin(polygons), std::end(polygons));
         }
 
-        sort(rasterizedPolygons.begin(), rasterizedPolygons.end(), [](Polygon &p0, Polygon &p1) {
+        sort(polygonsToRaster.begin(), polygonsToRaster.end(), [](Polygon &p0, Polygon &p1) {
             float z0 = (p0.vertices[0].z + p0.vertices[1].z + p0.vertices[2].z) / 3.0f;
             float z1 = (p1.vertices[0].z + p1.vertices[1].z + p1.vertices[2].z) / 3.0f;
             return z0 > z1;
         });
 
-        for (Polygon &polygon: rasterizedPolygons) {
+        for (Polygon &polygon: polygonsToRaster) {
             SDL_Point point0 = {(int) polygon.vertices[0].x, (int) polygon.vertices[0].y};
             SDL_Point point1 = {(int) polygon.vertices[1].x, (int) polygon.vertices[1].y};
             SDL_Point point2 = {(int) polygon.vertices[2].x, (int) polygon.vertices[2].y};
