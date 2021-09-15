@@ -20,7 +20,7 @@ private:
     SDL_Window *window = nullptr;
     Renderer renderer = Renderer(nullptr);
 
-    int selectedSceneRenderer = 1;
+    int selectedSceneRenderer = 0;
 
     Scene scene = Scene();
 
