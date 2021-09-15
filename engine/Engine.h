@@ -16,6 +16,8 @@ class Engine {
 private:
     SDL_Window *window = nullptr;
 
+    int selectedSceneRenderer = 0;
+
     Scene scene = Scene();
 
     SDL_Rect screenRect = SDL_Rect();
@@ -61,7 +63,11 @@ private:
 //        SDL_RenderDrawLines(renderer, points, 4);
     }
 
-    void drawSceneL1(SDL_Renderer *renderer) {
+    void renderSceneL2(SDL_Renderer *renderer) {
+
+    }
+
+    void renderSceneL1(SDL_Renderer *renderer) {
         const float fAspectRatio = (float) screenRect.h / (float) screenRect.w;
         Matrix4 matProj = Matrix4::makeProjection(scene.camera.fFOV, fAspectRatio, scene.camera.fNear, scene.camera.fFar);
 
@@ -196,8 +202,16 @@ private:
                 }
 
                 if (windowEvent.type == SDL_KEYDOWN) {
-                    if (windowEvent.key.keysym.scancode == SDL_SCANCODE_R) {
-                        scene.resetCamera();
+                    switch (windowEvent.key.keysym.scancode) {
+                        case SDL_SCANCODE_R:
+                            scene.resetCamera();
+                            break;
+                        case SDL_SCANCODE_1:
+                            selectedSceneRenderer = 0;
+                            break;
+                        case SDL_SCANCODE_2:
+                            selectedSceneRenderer = 1;
+                            break;
                     }
                 }
             }
@@ -215,7 +229,18 @@ private:
 
             //Draws scene
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            drawSceneL1(renderer);
+
+            switch (selectedSceneRenderer) {
+                case 0:
+                    renderSceneL1(renderer);
+                    break;
+                case 1:
+                    renderSceneL2(renderer);
+                    break;
+                default:
+                    printf("Invalid scene renderer was selected (%d)\n", selectedSceneRenderer);
+                    break;
+            }
 
             updateWindowTitle();
 
