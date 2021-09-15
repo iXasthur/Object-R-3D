@@ -24,6 +24,80 @@ private:
 
     Scene scene = Scene();
 
+    std::vector<Polygon> clipPolygonByCamera(Polygon &polygon) const {
+        Polygon clipped[2];
+        int nClippedTriangles = Polygon::clipAgainstPlane(
+                { 0.0f, 0.0f, scene.camera.fNear },
+                { 0.0f, 0.0f, 1.0f },
+                polygon,
+                clipped[0],
+                clipped[1]
+        );
+
+        std::vector<Polygon> v;
+        for (int n = 0; n < nClippedTriangles; n++) {
+            v.emplace_back(clipped[n]);
+        }
+
+        return v;
+    }
+
+    std::vector<Polygon> clipPolygonByScreen(Polygon &polygon) {
+        Polygon clipped[2];
+        std::list<Polygon> listTriangles;
+
+        // Add initial triangle
+        listTriangles.push_back(polygon);
+        unsigned long nNewTriangles = 1;
+
+        for (int p = 0; p < 4; p++) {
+            int nTrisToAdd = 0;
+            while (nNewTriangles > 0) {
+                // Take triangle from front of queue
+                Polygon test = listTriangles.front();
+                listTriangles.pop_front();
+                nNewTriangles--;
+
+                // Clip it against a plane. We only need to test each
+                // subsequent plane, against subsequent new triangles
+                // as all triangles after a plane clip are guaranteed
+                // to lie on the inside of the plane. I like how this
+                // comment is almost completely and utterly justified
+                switch (p) {
+                    case 0:
+                        nTrisToAdd = Polygon::clipAgainstPlane({0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, test,
+                                                               clipped[0], clipped[1]);
+                        break;
+                    case 1:
+                        nTrisToAdd = Polygon::clipAgainstPlane({0.0f, (float) renderer.getScreenRect().h - 1.0f, 0.0f},
+                                                               {0.0f, -1.0f, 0.0f}, test, clipped[0], clipped[1]);
+                        break;
+                    case 2:
+                        nTrisToAdd = Polygon::clipAgainstPlane({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, test,
+                                                               clipped[0], clipped[1]);
+                        break;
+                    case 3:
+                        nTrisToAdd = Polygon::clipAgainstPlane({(float) renderer.getScreenRect().w - 1.0f, 0.0f, 0.0f},
+                                                               {-1.0f, 0.0f, 0.0f}, test, clipped[0], clipped[1]);
+                        break;
+                }
+
+                // Clipping may yield a variable number of triangles, so
+                // add these new ones to the back of the queue for subsequent
+                // clipping against next planes
+                for (int w = 0; w < nTrisToAdd; w++) {
+                    listTriangles.push_back(clipped[w]);
+                }
+
+            }
+            nNewTriangles = listTriangles.size();
+        }
+
+        std::vector<Polygon> v;
+        v.insert(std::end(v), std::begin(listTriangles), std::end(listTriangles));
+        return v;
+    }
+
     std::vector<Polygon> createRasterizedPolygons(Object &obj, Matrix4 &matProj, Matrix4 &matCamView, Matrix4 &matScreen) {
         std::vector<Polygon> rasterizedPolygons;
 
@@ -44,7 +118,8 @@ private:
 
             if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
                 // How similar is normal to light direction
-                float dp = normal.x * -scene.light.direction.x + normal.y * -scene.light.direction.y + normal.z * -scene.light.direction.z;
+                float dp = normal.x * -scene.light.direction.x + normal.y * -scene.light.direction.y +
+                           normal.z * -scene.light.direction.z;
                 if (dp < 0.1f) {
                     dp = 0.1f;
                 }
@@ -56,104 +131,29 @@ private:
                 Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matCamView);
                 Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matCamView);
 
-                // -1 ... +1
-                Vector3 projectedV0 = Matrix4::multiplyVector(viewedV0, matProj);
-                Vector3 projectedV1 = Matrix4::multiplyVector(viewedV1, matProj);
-                Vector3 projectedV2 = Matrix4::multiplyVector(viewedV2, matProj);
+                Polygon viewedPolygon = {viewedV0, viewedV1, viewedV2};
+                for (auto &clippedViewedPolygon: clipPolygonByCamera(viewedPolygon)) {
+                    // -1 ... +1
+                    Vector3 projectedV0 = Matrix4::multiplyVector(clippedViewedPolygon.vertices[0], matProj);
+                    Vector3 projectedV1 = Matrix4::multiplyVector(clippedViewedPolygon.vertices[1], matProj);
+                    Vector3 projectedV2 = Matrix4::multiplyVector(clippedViewedPolygon.vertices[2], matProj);
 
-                // Screen width and height coordinates with inverted Y
-                Vector3 screenV0 = Matrix4::multiplyVector(projectedV0, matScreen);
-                Vector3 screenV1 = Matrix4::multiplyVector(projectedV1, matScreen);
-                Vector3 screenV2 = Matrix4::multiplyVector(projectedV2, matScreen);
+                    // Screen width and height coordinates with inverted Y
+                    Vector3 screenV0 = Matrix4::multiplyVector(projectedV0, matScreen);
+                    Vector3 screenV1 = Matrix4::multiplyVector(projectedV1, matScreen);
+                    Vector3 screenV2 = Matrix4::multiplyVector(projectedV2, matScreen);
 
-                Polygon p = {screenV0, screenV1, screenV2};
-                p.color = color;
-                rasterizedPolygons.emplace_back(p);
+                    Polygon screenPolygon = {screenV0, screenV1, screenV2};
+                    for (auto clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
+                        clippedScreenPolygon.color = color;
+                        rasterizedPolygons.emplace_back(clippedScreenPolygon);
+                    }
+                }
+
             }
         }
 
         return rasterizedPolygons;
-    }
-
-    void fillPolygonsToRasterVector(std::vector<Polygon> &vecPolygonsToRaster, Polygon &polygon, Matrix4 &matWorld, Matrix4 &matView, Matrix4 &matProj) {
-        // World Matrix Transform
-        Polygon polygonTransformed = {
-                Matrix4::multiplyVector(polygon.vertices[0], matWorld),
-                Matrix4::multiplyVector(polygon.vertices[1], matWorld),
-                Matrix4::multiplyVector(polygon.vertices[2], matWorld)
-        };
-        polygonTransformed.color = polygon.color;
-
-        // Calculate triangle Normal
-        Vector3 normal = polygonTransformed.getNormal();
-        normal = Vector3::normalize(normal);
-
-        // Get Ray from triangle to camera
-        Vector3 vCameraRay = Vector3::sub(polygonTransformed.vertices[0], scene.camera.position);
-
-        if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
-
-            // How similar is normal to light direction
-            float dp = normal.x * scene.light.direction.x + normal.y * scene.light.direction.y + normal.z * scene.light.direction.z;
-            if (dp < 0.1f) {
-                dp = 0.1f;
-            }
-            polygonTransformed.color.R = (int)(dp * (float)polygonTransformed.color.R);
-            polygonTransformed.color.G = (int)(dp * (float)polygonTransformed.color.G);
-            polygonTransformed.color.B = (int)(dp * (float)polygonTransformed.color.B);
-
-            // Convert World Space --> View Space
-            Polygon polygonViewed = {
-                    Matrix4::multiplyVector(polygonTransformed.vertices[0], matView),
-                    Matrix4::multiplyVector(polygonTransformed.vertices[1], matView),
-                    Matrix4::multiplyVector(polygonTransformed.vertices[2], matView)
-            };
-            polygonViewed.color = polygonTransformed.color;
-
-            int nClippedTriangles = 0;
-            Polygon clipped[2];
-            nClippedTriangles = Polygon::clipAgainstPlane(
-                    { 0.0f, 0.0f, 0.1f },
-                    { 0.0f, 0.0f, 1.0f },
-                    polygonViewed,
-                    clipped[0],
-                    clipped[1]
-            );
-
-            for (int n = 0; n < nClippedTriangles; n++)
-            {
-                // Project triangles from 3D --> 2D
-                Polygon polygonProjected = {
-                        Matrix4::multiplyVector(clipped[n].vertices[0], matProj),
-                        Matrix4::multiplyVector(clipped[n].vertices[1], matProj),
-                        Matrix4::multiplyVector(clipped[n].vertices[2], matProj)
-                };
-                polygonProjected.color = clipped[n].color;
-
-                // X/Y are inverted so put them back
-                polygonProjected.vertices[0].x *= -1.0f;
-                polygonProjected.vertices[1].x *= -1.0f;
-                polygonProjected.vertices[2].x *= -1.0f;
-                polygonProjected.vertices[0].y *= -1.0f;
-                polygonProjected.vertices[1].y *= -1.0f;
-                polygonProjected.vertices[2].y *= -1.0f;
-
-                // Offset verts into visible normalised space
-                Vector3 vOffsetView = { 1,1,0 };
-                polygonProjected.vertices[0] = Vector3::add(polygonProjected.vertices[0], vOffsetView);
-                polygonProjected.vertices[1] = Vector3::add(polygonProjected.vertices[1], vOffsetView);
-                polygonProjected.vertices[2] = Vector3::add(polygonProjected.vertices[2], vOffsetView);
-                polygonProjected.vertices[0].x *= 0.5f * (float)renderer.getScreenRect().w;
-                polygonProjected.vertices[0].y *= 0.5f * (float)renderer.getScreenRect().h;
-                polygonProjected.vertices[1].x *= 0.5f * (float)renderer.getScreenRect().w;
-                polygonProjected.vertices[1].y *= 0.5f * (float)renderer.getScreenRect().h;
-                polygonProjected.vertices[2].x *= 0.5f * (float)renderer.getScreenRect().w;
-                polygonProjected.vertices[2].y *= 0.5f * (float)renderer.getScreenRect().h;
-
-                // Store triangle for sorting
-                vecPolygonsToRaster.push_back(polygonProjected);
-            }
-        }
     }
 
     void renderSceneL2() {
@@ -187,76 +187,8 @@ private:
             Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
 
             renderer.drawFilledTriangle2D(triangleOnScreen, polygon.color);
+//            renderer.drawTriangle2D(triangleOnScreen, polygon.color);
         }
-
-        return;
-
-        // Clip polygons by screen edges
-//        for (Polygon &triToRaster : polygonsToRaster) {
-//            // Clip triangles against all four screen edges, this could yield
-//            // a bunch of triangles, so create a queue that we traverse to
-//            //  ensure we only test new triangles generated against planes
-//            Polygon clipped[2];
-//            std::list<Polygon> listTriangles;
-//
-//            // Add initial triangle
-//            listTriangles.push_back(triToRaster);
-//            unsigned long nNewTriangles = 1;
-//
-//            for (int p = 0; p < 4; p++) {
-//                int nTrisToAdd = 0;
-//                while (nNewTriangles > 0) {
-//                    // Take triangle from front of queue
-//                    Polygon test = listTriangles.front();
-//                    listTriangles.pop_front();
-//                    nNewTriangles--;
-//
-//                    // Clip it against a plane. We only need to test each
-//                    // subsequent plane, against subsequent new triangles
-//                    // as all triangles after a plane clip are guaranteed
-//                    // to lie on the inside of the plane. I like how this
-//                    // comment is almost completely and utterly justified
-//                    switch (p) {
-//                        case 0:
-//                            nTrisToAdd = Polygon::clipAgainstPlane({0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, test,
-//                                                                   clipped[0], clipped[1]);
-//                            break;
-//                        case 1:
-//                            nTrisToAdd = Polygon::clipAgainstPlane({0.0f, (float) screenRect.h - 1.0f, 0.0f},
-//                                                                   {0.0f, -1.0f, 0.0f}, test, clipped[0], clipped[1]);
-//                            break;
-//                        case 2:
-//                            nTrisToAdd = Polygon::clipAgainstPlane({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, test,
-//                                                                   clipped[0], clipped[1]);
-//                            break;
-//                        case 3:
-//                            nTrisToAdd = Polygon::clipAgainstPlane({(float) screenRect.w - 1.0f, 0.0f, 0.0f},
-//                                                                   {-1.0f, 0.0f, 0.0f}, test, clipped[0], clipped[1]);
-//                            break;
-//                    }
-//
-//                    // Clipping may yield a variable number of triangles, so
-//                    // add these new ones to the back of the queue for subsequent
-//                    // clipping against next planes
-//                    for (int w = 0; w < nTrisToAdd; w++) {
-//                        listTriangles.push_back(clipped[w]);
-//                    }
-//
-//                }
-//                nNewTriangles = listTriangles.size();
-//            }
-//
-//            // Draw the transformed, viewed, clipped, projected, sorted, clipped triangles
-//            for (Polygon &polygon: listTriangles) {
-//                SDL_Point point0 = {(int) polygon.vertices[0].x, (int) polygon.vertices[0].y};
-//                SDL_Point point1 = {(int) polygon.vertices[1].x, (int) polygon.vertices[1].y};
-//                SDL_Point point2 = {(int) polygon.vertices[2].x, (int) polygon.vertices[2].y};
-//
-//                Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
-//
-//                drawTriangle2D(renderer, triangleOnScreen);
-//            }
-//        }
     }
 
     void renderSceneL1() {
