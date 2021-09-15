@@ -62,36 +62,10 @@ private:
     }
 
     void drawSceneL1(SDL_Renderer *renderer) {
-//        // Rotation X, Y, Z
-//        Matrix4 matRotX = Matrix4::makeRotationX(0);
-//        Matrix4 matRotY = Matrix4::makeRotationY(0);
-//        Matrix4 matRotZ = Matrix4::makeRotationZ(0);
-//
-//        Matrix4 matTrans = Matrix4::makeMove(0.0f, 0.0f, 0.0f);
-//
-//        Matrix4 matWorld = Matrix4::makeIdentity(); // Form World Matrix
-//        matWorld = Matrix4::multiplyMatrix(matRotX, matRotY); // Transform by rotation by X and Y
-//        matWorld = Matrix4::multiplyMatrix(matWorld, matRotZ); // Transform by rotation by Y
-//        matWorld = Matrix4::multiplyMatrix(matWorld, matTrans); // Transform by translation
         const float fAspectRatio = (float) screenRect.h / (float) screenRect.w;
-        Matrix4 matProj = Matrix4::makeProjection(
-                scene.camera.fFOV,
-                fAspectRatio,
-                scene.camera.fNear,
-                scene.camera.fFar
-        );
+        Matrix4 matProj = Matrix4::makeProjection(scene.camera.fFOV, fAspectRatio, scene.camera.fNear, scene.camera.fFar);
 
-        Vector3 upVector = {0, 1, 0};
-        Vector3 targetVector = {0, 0, 1};
-        Matrix4 m1 = Matrix4::makeRotationX(scene.camera.eulerRotation.x);
-        Matrix4 m2 = Matrix4::makeRotationY(scene.camera.eulerRotation.y);
-        Matrix4 matCameraRot = Matrix4::multiplyMatrix(m1, m2);
-        Vector3 lookDirection = Matrix4::multiplyVector(targetVector, matCameraRot);
-        targetVector = Vector3::add(scene.camera.position, lookDirection);
-        Matrix4 matCamera = Matrix4::pointAt(scene.camera.position, targetVector, upVector);
-
-        Matrix4 matView = Matrix4::quickInverseRotationTranslation(matCamera);
-
+        Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
         Matrix4 matScreen = Matrix4::makeScreen(screenRect.w, screenRect.h);
 
 //        printf("Drawing %d objects to scene\n", scene.objects.size());
@@ -105,9 +79,9 @@ private:
                 Vector3 translatedV2 = Matrix4::multiplyVector(polygon.vertices[2], moveMatrix);
 
                 // Apply camera transformations
-                Vector3 viewedV0 = Matrix4::multiplyVector(translatedV0, matView);
-                Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matView);
-                Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matView);
+                Vector3 viewedV0 = Matrix4::multiplyVector(translatedV0, matCameraView);
+                Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matCameraView);
+                Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matCameraView);
 
                 // -1 ... +1
                 Vector3 projectedV0 = Matrix4::multiplyVector(viewedV0, matProj);
