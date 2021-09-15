@@ -31,7 +31,7 @@ public:
         }
         return o;
     }
-    
+
     static Matrix4 makeIdentity() {
         Matrix4 matrix;
         matrix.m[0][0] = 1.0f;
@@ -41,8 +41,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeRotationX(float fAngleRad)
-    {
+    static Matrix4 makeRotationX(float fAngleRad) {
         Matrix4 matrix;
         matrix.m[0][0] = 1.0f;
         matrix.m[1][1] = cosf(fAngleRad);
@@ -53,8 +52,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeRotationY(float fAngleRad)
-    {
+    static Matrix4 makeRotationY(float fAngleRad) {
         Matrix4 matrix;
         matrix.m[0][0] = cosf(fAngleRad);
         matrix.m[0][2] = sinf(fAngleRad);
@@ -65,8 +63,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeRotationZ(float fAngleRad)
-    {
+    static Matrix4 makeRotationZ(float fAngleRad) {
         Matrix4 matrix;
         matrix.m[0][0] = cosf(fAngleRad);
         matrix.m[0][1] = sinf(fAngleRad);
@@ -77,8 +74,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeMove(float x, float y, float z)
-    {
+    static Matrix4 makeMove(float x, float y, float z) {
         Matrix4 matrix;
         matrix.m[0][0] = 1.0f;
         matrix.m[1][1] = 1.0f;
@@ -90,8 +86,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeScale(float x, float y, float z)
-    {
+    static Matrix4 makeScale(float x, float y, float z) {
         Matrix4 matrix;
         matrix.m[0][0] = x;
         matrix.m[1][1] = y;
@@ -100,8 +95,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeProjection(float fFovDegrees, float fAspectRatio, float fNear, float fFar)
-    {
+    static Matrix4 makeProjection(float fFovDegrees, float fAspectRatio, float fNear, float fFar) {
         float fFovRad = 1.0f / tanf(fFovDegrees * 0.5f / 180.0f * 3.14159f);
         Matrix4 matrix;
         matrix.m[0][0] = fAspectRatio * fFovRad;
@@ -133,8 +127,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 multiplyMatrix(Matrix4 &m1, Matrix4 &m2)
-    {
+    static Matrix4 multiplyMatrix(Matrix4 &m1, Matrix4 &m2) {
         Matrix4 matrix;
         for (int c = 0; c < 4; c++) {
             for (int r = 0; r < 4; r++) {
@@ -144,8 +137,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 pointAt(Vector3 &pos, Vector3 &target, Vector3 &up)
-    {
+    static Matrix4 pointAt(Vector3 &pos, Vector3 &target, Vector3 &up) {
         // Calculate new forward direction
         Vector3 newForward = Vector3::sub(target, pos);
         newForward = Vector3::normalize(newForward);
@@ -168,8 +160,7 @@ public:
 
     }
 
-    static Matrix4 quickInverseRotationTranslation(Matrix4 &m) // Only for Rotation/Translation Matrixes
-    {
+    static Matrix4 quickInverseRotationTranslation(Matrix4 &m) { // Only for Rotation/Translation Matrices
         Matrix4 matrix;
         matrix.m[0][0] = m.m[0][0]; matrix.m[0][1] = m.m[1][0]; matrix.m[0][2] = m.m[2][0]; matrix.m[0][3] = 0.0f;
         matrix.m[1][0] = m.m[0][1]; matrix.m[1][1] = m.m[1][1]; matrix.m[1][2] = m.m[2][1]; matrix.m[1][3] = 0.0f;
