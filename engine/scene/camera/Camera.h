@@ -5,8 +5,8 @@
 #ifndef V_3D_CAMERA_H
 #define V_3D_CAMERA_H
 
-#include "../utils/Vector3.h"
-#include "../utils/EulerAngle.h"
+#include "../../utils/Vector3.h"
+#include "../../utils/EulerAngle.h"
 
 class Camera {
 public:

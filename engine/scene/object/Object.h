@@ -6,8 +6,8 @@
 #define V_3D_OBJECT_H
 
 #include <vector>
-#include "../utils/Polygon.h"
-#include "../utils/Color.h"
+#include "../../utils/Polygon.h"
+#include "../../utils/Color.h"
 
 class Object {
 public:

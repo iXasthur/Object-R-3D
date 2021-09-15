@@ -6,73 +6,228 @@
 #define V_3D_ENGINE_H
 
 #include <array>
+#include <algorithm>
 #include <SDL2/SDL.h>
 #include "scene/Scene.h"
 #include "utils/Matrix4.h"
 #include "utils/Triangle2D.h"
+#include "renderer/Renderer.h"
 #include <cmath>
+#include <list>
 
 class Engine {
 private:
     SDL_Window *window = nullptr;
+    Renderer renderer = Renderer(nullptr);
 
     int selectedSceneRenderer = 0;
 
     Scene scene = Scene();
 
-    SDL_Rect screenRect = SDL_Rect();
+    void fillPolygonsToRasterVector(std::vector<Polygon> &vecPolygonsToRaster, Polygon &polygon, Matrix4 &matWorld, Matrix4 &matView, Matrix4 &matProj) {
+        // World Matrix Transform
+        Polygon polygonTransformed = {
+                Matrix4::multiplyVector(polygon.vertices[0], matWorld),
+                Matrix4::multiplyVector(polygon.vertices[1], matWorld),
+                Matrix4::multiplyVector(polygon.vertices[2], matWorld)
+        };
+        polygonTransformed.color = polygon.color;
 
-    void drawLine(SDL_Renderer *renderer, SDL_Point p0, SDL_Point p1) const {
-        if (!SDL_IntersectRectAndLine(&screenRect, &p0.x, &p0.y, &p1.x, &p1.y)) {
-            return;
+        // Calculate triangle Normal
+        Vector3 normal = polygonTransformed.getNormal();
+        normal = Vector3::normalize(normal);
+
+        // Get Ray from triangle to camera
+        Vector3 vCameraRay = Vector3::sub(polygonTransformed.vertices[0], scene.camera.position);
+
+        if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
+
+            // How similar is normal to light direction
+            float dp = normal.x * scene.light.direction.x + normal.y * scene.light.direction.y + normal.z * scene.light.direction.z;
+            if (dp < 0.1f) {
+                dp = 0.1f;
+            }
+            polygonTransformed.color.R = (int)(dp * (float)polygonTransformed.color.R);
+            polygonTransformed.color.G = (int)(dp * (float)polygonTransformed.color.G);
+            polygonTransformed.color.B = (int)(dp * (float)polygonTransformed.color.B);
+
+            // Convert World Space --> View Space
+            Polygon polygonViewed = {
+                    Matrix4::multiplyVector(polygonTransformed.vertices[0], matView),
+                    Matrix4::multiplyVector(polygonTransformed.vertices[1], matView),
+                    Matrix4::multiplyVector(polygonTransformed.vertices[2], matView)
+            };
+            polygonViewed.color = polygonTransformed.color;
+
+            int nClippedTriangles = 0;
+            Polygon clipped[2];
+            nClippedTriangles = Polygon::clipAgainstPlane(
+                    { 0.0f, 0.0f, 0.1f },
+                    { 0.0f, 0.0f, 1.0f },
+                    polygonViewed,
+                    clipped[0],
+                    clipped[1]
+            );
+
+            for (int n = 0; n < nClippedTriangles; n++)
+            {
+                // Project triangles from 3D --> 2D
+                Polygon polygonProjected = {
+                        Matrix4::multiplyVector(clipped[n].vertices[0], matProj),
+                        Matrix4::multiplyVector(clipped[n].vertices[1], matProj),
+                        Matrix4::multiplyVector(clipped[n].vertices[2], matProj)
+                };
+                polygonProjected.color = clipped[n].color;
+
+                // X/Y are inverted so put them back
+                polygonProjected.vertices[0].x *= -1.0f;
+                polygonProjected.vertices[1].x *= -1.0f;
+                polygonProjected.vertices[2].x *= -1.0f;
+                polygonProjected.vertices[0].y *= -1.0f;
+                polygonProjected.vertices[1].y *= -1.0f;
+                polygonProjected.vertices[2].y *= -1.0f;
+
+                // Offset verts into visible normalised space
+                Vector3 vOffsetView = { 1,1,0 };
+                polygonProjected.vertices[0] = Vector3::add(polygonProjected.vertices[0], vOffsetView);
+                polygonProjected.vertices[1] = Vector3::add(polygonProjected.vertices[1], vOffsetView);
+                polygonProjected.vertices[2] = Vector3::add(polygonProjected.vertices[2], vOffsetView);
+                polygonProjected.vertices[0].x *= 0.5f * (float)renderer.getScreenRect().w;
+                polygonProjected.vertices[0].y *= 0.5f * (float)renderer.getScreenRect().h;
+                polygonProjected.vertices[1].x *= 0.5f * (float)renderer.getScreenRect().w;
+                polygonProjected.vertices[1].y *= 0.5f * (float)renderer.getScreenRect().h;
+                polygonProjected.vertices[2].x *= 0.5f * (float)renderer.getScreenRect().w;
+                polygonProjected.vertices[2].y *= 0.5f * (float)renderer.getScreenRect().h;
+
+                // Store triangle for sorting
+                vecPolygonsToRaster.push_back(polygonProjected);
+            }
         }
-
-        int x0 = p0.x;
-        int y0 = p0.y;
-        int x1 = p1.x;
-        int y1 = p1.y;
-
-        int dx = abs(x1 - x0);
-        int sx = x0 < x1 ? 1 : -1;
-
-        int dy = -abs(y1 - y0);
-        int sy = y0 < y1 ? 1 : -1;
-        int err = dx + dy;  /* error value e_xy */
-        while (true) {
-            SDL_RenderDrawPoint(renderer, x0, y0);
-            if (x0 == x1 && y0 == y1) {
-                break;
-            }
-            int e2 = 2 * err;
-            if (e2 >= dy) { /* e_xy+e_x > 0 */
-                err += dy;
-                x0 += sx;
-            }
-            if (e2 <= dx) { /* e_xy+e_y < 0 */
-                err += dx;
-                y0 += sy;
-            }
-        }
     }
 
-    void drawTriangle2D(SDL_Renderer *renderer, Triangle2D tr) {
-        drawLine(renderer, tr.points[0], tr.points[1]);
-        drawLine(renderer, tr.points[1], tr.points[2]);
-        drawLine(renderer, tr.points[2], tr.points[0]);
-//        SDL_Point points[4] = { tr.points[0], tr.points[1], tr.points[2], tr.points[0] };
-//        SDL_RenderDrawLines(renderer, points, 4);
-    }
+    void renderSceneL2() {
+        return;
 
-    void renderSceneL2(SDL_Renderer *renderer) {
+        Matrix4 matRotX, matRotY, matRotZ;
 
-    }
+        // Rotation X
+        matRotX = Matrix4::makeRotationX(0);
+        // Rotation Y
+        matRotY = Matrix4::makeRotationY(0);
+        // Rotation Z
+        matRotZ = Matrix4::makeRotationZ(0);
 
-    void renderSceneL1(SDL_Renderer *renderer) {
-        const float fAspectRatio = (float) screenRect.h / (float) screenRect.w;
-        Matrix4 matProj = Matrix4::makeProjection(scene.camera.fFOV, fAspectRatio, scene.camera.fNear, scene.camera.fFar);
+        Matrix4 matTrans = Matrix4::makeMove(0.0f, 0.0f, 5.0f);
 
+        Matrix4 matWorld = Matrix4::makeIdentity();	// Form World Matrix
+        matWorld = Matrix4::multiplyMatrix(matRotX, matRotY); // Transform by rotation by X and Y
+        matWorld = Matrix4::multiplyMatrix(matWorld, matRotZ); // Transform by rotation by Y
+        matWorld = Matrix4::multiplyMatrix(matWorld, matTrans); // Transform by translation
+
+        Matrix4 matProj = Matrix4::makeProjection(scene.camera.fFOV, renderer.getAspectRatio(), scene.camera.fNear,
+                                                  scene.camera.fFar);
         Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
-        Matrix4 matScreen = Matrix4::makeScreen(screenRect.w, screenRect.h);
+        Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
+
+        // Store triagles for rastering later
+        std::vector<Polygon> polygonsToRaster;
+        for (Object &obj: scene.objects) {
+            for (Polygon &polygon: obj.polygons) {
+                fillPolygonsToRasterVector(polygonsToRaster, polygon, matWorld, matCameraView, matProj);
+            }
+        }
+
+        sort(polygonsToRaster.begin(), polygonsToRaster.end(), [](Polygon &p0, Polygon &p1) {
+            float z0 = (p0.vertices[0].z + p0.vertices[1].z + p0.vertices[2].z) / 3.0f;
+            float z1 = (p1.vertices[0].z + p1.vertices[1].z + p1.vertices[2].z) / 3.0f;
+            return z0 > z1;
+        });
+
+        for (Polygon &polygon: polygonsToRaster) {
+            SDL_Point point0 = {(int) polygon.vertices[0].x, (int) polygon.vertices[0].y};
+            SDL_Point point1 = {(int) polygon.vertices[1].x, (int) polygon.vertices[1].y};
+            SDL_Point point2 = {(int) polygon.vertices[2].x, (int) polygon.vertices[2].y};
+
+            Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
+
+            renderer.drawFilledTriangle2D(triangleOnScreen, polygon.color);
+        }
+
+        return;
+
+        // Clip polygons by screen edges
+//        for (Polygon &triToRaster : polygonsToRaster) {
+//            // Clip triangles against all four screen edges, this could yield
+//            // a bunch of triangles, so create a queue that we traverse to
+//            //  ensure we only test new triangles generated against planes
+//            Polygon clipped[2];
+//            std::list<Polygon> listTriangles;
+//
+//            // Add initial triangle
+//            listTriangles.push_back(triToRaster);
+//            unsigned long nNewTriangles = 1;
+//
+//            for (int p = 0; p < 4; p++) {
+//                int nTrisToAdd = 0;
+//                while (nNewTriangles > 0) {
+//                    // Take triangle from front of queue
+//                    Polygon test = listTriangles.front();
+//                    listTriangles.pop_front();
+//                    nNewTriangles--;
+//
+//                    // Clip it against a plane. We only need to test each
+//                    // subsequent plane, against subsequent new triangles
+//                    // as all triangles after a plane clip are guaranteed
+//                    // to lie on the inside of the plane. I like how this
+//                    // comment is almost completely and utterly justified
+//                    switch (p) {
+//                        case 0:
+//                            nTrisToAdd = Polygon::clipAgainstPlane({0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, test,
+//                                                                   clipped[0], clipped[1]);
+//                            break;
+//                        case 1:
+//                            nTrisToAdd = Polygon::clipAgainstPlane({0.0f, (float) screenRect.h - 1.0f, 0.0f},
+//                                                                   {0.0f, -1.0f, 0.0f}, test, clipped[0], clipped[1]);
+//                            break;
+//                        case 2:
+//                            nTrisToAdd = Polygon::clipAgainstPlane({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, test,
+//                                                                   clipped[0], clipped[1]);
+//                            break;
+//                        case 3:
+//                            nTrisToAdd = Polygon::clipAgainstPlane({(float) screenRect.w - 1.0f, 0.0f, 0.0f},
+//                                                                   {-1.0f, 0.0f, 0.0f}, test, clipped[0], clipped[1]);
+//                            break;
+//                    }
+//
+//                    // Clipping may yield a variable number of triangles, so
+//                    // add these new ones to the back of the queue for subsequent
+//                    // clipping against next planes
+//                    for (int w = 0; w < nTrisToAdd; w++) {
+//                        listTriangles.push_back(clipped[w]);
+//                    }
+//
+//                }
+//                nNewTriangles = listTriangles.size();
+//            }
+//
+//            // Draw the transformed, viewed, clipped, projected, sorted, clipped triangles
+//            for (Polygon &polygon: listTriangles) {
+//                SDL_Point point0 = {(int) polygon.vertices[0].x, (int) polygon.vertices[0].y};
+//                SDL_Point point1 = {(int) polygon.vertices[1].x, (int) polygon.vertices[1].y};
+//                SDL_Point point2 = {(int) polygon.vertices[2].x, (int) polygon.vertices[2].y};
+//
+//                Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
+//
+//                drawTriangle2D(renderer, triangleOnScreen);
+//            }
+//        }
+    }
+
+    void renderSceneL1() {
+        Matrix4 matProj = Matrix4::makeProjection(scene.camera.fFOV, renderer.getAspectRatio(), scene.camera.fNear,
+                                                  scene.camera.fFar);
+        Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
+        Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
 //        printf("Drawing %d objects to scene\n", scene.objects.size());
         for (Object &obj: scene.objects) {
@@ -105,7 +260,7 @@ private:
 
                 Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
 
-                drawTriangle2D(renderer, triangleOnScreen);
+                renderer.drawTriangle2D(triangleOnScreen, polygon.color);
             }
         }
     }
@@ -189,7 +344,9 @@ private:
     void startRenderLoop() {
         bool isRunning = true;
 
-        SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0); // SDL_RENDERER_ACCELERATED is Default
+        SDL_Renderer *sdl_renderer = SDL_CreateRenderer(window, -1, 0); // SDL_RENDERER_ACCELERATED is Default
+        renderer = Renderer(sdl_renderer);
+
         Uint32 start;
         SDL_Event windowEvent;
         while (isRunning)
@@ -219,23 +376,19 @@ private:
 
             processInputFast();
 
-            // Updates properties of the screen and camera
-            // Gets real size of the window(Fix for macOS/Resizing)
-            SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
+            // Updates properties of the screen
+            // Gets real size of the window (fix for macOS/resizing)
+            renderer.updateScreenRect();
 
-            //Background(Clears with color)
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            SDL_RenderClear(renderer);
-
-            //Draws scene
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            //Background (Clears with color)
+            renderer.clear({0, 0, 0, 255});
 
             switch (selectedSceneRenderer) {
                 case 0:
-                    renderSceneL1(renderer);
+                    renderSceneL1();
                     break;
                 case 1:
-                    renderSceneL2(renderer);
+                    renderSceneL2();
                     break;
                 default:
                     printf("Invalid scene renderer was selected (%d)\n", selectedSceneRenderer);
@@ -245,13 +398,14 @@ private:
             updateWindowTitle();
 
             // Renders window
-            SDL_RenderPresent(renderer);
+            SDL_RenderPresent(sdl_renderer);
             Uint32 ticks = SDL_GetTicks();
             if (1000 / targetFps > ticks - start) {
                 SDL_Delay(1000 / targetFps - (ticks - start));
             }
         }
-        SDL_DestroyRenderer(renderer);
+
+        SDL_DestroyRenderer(sdl_renderer);
     }
 
     void updateWindowTitle() {
@@ -269,15 +423,12 @@ public:
             return false;
         }
 
-        screenRect.w = startWidth;
-        screenRect.h = startHeight;
-
         this->window = SDL_CreateWindow(
                 title,
                 SDL_WINDOWPOS_UNDEFINED,
                 SDL_WINDOWPOS_UNDEFINED,
-                screenRect.w,
-                screenRect.h,
+                startWidth,
+                startHeight,
                 SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE
         );
 
@@ -286,7 +437,7 @@ public:
             printf("Error creating window! SDL_Error: %s\n", SDL_GetError());
             return false;
         } else {
-            printf("Created window(%dx%d)!\n", screenRect.w, screenRect.h);
+            printf("Created window(%dx%d)!\n", startWidth, startHeight);
             startRenderLoop();
             return true;
         }

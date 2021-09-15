@@ -17,18 +17,19 @@ add_executable(
         Tamara_3D
         main.cpp
         engine/scene/Scene.h
-        engine/object/Object.h
-        engine/camera/Camera.h
+        engine/scene/object/Object.h
+        engine/scene/camera/Camera.h
         engine/utils/Polygon.h
         engine/utils/Vector3.h
         engine/utils/Vector4.h
         engine/Engine.h
         engine/utils/Color.h
         engine/utils/EulerAngle.h
-        engine/object/ObjectLoader.h
-        engine/light/Light.h
+        engine/scene/object/ObjectLoader.h
+        engine/scene/light/DirectionalLight.h
         engine/utils/Matrix4.h
         engine/utils/Triangle2D.h
+        engine/renderer/Renderer.h
 )
 
 if(WIN32) # Windows

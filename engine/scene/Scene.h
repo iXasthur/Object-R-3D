@@ -8,16 +8,17 @@
 #include <vector>
 #include <array>
 #include <cstdlib>
-#include "../object/Object.h"
-#include "../light/Light.h"
-#include "../camera/Camera.h"
+#include "./object/Object.h"
+#include "./light/DirectionalLight.h"
+#include "./camera/Camera.h"
 #include "../utils/Color.h"
-#include "../object/ObjectLoader.h"
+#include "./object/ObjectLoader.h"
 
 class Scene {
 public:
     std::vector<Object> objects{};
     Camera camera = Camera({0 , 0, -5}, {0, 0, 0});
+    DirectionalLight light = DirectionalLight({-8, -5, 10});
 
     Scene() {
         std::string dir = "../objects/";

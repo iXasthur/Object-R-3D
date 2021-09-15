@@ -8,17 +8,17 @@
 
 class Color {
 public:
-    int R;
-    int G;
-    int B;
-    int A;
+    uint8_t R;
+    uint8_t G;
+    uint8_t B;
+    uint8_t A;
 
     float Rf;
     float Gf;
     float Bf;
     float Af;
 
-    Color(int r, int g, int b, int a) {
+    Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
         R = r;
         G = g;
         B = b;
