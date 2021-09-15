@@ -20,8 +20,6 @@ private:
 
     SDL_Rect screenRect = SDL_Rect();
 
-    Matrix4 matProj = Matrix4();
-
     void drawLine(SDL_Renderer *renderer, SDL_Point p0, SDL_Point p1) const {
         if (!SDL_IntersectRectAndLine(&screenRect, &p0.x, &p0.y, &p1.x, &p1.y)) {
             return;
@@ -69,15 +67,22 @@ private:
 //        Matrix4 matRotY = Matrix4::makeRotationY(0);
 //        Matrix4 matRotZ = Matrix4::makeRotationZ(0);
 //
-//        Matrix4 matTrans = Matrix4::makeTranslation(0.0f, 0.0f, 0.0f);
+//        Matrix4 matTrans = Matrix4::makeMove(0.0f, 0.0f, 0.0f);
 //
 //        Matrix4 matWorld = Matrix4::makeIdentity(); // Form World Matrix
 //        matWorld = Matrix4::multiplyMatrix(matRotX, matRotY); // Transform by rotation by X and Y
 //        matWorld = Matrix4::multiplyMatrix(matWorld, matRotZ); // Transform by rotation by Y
 //        matWorld = Matrix4::multiplyMatrix(matWorld, matTrans); // Transform by translation
+        const float fAspectRatio = (float) screenRect.h / (float) screenRect.w;
+        Matrix4 matProj = Matrix4::makeProjection(
+                scene.camera.fFOV,
+                fAspectRatio,
+                scene.camera.fNear,
+                scene.camera.fFar
+        );
 
-        Vector3 upVector = { 0, 1, 0 };
-        Vector3 targetVector = { 0, 0, 1 };
+        Vector3 upVector = {0, 1, 0};
+        Vector3 targetVector = {0, 0, 1};
         Matrix4 m1 = Matrix4::makeRotationX(scene.camera.eulerRotation.x);
         Matrix4 m2 = Matrix4::makeRotationY(scene.camera.eulerRotation.y);
         Matrix4 matCameraRot = Matrix4::multiplyMatrix(m1, m2);
@@ -85,15 +90,21 @@ private:
         targetVector = Vector3::add(scene.camera.position, lookDirection);
         Matrix4 matCamera = Matrix4::pointAt(scene.camera.position, targetVector, upVector);
 
-        Matrix4 matView = Matrix4::quickInverse(matCamera);
+        Matrix4 matView = Matrix4::quickInverseRotationTranslation(matCamera);
+
+        Matrix4 matScreen = Matrix4::makeScreen(screenRect.w, screenRect.h);
 
 //        printf("Drawing %d objects to scene\n", scene.objects.size());
-        for (Object &obj : scene.objects) {
-            for (Polygon &polygon : obj.polygons) {
-                Vector3 translatedV0 = polygon.vertices[0] + obj.position;
-                Vector3 translatedV1 = polygon.vertices[1] + obj.position;
-                Vector3 translatedV2 = polygon.vertices[2] + obj.position;
-                
+        for (Object &obj: scene.objects) {
+            Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
+
+            for (Polygon &polygon: obj.polygons) {
+                // Move in world
+                Vector3 translatedV0 = Matrix4::multiplyVector(polygon.vertices[0], moveMatrix);
+                Vector3 translatedV1 = Matrix4::multiplyVector(polygon.vertices[1], moveMatrix);
+                Vector3 translatedV2 = Matrix4::multiplyVector(polygon.vertices[2], moveMatrix);
+
+                // Apply camera transformations
                 Vector3 viewedV0 = Matrix4::multiplyVector(translatedV0, matView);
                 Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matView);
                 Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matView);
@@ -103,24 +114,14 @@ private:
                 Vector3 projectedV1 = Matrix4::multiplyVector(viewedV1, matProj);
                 Vector3 projectedV2 = Matrix4::multiplyVector(viewedV2, matProj);
 
-                // Mirror Y coordinate
-                projectedV0.y = -projectedV0.y;
-                projectedV1.y = -projectedV1.y;
-                projectedV2.y = -projectedV2.y;
+                // Screen width and height coordinates with inverted Y
+                Vector3 screenV0 = Matrix4::multiplyVector(projectedV0, matScreen);
+                Vector3 screenV1 = Matrix4::multiplyVector(projectedV1, matScreen);
+                Vector3 screenV2 = Matrix4::multiplyVector(projectedV2, matScreen);
 
-                // +0 ... +2
-                projectedV0.x += 1.0f; projectedV0.y += 1.0f;
-                projectedV1.x += 1.0f; projectedV1.y += 1.0f;
-                projectedV2.x += 1.0f; projectedV2.y += 1.0f;
-
-                // Convert +0 ... +2 to screen width and height
-                projectedV0.x *= 0.5f * (float)screenRect.w; projectedV0.y *= 0.5f * (float)screenRect.h;
-                projectedV1.x *= 0.5f * (float)screenRect.w; projectedV1.y *= 0.5f * (float)screenRect.h;
-                projectedV2.x *= 0.5f * (float)screenRect.w; projectedV2.y *= 0.5f * (float)screenRect.h;
-
-                SDL_Point point0 = {(int)projectedV0.x, (int)projectedV0.y};
-                SDL_Point point1 = {(int)projectedV1.x, (int)projectedV1.y};
-                SDL_Point point2 = {(int)projectedV2.x, (int)projectedV2.y};
+                SDL_Point point0 = {(int) screenV0.x, (int) screenV0.y};
+                SDL_Point point1 = {(int) screenV1.x, (int) screenV1.y};
+                SDL_Point point2 = {(int) screenV2.x, (int) screenV2.y};
 
                 Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
 
@@ -233,8 +234,6 @@ private:
             // Updates properties of the screen and camera
             // Gets real size of the window(Fix for macOS/Resizing)
             SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
-            const float fAspectRatio = (float)screenRect.h / (float)screenRect.w;
-            matProj = Matrix4::makeProjection(scene.camera.fFOV, fAspectRatio, scene.camera.fNear, scene.camera.fFar);
 
             //Background(Clears with color)
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);

@@ -77,7 +77,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeTranslation(float x, float y, float z)
+    static Matrix4 makeMove(float x, float y, float z)
     {
         Matrix4 matrix;
         matrix.m[0][0] = 1.0f;
@@ -87,6 +87,16 @@ public:
         matrix.m[3][0] = x;
         matrix.m[3][1] = y;
         matrix.m[3][2] = z;
+        return matrix;
+    }
+
+    static Matrix4 makeScale(float x, float y, float z)
+    {
+        Matrix4 matrix;
+        matrix.m[0][0] = x;
+        matrix.m[1][1] = y;
+        matrix.m[2][2] = z;
+        matrix.m[3][3] = 1;
         return matrix;
     }
 
@@ -100,6 +110,26 @@ public:
         matrix.m[3][2] = (-fFar * fNear) / (fFar - fNear);
         matrix.m[2][3] = 1.0f;
         matrix.m[3][3] = 0.0f;
+        return matrix;
+    }
+
+    static Matrix4 makeScreen(int screenWidth, int screenHeight) {
+//        // Mirror Y coordinate
+//        projected.y = -projectedV0.y;
+//        // +0 ... +2
+//        projected.x += 1.0f;
+//        projected.y += 1.0f;
+//        // Convert +0 ... +2 to screen width and height
+//        projected.x *= 0.5f * (float) screenRect.w;
+//        projected.y *= 0.5f * (float) screenRect.h;
+
+        Matrix4 matrix;
+        matrix.m[0][0] = (float) screenWidth * 0.5f;
+        matrix.m[1][1] = (float) screenHeight * -0.5f;
+        matrix.m[2][2] = 1;
+        matrix.m[3][3] = 1;
+        matrix.m[3][0] = 1.0f + (float) screenWidth * 0.5f;
+        matrix.m[3][1] = 1.0f + (float) screenHeight * 0.5f;
         return matrix;
     }
 
@@ -138,7 +168,7 @@ public:
 
     }
 
-    static Matrix4 quickInverse(Matrix4 &m) // Only for Rotation/Translation Matrixes
+    static Matrix4 quickInverseRotationTranslation(Matrix4 &m) // Only for Rotation/Translation Matrixes
     {
         Matrix4 matrix;
         matrix.m[0][0] = m.m[0][0]; matrix.m[0][1] = m.m[1][0]; matrix.m[0][2] = m.m[2][0]; matrix.m[0][3] = 0.0f;
