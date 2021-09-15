@@ -110,20 +110,25 @@ public:
     static Matrix4 makeScreen(int screenWidth, int screenHeight) {
 //        // Mirror Y coordinate
 //        projected.y = -projectedV0.y;
+//
 //        // +0 ... +2
 //        projected.x += 1.0f;
 //        projected.y += 1.0f;
+//
 //        // Convert +0 ... +2 to screen width and height
 //        projected.x *= 0.5f * (float) screenRect.w;
 //        projected.y *= 0.5f * (float) screenRect.h;
 
+        float fHalfWidth = (float) screenWidth * 0.5f;
+        float fHalfHeight = (float) screenHeight * 0.5f;
+
         Matrix4 matrix;
-        matrix.m[0][0] = (float) screenWidth * 0.5f;
-        matrix.m[1][1] = (float) screenHeight * -0.5f;
+        matrix.m[0][0] = fHalfWidth;
+        matrix.m[1][1] = -fHalfHeight;
         matrix.m[2][2] = 1;
         matrix.m[3][3] = 1;
-        matrix.m[3][0] = 1.0f + (float) screenWidth * 0.5f;
-        matrix.m[3][1] = 1.0f + (float) screenHeight * 0.5f;
+        matrix.m[3][0] = -1.0f + fHalfWidth;
+        matrix.m[3][1] = -1.0f + fHalfHeight;
         return matrix;
     }
 
