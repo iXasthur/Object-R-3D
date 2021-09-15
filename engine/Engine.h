@@ -18,12 +18,15 @@ private:
 
     Scene scene = Scene();
 
-    int renderWidth = -1;
-    int renderHeight = -1;
+    SDL_Rect screenRect = SDL_Rect();
 
     Matrix4 matProj = Matrix4();
 
-    static void drawLine(SDL_Renderer *renderer, SDL_Point p0, SDL_Point p1) {
+    void drawLine(SDL_Renderer *renderer, SDL_Point p0, SDL_Point p1) const {
+        if (!SDL_IntersectRectAndLine(&screenRect, &p0.x, &p0.y, &p1.x, &p1.y)) {
+            return;
+        }
+
         int x0 = p0.x;
         int y0 = p0.y;
         int x1 = p1.x;
@@ -52,7 +55,7 @@ private:
         }
     }
 
-    static void drawTriangle2D(SDL_Renderer *renderer, Triangle2D tr) {
+    void drawTriangle2D(SDL_Renderer *renderer, Triangle2D tr) {
         drawLine(renderer, tr.points[0], tr.points[1]);
         drawLine(renderer, tr.points[1], tr.points[2]);
         drawLine(renderer, tr.points[2], tr.points[0]);
@@ -111,9 +114,9 @@ private:
                 projectedV2.x += 1.0f; projectedV2.y += 1.0f;
 
                 // Convert +0 ... +2 to screen width and height
-                projectedV0.x *= 0.5f * (float)renderWidth; projectedV0.y *= 0.5f * (float)renderHeight;
-                projectedV1.x *= 0.5f * (float)renderWidth; projectedV1.y *= 0.5f * (float)renderHeight;
-                projectedV2.x *= 0.5f * (float)renderWidth; projectedV2.y *= 0.5f * (float)renderHeight;
+                projectedV0.x *= 0.5f * (float)screenRect.w; projectedV0.y *= 0.5f * (float)screenRect.h;
+                projectedV1.x *= 0.5f * (float)screenRect.w; projectedV1.y *= 0.5f * (float)screenRect.h;
+                projectedV2.x *= 0.5f * (float)screenRect.w; projectedV2.y *= 0.5f * (float)screenRect.h;
 
                 SDL_Point point0 = {(int)projectedV0.x, (int)projectedV0.y};
                 SDL_Point point1 = {(int)projectedV1.x, (int)projectedV1.y};
@@ -229,8 +232,8 @@ private:
 
             // Updates properties of the screen and camera
             // Gets real size of the window(Fix for macOS/Resizing)
-            SDL_GetRendererOutputSize(renderer, &renderWidth, &renderHeight);
-            const float fAspectRatio = (float)renderHeight / (float)renderWidth;
+            SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
+            const float fAspectRatio = (float)screenRect.h / (float)screenRect.w;
             matProj = Matrix4::makeProjection(scene.camera.fFOV, fAspectRatio, scene.camera.fNear, scene.camera.fFar);
 
             //Background(Clears with color)
@@ -268,15 +271,15 @@ public:
             return false;
         }
 
-        renderWidth = startWidth;
-        renderHeight = startHeight;
+        screenRect.w = startWidth;
+        screenRect.h = startHeight;
 
         this->window = SDL_CreateWindow(
                 title,
                 SDL_WINDOWPOS_UNDEFINED,
                 SDL_WINDOWPOS_UNDEFINED,
-                renderWidth,
-                renderHeight,
+                screenRect.w,
+                screenRect.h,
                 SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE
         );
 
@@ -285,7 +288,7 @@ public:
             printf("Error creating window! SDL_Error: %s\n", SDL_GetError());
             return false;
         } else {
-            printf("Created window(%dx%d)!\n", renderWidth, renderHeight);
+            printf("Created window(%dx%d)!\n", screenRect.w, screenRect.h);
             startRenderLoop();
             return true;
         }
