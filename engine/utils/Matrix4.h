@@ -153,6 +153,7 @@ public:
         targetVector = Vector3::add(camera.position, lookDirection);
         Matrix4 matCamera = Matrix4::pointAt(camera.position, targetVector, upVector);
 
+        // Quick inverse
         Matrix4 matView;
         matView.m[0][0] = matCamera.m[0][0]; matView.m[0][1] = matCamera.m[1][0]; matView.m[0][2] = matCamera.m[2][0]; matView.m[0][3] = 0.0f;
         matView.m[1][0] = matCamera.m[0][1]; matView.m[1][1] = matCamera.m[1][1]; matView.m[1][2] = matCamera.m[2][1]; matView.m[1][3] = 0.0f;
