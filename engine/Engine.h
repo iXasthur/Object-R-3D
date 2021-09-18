@@ -20,7 +20,7 @@ private:
     SDL_Window *window = nullptr;
     Renderer renderer = Renderer(nullptr);
 
-    int selectedSceneRenderer = 0;
+    int selectedSceneRenderer = 1;
 
     Scene scene = Scene();
 
@@ -187,25 +187,28 @@ private:
             polygonsToRaster.insert(std::end(polygonsToRaster), std::begin(polygons), std::end(polygons));
         }
 
-        sort(polygonsToRaster.begin(), polygonsToRaster.end(), [](Polygon &p0, Polygon &p1) {
-            float z0 = (p0.vertices[0].z + p0.vertices[1].z + p0.vertices[2].z) / 3.0f;
-            float z1 = (p1.vertices[0].z + p1.vertices[1].z + p1.vertices[2].z) / 3.0f;
-            return z0 > z1;
-        });
-
         for (Polygon &polygon: polygonsToRaster) {
-            SDL_Point point0 = {(int) polygon.vertices[0].x, (int) polygon.vertices[0].y};
-            SDL_Point point1 = {(int) polygon.vertices[1].x, (int) polygon.vertices[1].y};
-            SDL_Point point2 = {(int) polygon.vertices[2].x, (int) polygon.vertices[2].y};
-
-            Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
-
-            if (selectedSceneRenderer == 1) {
-                renderer.drawFilledTriangle2D(triangleOnScreen, polygon.color);
-            } else {
-                renderer.drawTriangle2D(triangleOnScreen, polygon.color);
-            }
+            renderer.drawFilledScreenPolygon_Z(polygon);
         }
+//        sort(polygonsToRaster.begin(), polygonsToRaster.end(), [](Polygon &p0, Polygon &p1) {
+//            float z0 = (p0.vertices[0].z + p0.vertices[1].z + p0.vertices[2].z) / 3.0f;
+//            float z1 = (p1.vertices[0].z + p1.vertices[1].z + p1.vertices[2].z) / 3.0f;
+//            return z0 > z1;
+//        });
+
+//        for (Polygon &polygon: polygonsToRaster) {
+//            SDL_Point point0 = {(int) polygon.vertices[0].x, (int) polygon.vertices[0].y};
+//            SDL_Point point1 = {(int) polygon.vertices[1].x, (int) polygon.vertices[1].y};
+//            SDL_Point point2 = {(int) polygon.vertices[2].x, (int) polygon.vertices[2].y};
+//
+//            Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
+//
+//            if (selectedSceneRenderer == 1) {
+//                renderer.drawFilledTriangle2D(triangleOnScreen, polygon.color);
+//            } else {
+//                renderer.drawTriangle2D(triangleOnScreen, polygon.color);
+//            }
+//        }
     }
 
     void renderSceneL1() {
@@ -356,11 +359,7 @@ private:
                             selectedSceneRenderer = 0;
                             break;
                         case SDL_SCANCODE_2:
-                            if (selectedSceneRenderer != 1) {
-                                selectedSceneRenderer = 1;
-                            } else {
-                                selectedSceneRenderer = 2;
-                            }
+                            selectedSceneRenderer = 1;
                             break;
                     }
                 }
@@ -371,10 +370,8 @@ private:
 
             // Updates properties of the screen
             // Gets real size of the window (fix for macOS/resizing)
-            renderer.updateScreenRect();
-
-            //Background (Clears with color)
-            renderer.clear({0, 0, 0, 255});
+            // + Background (Clears with color)
+            renderer.updateScreen({0, 0, 0, 255});
 
             switch (selectedSceneRenderer) {
                 case 0:

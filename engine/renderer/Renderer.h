@@ -6,12 +6,229 @@
 #define TAMARA_3D_RENDERER_H
 
 #include <SDL2/SDL.h>
+
+#include <cmath>
 #include "../utils/Color.h"
 
 class Renderer {
 private:
     SDL_Renderer *renderer = nullptr;
     SDL_Rect screenRect = {0, 0, 0, 0};
+    std::vector<std::vector<float>> zBuffer = std::vector<std::vector<float>>(0, std::vector<float>(0));
+
+    void drawPoint_Z(int x, int y, float zf) {
+        SDL_Point point = {x, y};
+        if (SDL_PointInRect(&point, &screenRect)) {
+            if (zf < zBuffer[y][x]) {
+                SDL_RenderDrawPoint(renderer, x, y);
+                zBuffer[y][x] = zf;
+            }
+        }
+    }
+
+    void drawLine_Z(Vector3 v0, Vector3 v1, Color color) {
+        SDL_Point p0 = {(int) v0.x, (int) v0.y};
+        SDL_Point p1 = {(int) v1.x, (int) v1.y};
+
+        if (!SDL_IntersectRectAndLine(&screenRect, &p0.x, &p0.y, &p1.x, &p1.y)) {
+            return;
+        }
+
+        SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
+
+        int x0 = p0.x;
+        int y0 = p0.y;
+        int x1 = p1.x;
+        int y1 = p1.y;
+
+        int dx = abs(x1 - x0);
+        int sx = x0 < x1 ? 1 : -1;
+
+        int dy = -abs(y1 - y0);
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;  /* error value e_xy */
+        while (true) {
+            drawPoint_Z(x0, y0, Vector3::getLineZ(v0, v1, (float) x0));
+            if (x0 == x1 && y0 == y1) {
+                break;
+            }
+            int e2 = 2 * err;
+            if (e2 >= dy) { /* e_xy+e_x > 0 */
+                err += dy;
+                x0 += sx;
+            }
+            if (e2 <= dx) { /* e_xy+e_y < 0 */
+                err += dx;
+                y0 += sy;
+            }
+        }
+
+
+//        SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
+//
+//        float x1 = v0.x;
+//        float y1 = v0.y;
+//        float z1 = v0.z;
+//        float x2 = v1.x;
+//        float y2 = v1.y;
+//        float z2 = v1.z;
+//
+//        float i, dx, dy, dz, l, m, n, x_inc, y_inc, z_inc, err_1, err_2, dx2, dy2, dz2;
+//        float di = 1;
+//        float point[3];
+//
+//        point[0] = x1;
+//        point[1] = y1;
+//        point[2] = z1;
+//        dx = x2 - x1;
+//        dy = y2 - y1;
+//        dz = z2 - z1;
+//        x_inc = (dx < 0) ? -1 : 1;
+//        l = abs(dx);
+//        y_inc = (dy < 0) ? -1 : 1;
+//        m = abs(dy);
+//        z_inc = (dz < 0) ? -1 : 1;
+//        n = abs(dz);
+//        dx2 = l * 2;
+//        dy2 = m * 2;
+//        dz2 = n * 2;
+//
+//        if ((l >= m) && (l >= n)) {
+//            err_1 = dy2 - l;
+//            err_2 = dz2 - l;
+//
+//            i = 0;
+//            while (i < l) {
+//                drawPoint_Z(point[0], point[1], point[2]);
+//                if (err_1 > 0) {
+//                    point[1] += y_inc;
+//                    err_1 -= dx2;
+//                }
+//                if (err_2 > 0) {
+//                    point[2] += z_inc;
+//                    err_2 -= dx2;
+//                }
+//                err_1 += dy2;
+//                err_2 += dz2;
+//                point[0] += x_inc;
+//
+//                i = i + di;
+//            }
+//        } else if ((m >= l) && (m >= n)) {
+//            err_1 = dx2 - m;
+//            err_2 = dz2 - m;
+//
+//            i = 0;
+//            while (i < m) {
+//                drawPoint_Z(point[0], point[1], point[2]);
+//                if (err_1 > 0) {
+//                    point[0] += x_inc;
+//                    err_1 -= dy2;
+//                }
+//                if (err_2 > 0) {
+//                    point[2] += z_inc;
+//                    err_2 -= dy2;
+//                }
+//                err_1 += dx2;
+//                err_2 += dz2;
+//                point[1] += y_inc;
+//
+//                i = i + di;
+//            }
+//        } else {
+//            err_1 = dy2 - n;
+//            err_2 = dx2 - n;
+//
+//            i = 0;
+//            while (i < n) {
+//                drawPoint_Z(point[0], point[1], point[2]);
+//                if (err_1 > 0) {
+//                    point[1] += y_inc;
+//                    err_1 -= dz2;
+//                }
+//                if (err_2 > 0) {
+//                    point[0] += x_inc;
+//                    err_2 -= dz2;
+//                }
+//                err_1 += dy2;
+//                err_2 += dx2;
+//                point[2] += z_inc;
+//
+//                i = i + di;
+//            }
+//        }
+//        drawPoint_Z(point[0], point[1], point[2]);
+    }
+
+    void drawTopFlatTriangle_Z(Vector3 *v, Color color) {
+        /*
+          0 ---------- 1
+            \	     /
+             \      /
+              \	   /
+               \  /
+                \/
+                 2
+        */
+        float dx0 = (v[0].x - v[2].x) / (v[2].y - v[0].y);
+        float dx1 = (v[1].x - v[2].x) / (v[2].y - v[1].y);
+
+        float dz0 = (v[0].z - v[2].z) / (v[2].y - v[0].y);
+        float dz1 = (v[1].z - v[2].z) / (v[2].y - v[1].y);
+
+        float xOffset0 = v[2].x;
+        float xOffset1 = v[2].x;
+
+        float zOffset0 = v[2].z;
+        float zOffset1 = v[2].z;
+
+        for (int scanlineY = (int) v[2].y; scanlineY >= (int) v[0].y; scanlineY--) {
+            drawLine_Z(
+                    {xOffset0, (float) scanlineY, zOffset0},
+                    {xOffset1, (float) scanlineY, zOffset1},
+                    color
+            );
+            xOffset0 += dx0;
+            xOffset1 += dx1;
+            zOffset0 += dz0;
+            zOffset0 += dz1;
+        }
+    }
+
+    void drawBottomFlatTriangle_Z(Vector3 *v, Color color) {
+        /*
+                0
+                /\
+               /  \
+              /    \
+             /      \
+            /        \
+          1 ---------- 2
+        */
+        float dx0 = (float) (v[1].x - v[0].x) / (float) (v[1].y - v[0].y);
+        float dx1 = (float) (v[2].x - v[0].x) / (float) (v[2].y - v[0].y);
+
+        float dz0 = (float) (v[1].z - v[0].z) / (float) (v[1].y - v[0].y);
+        float dz1 = (float) (v[2].z - v[0].z) / (float) (v[2].y - v[0].y);
+
+        float xOffset0 = v[0].x;
+        float xOffset1 = v[0].x;
+
+        float zOffset0 = v[0].z;
+        float zOffset1 = v[0].z;
+
+        for (int scanlineY = (int) v[0].y; scanlineY <= (int) v[1].y; scanlineY++) {
+            drawLine_Z(
+                    {xOffset0, (float) scanlineY, zOffset0},
+                    {xOffset1, (float) scanlineY, zOffset1},
+                    color
+            );
+            xOffset0 += dx0;
+            xOffset1 += dx1;
+            zOffset0 += dz0;
+            zOffset0 += dz1;
+        }
+    }
 
     void drawLine(SDL_Point p0, SDL_Point p1, Color color) const {
         if (!SDL_IntersectRectAndLine(&screenRect, &p0.x, &p0.y, &p1.x, &p1.y)) {
@@ -47,53 +264,6 @@ private:
             }
         }
     }
-
-    void drawTopFlatTriangle(SDL_Point *v, Color color) const {
-        /*
-          0 ---------- 1
-            \	     /
-             \      /
-              \	   /
-               \  /
-                \/
-                 2
-        */
-        float dx0 = (float) (v[0].x - v[2].x) / (float) (v[2].y - v[0].y);
-        float dx1 = (float) (v[1].x - v[2].x) / (float) (v[2].y - v[1].y);
-
-        float xOffset0 = v[2].x;
-        float xOffset1 = v[2].x;
-
-        for (int scanlineY = v[2].y; scanlineY >= v[0].y; scanlineY--) {
-            drawLine({(int)xOffset0, scanlineY}, {(int)xOffset1, scanlineY}, color);
-            xOffset0 += dx0;
-            xOffset1 += dx1;
-        }
-    }
-
-    void drawBottomFlatTriangle(SDL_Point *v, Color color) {
-        /*
-                0
-                /\
-               /  \
-              /    \
-             /      \
-            /        \
-          1 ---------- 2
-        */
-        float dx0 = (float) (v[1].x - v[0].x) / (float) (v[1].y - v[0].y);
-        float dx1 = (float) (v[2].x - v[0].x) / (float) (v[2].y - v[0].y);
-
-        float xOffset0 = v[0].x;
-        float xOffset1 = v[0].x;
-
-        for (int scanlineY = v[0].y; scanlineY <= v[1].y; scanlineY++) {
-            drawLine({(int)xOffset0, scanlineY}, {(int)xOffset1, scanlineY}, color);
-            xOffset0 += dx0;
-            xOffset1 += dx1;
-        }
-    }
-
 public:
     explicit Renderer(SDL_Renderer *r) : renderer(r) {
 
@@ -103,17 +273,73 @@ public:
         return screenRect;
     }
 
-    float getAspectRatio() {
+    [[nodiscard]] float getAspectRatio() const {
         return (float) screenRect.h / (float) screenRect.w;
     }
 
-    void updateScreenRect() {
+    void updateScreen(Color color) {
         SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
-    }
+        zBuffer = std::vector<std::vector<float>>(screenRect.h, std::vector<float>(screenRect.w));
+        for (int i = 0; i < screenRect.h; ++i) {
+            std::fill(zBuffer[i].begin(), zBuffer[i].end(),2);
+        }
 
-    void clear(Color color) {
         SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
         SDL_RenderClear(renderer);
+    }
+
+    void drawFilledScreenPolygon_Z(Polygon screenPolygon) {
+        for (int i = 0; i < 3; ++i) {
+            screenPolygon.vertices[i].x = std::floor(screenPolygon.vertices[i].x);
+            screenPolygon.vertices[i].y = std::floor(screenPolygon.vertices[i].y);
+        }
+
+        // vertices[0] need to have lowest y among points
+        if (!(screenPolygon.vertices[0].y == screenPolygon.vertices[1].y && screenPolygon.vertices[1].y == screenPolygon.vertices[2].y)) {
+            bool sorted = false;
+
+            while (!sorted) {
+                sorted = true;
+
+                for (int i = 0; i < 2; i++) {
+                    if (screenPolygon.vertices[i].y > screenPolygon.vertices[i + 1].y) {
+                        sorted = false;
+
+                        Vector3 buffPoint = screenPolygon.vertices[i];
+                        screenPolygon.vertices[i] = screenPolygon.vertices[i + 1];
+                        screenPolygon.vertices[i + 1] = buffPoint;
+                    }
+                }
+            }
+
+            if (screenPolygon.vertices[1].y == screenPolygon.vertices[2].y) {
+                drawBottomFlatTriangle_Z(screenPolygon.vertices.data(), screenPolygon.color);
+            } else if (screenPolygon.vertices[0].y == screenPolygon.vertices[1].y) {
+                drawTopFlatTriangle_Z(screenPolygon.vertices.data(), screenPolygon.color);
+            } else {
+                Vector3 splitPoint;
+                splitPoint.x = screenPolygon.vertices[0].x +
+                               ((screenPolygon.vertices[1].y - screenPolygon.vertices[0].y) / (screenPolygon.vertices[2].y - screenPolygon.vertices[0].y)) *
+                               (screenPolygon.vertices[2].x - screenPolygon.vertices[0].x);
+                splitPoint.y = screenPolygon.vertices[1].y;
+
+                float yd = (splitPoint.y - screenPolygon.vertices[0].y) / (screenPolygon.vertices[2].y - screenPolygon.vertices[0].y); // < 1
+                float zd = (screenPolygon.vertices[2].z - screenPolygon.vertices[0].z) * yd;
+                splitPoint.z = zd + screenPolygon.vertices[0].z;
+
+                Vector3 points[3];
+
+                points[0] = screenPolygon.vertices[0];
+                points[1] = screenPolygon.vertices[1];
+                points[2] = splitPoint;
+                drawBottomFlatTriangle_Z(points, screenPolygon.color);
+
+                points[0] = screenPolygon.vertices[1];
+                points[1] = splitPoint;
+                points[2] = screenPolygon.vertices[2];
+                drawTopFlatTriangle_Z(points, screenPolygon.color);
+            }
+        }
     }
 
     void drawTriangle2D(Triangle2D tr, Color color) {
@@ -122,46 +348,6 @@ public:
         drawLine(tr.points[2], tr.points[0], color);
     }
 
-    void drawFilledTriangle2D(Triangle2D tr, Color color) {
-        // Points are Integers
-        // p[0] need to have lowest y among points
-        if (!(tr.points[0].y == tr.points[1].y && tr.points[1].y == tr.points[2].y)) {
-            bool sorted = false;
-            while (!sorted) {
-                sorted = true;
-                for (int i = 0; i < 2; i++) {
-                    if (tr.points[i].y > tr.points[i + 1].y) {
-                        sorted = false;
-                        SDL_Point buffPoint = tr.points[i];
-                        tr.points[i] = tr.points[i + 1];
-                        tr.points[i + 1] = buffPoint;
-                    }
-                }
-            }
-
-            if (tr.points[1].y == tr.points[2].y) {
-                drawBottomFlatTriangle(tr.points, color);
-            } else if (tr.points[0].y == tr.points[1].y) {
-                drawTopFlatTriangle(tr.points, color);
-            } else {
-                SDL_Point splitPoint;
-                splitPoint.x = tr.points[0].x +
-                               ((float) (tr.points[1].y - tr.points[0].y) / (float) (tr.points[2].y - tr.points[0].y)) *
-                               (tr.points[2].x - tr.points[0].x);
-                splitPoint.y = tr.points[1].y;
-                SDL_Point points[3];
-                points[0] = tr.points[0];
-                points[1] = tr.points[1];
-                points[2] = splitPoint;
-                drawBottomFlatTriangle(points, color);
-                points[0] = tr.points[1];
-                points[1] = splitPoint;
-                points[2] = tr.points[2];
-                drawTopFlatTriangle(points, color);
-            }
-        }
-
-    }
 };
 
 

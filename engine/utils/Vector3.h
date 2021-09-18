@@ -137,6 +137,12 @@ public:
         Vector3 lineToIntersect = Vector3::mul(lineStartToEnd, t);
         return Vector3::add(lineStart, lineToIntersect);
     }
+
+    static float getLineZ(Vector3 linePoint0, Vector3 linePoint1, float targetX) {
+        Vector3 r = Vector3::sub(linePoint1, linePoint0);
+        float t = (targetX - linePoint0.x) / r.x;
+        return linePoint0.z + t * r.z;
+    }
 };
 
 
