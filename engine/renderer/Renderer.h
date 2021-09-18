@@ -18,7 +18,7 @@ private:
     void drawPoint_Z(int x, int y, float zf) {
         SDL_Point point = {x, y};
         if (SDL_PointInRect(&point, &screenRect)) {
-            if (zf <= zBuffer[y][x]) {
+            if (zf > 0 && zf < 1 && zf < zBuffer[y][x]) {
                 SDL_RenderDrawPoint(renderer, x, y);
                 zBuffer[y][x] = zf;
             }
@@ -216,11 +216,11 @@ private:
             v[i].y = std::floor(v[i].y);
         }
 
-        float dx0 = (float) (v[1].x - v[0].x) / (float) (v[1].y - v[0].y);
-        float dx1 = (float) (v[2].x - v[0].x) / (float) (v[2].y - v[0].y);
+        float dx0 = (v[1].x - v[0].x) / (v[1].y - v[0].y);
+        float dx1 = (v[2].x - v[0].x) / (v[2].y - v[0].y);
 
-        float dz0 = (float) (v[1].z - v[0].z) / (float) (v[1].y - v[0].y);
-        float dz1 = (float) (v[2].z - v[0].z) / (float) (v[2].y - v[0].y);
+        float dz0 = (v[1].z - v[0].z) / (v[1].y - v[0].y);
+        float dz1 = (v[2].z - v[0].z) / (v[2].y - v[0].y);
 
         float xOffset0 = v[0].x;
         float xOffset1 = v[0].x;

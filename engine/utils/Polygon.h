@@ -64,13 +64,6 @@ public:
         return false;
     }
 
-    void floorXY() {
-        for (int i = 0; i < 3; i++) {
-            vertices[i].x = std::floor(vertices[i].x);
-            vertices[i].y = std::floor(vertices[i].y);
-        }
-    }
-
 //    static int clipAgainstPlane(Vector3 plane_p, Vector3 plane_n, Polygon &in_tri, Polygon &out_tri1, Polygon &out_tri2)
 //    {
 //        // Make sure plane normal is indeed normal

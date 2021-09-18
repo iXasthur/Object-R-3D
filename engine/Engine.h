@@ -190,6 +190,7 @@ private:
         for (Polygon &polygon: polygonsToRaster) {
             renderer.drawFilledScreenPolygon_Z(polygon);
         }
+
 //        sort(polygonsToRaster.begin(), polygonsToRaster.end(), [](Polygon &p0, Polygon &p1) {
 //            float z0 = (p0.vertices[0].z + p0.vertices[1].z + p0.vertices[2].z) / 3.0f;
 //            float z1 = (p1.vertices[0].z + p1.vertices[1].z + p1.vertices[2].z) / 3.0f;
