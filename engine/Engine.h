@@ -107,11 +107,9 @@ private:
             Vector3 normal = polygon.getNormal();
             normal = Vector3::normalize(normal);
 
-            Vector3 translatedV0 = Matrix4::multiplyVector(polygon.vertices[0], moveMatrix);
-            Vector3 translatedV1 = Matrix4::multiplyVector(polygon.vertices[1], moveMatrix);
-            Vector3 translatedV2 = Matrix4::multiplyVector(polygon.vertices[2], moveMatrix);
+            Polygon translated = polygon.matrixMultiplied(moveMatrix);
 
-            Vector3 translatedCenter = translatedV0 + translatedV1 + translatedV2;
+            Vector3 translatedCenter = translated.vertices[0] + translated.vertices[1] + translated.vertices[2];
             translatedCenter = Vector3::div(translatedCenter, 3);
 
             Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
@@ -127,21 +125,14 @@ private:
                 Color color = polygon.color.exposed(dp);
 
                 // Apply camera transformations
-                Vector3 viewedV0 = Matrix4::multiplyVector(translatedV0, matCamView);
-                Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matCamView);
-                Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matCamView);
+                Polygon viewed = translated.matrixMultiplied(matCamView);
 
                 // -1 ... +1
-                Vector3 projectedV0 = Matrix4::multiplyVector(viewedV0, matProj);
-                Vector3 projectedV1 = Matrix4::multiplyVector(viewedV1, matProj);
-                Vector3 projectedV2 = Matrix4::multiplyVector(viewedV2, matProj);
+                Polygon projected = viewed.matrixMultiplied(matProj);
 
                 // Screen width and height coordinates with inverted Y
-                Vector3 screenV0 = Matrix4::multiplyVector(projectedV0, matScreen);
-                Vector3 screenV1 = Matrix4::multiplyVector(projectedV1, matScreen);
-                Vector3 screenV2 = Matrix4::multiplyVector(projectedV2, matScreen);
+                Polygon screenPolygon = projected.matrixMultiplied(matScreen);
 
-                Polygon screenPolygon = {screenV0, screenV1, screenV2};
                 screenPolygon.color = color;
                 polygonsToRaster.emplace_back(screenPolygon);
 
@@ -228,28 +219,20 @@ private:
 
             for (Polygon &polygon: obj.polygons) {
                 // Move in world
-                Vector3 translatedV0 = Matrix4::multiplyVector(polygon.vertices[0], moveMatrix);
-                Vector3 translatedV1 = Matrix4::multiplyVector(polygon.vertices[1], moveMatrix);
-                Vector3 translatedV2 = Matrix4::multiplyVector(polygon.vertices[2], moveMatrix);
+                Polygon translated = polygon.matrixMultiplied(moveMatrix);
 
                 // Apply camera transformations
-                Vector3 viewedV0 = Matrix4::multiplyVector(translatedV0, matCameraView);
-                Vector3 viewedV1 = Matrix4::multiplyVector(translatedV1, matCameraView);
-                Vector3 viewedV2 = Matrix4::multiplyVector(translatedV2, matCameraView);
+                Polygon viewed = translated.matrixMultiplied(matCameraView);
 
                 // -1 ... +1
-                Vector3 projectedV0 = Matrix4::multiplyVector(viewedV0, matProj);
-                Vector3 projectedV1 = Matrix4::multiplyVector(viewedV1, matProj);
-                Vector3 projectedV2 = Matrix4::multiplyVector(viewedV2, matProj);
+                Polygon projected = viewed.matrixMultiplied(matProj);
 
                 // Screen width and height coordinates with inverted Y
-                Vector3 screenV0 = Matrix4::multiplyVector(projectedV0, matScreen);
-                Vector3 screenV1 = Matrix4::multiplyVector(projectedV1, matScreen);
-                Vector3 screenV2 = Matrix4::multiplyVector(projectedV2, matScreen);
+                Polygon screen = projected.matrixMultiplied(matScreen);
 
-                SDL_Point point0 = {(int) screenV0.x, (int) screenV0.y};
-                SDL_Point point1 = {(int) screenV1.x, (int) screenV1.y};
-                SDL_Point point2 = {(int) screenV2.x, (int) screenV2.y};
+                SDL_Point point0 = {(int) screen.vertices[0].x, (int) screen.vertices[0].y};
+                SDL_Point point1 = {(int) screen.vertices[1].x, (int) screen.vertices[1].y};
+                SDL_Point point2 = {(int) screen.vertices[2].x, (int) screen.vertices[2].y};
 
                 Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
 

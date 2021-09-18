@@ -6,6 +6,7 @@
 #define TAMARA_3D_MATRIX4_H
 
 #include "Vector3.h"
+#include "../scene/camera/Camera.h"
 
 class Matrix4 {
 public:

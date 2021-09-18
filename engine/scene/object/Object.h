@@ -31,17 +31,17 @@ public:
         return vertices;
     }
 
-    std::vector<float> getNormals() {
-        std::vector<float> normals;
-        for (Polygon polygon : polygons) {
-            for (Vector3 normal : polygon.normals) {
-                for (float n : normal.toArray()) {
-                    normals.emplace_back(n);
-                }
-            }
-        }
-        return normals;
-    }
+//    std::vector<float> getNormals() {
+//        std::vector<float> normals;
+//        for (Polygon polygon : polygons) {
+//            for (Vector3 normal : polygon.normals) {
+//                for (float n : normal.toArray()) {
+//                    normals.emplace_back(n);
+//                }
+//            }
+//        }
+//        return normals;
+//    }
 
     void normalizePolygonVertices() {
         for (Polygon &polygon : polygons) {
