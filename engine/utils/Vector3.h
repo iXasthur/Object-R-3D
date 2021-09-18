@@ -138,10 +138,16 @@ public:
         return Vector3::add(lineStart, lineToIntersect);
     }
 
-    static float getLineZ(Vector3 linePoint0, Vector3 linePoint1, float targetX) {
+    static float getLineZtX(Vector3 linePoint0, Vector3 linePoint1, float targetX) {
         Vector3 r = Vector3::sub(linePoint1, linePoint0);
         float t = (targetX - linePoint0.x) / r.x;
         return linePoint0.z + t * r.z;
+    }
+
+    static float getLineXtY(Vector3 linePoint0, Vector3 linePoint1, float targetY) {
+        Vector3 r = Vector3::sub(linePoint1, linePoint0);
+        float t = (targetY - linePoint0.y) / r.y;
+        return linePoint0.x + t * r.x;
     }
 };
 

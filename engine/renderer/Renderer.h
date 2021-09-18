@@ -6,7 +6,6 @@
 #define TAMARA_3D_RENDERER_H
 
 #include <SDL2/SDL.h>
-
 #include <cmath>
 #include "../utils/Color.h"
 
@@ -19,7 +18,7 @@ private:
     void drawPoint_Z(int x, int y, float zf) {
         SDL_Point point = {x, y};
         if (SDL_PointInRect(&point, &screenRect)) {
-            if (zf < zBuffer[y][x]) {
+            if (zf <= zBuffer[y][x]) {
                 SDL_RenderDrawPoint(renderer, x, y);
                 zBuffer[y][x] = zf;
             }
@@ -48,7 +47,7 @@ private:
         int sy = y0 < y1 ? 1 : -1;
         int err = dx + dy;  /* error value e_xy */
         while (true) {
-            drawPoint_Z(x0, y0, Vector3::getLineZ(v0, v1, (float) x0));
+            drawPoint_Z(x0, y0, Vector3::getLineZtX(v0, v1, (float) x0));
             if (x0 == x1 && y0 == y1) {
                 break;
             }
@@ -160,7 +159,7 @@ private:
 //        drawPoint_Z(point[0], point[1], point[2]);
     }
 
-    void drawTopFlatTriangle_Z(Vector3 *v, Color color) {
+    void drawTopFlatTriangle_Z(std::array<Vector3, 3> v, Color color) {
         /*
           0 ---------- 1
             \	     /
@@ -170,6 +169,12 @@ private:
                 \/
                  2
         */
+
+        for (int i = 0; i < 3; i++) {
+            v[i].x = std::floor(v[i].x);
+            v[i].y = std::floor(v[i].y);
+        }
+
         float dx0 = (v[0].x - v[2].x) / (v[2].y - v[0].y);
         float dx1 = (v[1].x - v[2].x) / (v[2].y - v[1].y);
 
@@ -195,7 +200,7 @@ private:
         }
     }
 
-    void drawBottomFlatTriangle_Z(Vector3 *v, Color color) {
+    void drawBottomFlatTriangle_Z(std::array<Vector3, 3> v, Color color) {
         /*
                 0
                 /\
@@ -205,6 +210,12 @@ private:
             /        \
           1 ---------- 2
         */
+
+        for (int i = 0; i < 3; i++) {
+            v[i].x = std::floor(v[i].x);
+            v[i].y = std::floor(v[i].y);
+        }
+
         float dx0 = (float) (v[1].x - v[0].x) / (float) (v[1].y - v[0].y);
         float dx1 = (float) (v[2].x - v[0].x) / (float) (v[2].y - v[0].y);
 
@@ -289,56 +300,38 @@ public:
     }
 
     void drawFilledScreenPolygon_Z(Polygon screenPolygon) {
-        for (int i = 0; i < 3; ++i) {
-            screenPolygon.vertices[i].x = std::floor(screenPolygon.vertices[i].x);
-            screenPolygon.vertices[i].y = std::floor(screenPolygon.vertices[i].y);
+        if (screenPolygon.isFlat()) {
+            return;
         }
 
         // vertices[0] need to have lowest y among points
-        if (!(screenPolygon.vertices[0].y == screenPolygon.vertices[1].y && screenPolygon.vertices[1].y == screenPolygon.vertices[2].y)) {
-            bool sorted = false;
+        std::sort(screenPolygon.vertices.begin(), screenPolygon.vertices.end(), [](Vector3 &v0, Vector3 &v1) {
+            return v0.y < v1.y;
+        });
 
-            while (!sorted) {
-                sorted = true;
+        if (std::floor(screenPolygon.vertices[1].y) == std::floor(screenPolygon.vertices[2].y)) {
+            drawBottomFlatTriangle_Z(screenPolygon.vertices, screenPolygon.color);
 
-                for (int i = 0; i < 2; i++) {
-                    if (screenPolygon.vertices[i].y > screenPolygon.vertices[i + 1].y) {
-                        sorted = false;
+        } else if (std::floor(screenPolygon.vertices[0].y) == std::floor(screenPolygon.vertices[1].y)) {
+            drawTopFlatTriangle_Z(screenPolygon.vertices, screenPolygon.color);
 
-                        Vector3 buffPoint = screenPolygon.vertices[i];
-                        screenPolygon.vertices[i] = screenPolygon.vertices[i + 1];
-                        screenPolygon.vertices[i + 1] = buffPoint;
-                    }
-                }
-            }
+        } else {
+            Vector3 splitPoint;
+            splitPoint.y = screenPolygon.vertices[1].y;
+            splitPoint.x = Vector3::getLineXtY(screenPolygon.vertices[0], screenPolygon.vertices[2], splitPoint.y);
+            splitPoint.z = Vector3::getLineZtX(screenPolygon.vertices[0], screenPolygon.vertices[2], splitPoint.x);
 
-            if (screenPolygon.vertices[1].y == screenPolygon.vertices[2].y) {
-                drawBottomFlatTriangle_Z(screenPolygon.vertices.data(), screenPolygon.color);
-            } else if (screenPolygon.vertices[0].y == screenPolygon.vertices[1].y) {
-                drawTopFlatTriangle_Z(screenPolygon.vertices.data(), screenPolygon.color);
-            } else {
-                Vector3 splitPoint;
-                splitPoint.x = screenPolygon.vertices[0].x +
-                               ((screenPolygon.vertices[1].y - screenPolygon.vertices[0].y) / (screenPolygon.vertices[2].y - screenPolygon.vertices[0].y)) *
-                               (screenPolygon.vertices[2].x - screenPolygon.vertices[0].x);
-                splitPoint.y = screenPolygon.vertices[1].y;
+            std::array<Vector3, 3> points;
 
-                float yd = (splitPoint.y - screenPolygon.vertices[0].y) / (screenPolygon.vertices[2].y - screenPolygon.vertices[0].y); // < 1
-                float zd = (screenPolygon.vertices[2].z - screenPolygon.vertices[0].z) * yd;
-                splitPoint.z = zd + screenPolygon.vertices[0].z;
+            points[0] = screenPolygon.vertices[0];
+            points[1] = screenPolygon.vertices[1];
+            points[2] = splitPoint;
+            drawBottomFlatTriangle_Z(points, screenPolygon.color);
 
-                Vector3 points[3];
-
-                points[0] = screenPolygon.vertices[0];
-                points[1] = screenPolygon.vertices[1];
-                points[2] = splitPoint;
-                drawBottomFlatTriangle_Z(points, screenPolygon.color);
-
-                points[0] = screenPolygon.vertices[1];
-                points[1] = splitPoint;
-                points[2] = screenPolygon.vertices[2];
-                drawTopFlatTriangle_Z(points, screenPolygon.color);
-            }
+            points[0] = screenPolygon.vertices[1];
+            points[1] = splitPoint;
+            points[2] = screenPolygon.vertices[2];
+            drawTopFlatTriangle_Z(points, screenPolygon.color);
         }
     }
 

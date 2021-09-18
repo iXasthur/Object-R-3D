@@ -44,6 +44,33 @@ public:
         return Vector3::cross(a, b);
     }
 
+    [[nodiscard]] bool isFlat() const {
+        Polygon roundedPolygon = *this;
+        for (int i = 0; i < 3; i++) {
+            roundedPolygon.vertices[i].x = std::floor(roundedPolygon.vertices[i].x);
+            roundedPolygon.vertices[i].y = std::floor(roundedPolygon.vertices[i].y);
+        }
+
+        if (roundedPolygon.vertices[0].y == roundedPolygon.vertices[1].y &&
+            roundedPolygon.vertices[1].y == roundedPolygon.vertices[2].y) {
+            return true;
+        }
+
+        if (roundedPolygon.vertices[0].x == roundedPolygon.vertices[1].x &&
+            roundedPolygon.vertices[1].x == roundedPolygon.vertices[2].x) {
+            return true;
+        }
+
+        return false;
+    }
+
+    void floorXY() {
+        for (int i = 0; i < 3; i++) {
+            vertices[i].x = std::floor(vertices[i].x);
+            vertices[i].y = std::floor(vertices[i].y);
+        }
+    }
+
 //    static int clipAgainstPlane(Vector3 plane_p, Vector3 plane_n, Polygon &in_tri, Polygon &out_tri1, Polygon &out_tri2)
 //    {
 //        // Make sure plane normal is indeed normal
