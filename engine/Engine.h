@@ -362,7 +362,6 @@ private:
                     renderSceneL1();
                     break;
                 case 1:
-                case 2:
                     renderSceneL2();
                     break;
                 default:
