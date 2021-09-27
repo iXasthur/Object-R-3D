@@ -116,8 +116,11 @@ private:
 
             if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
                 // How similar is normal to light direction
-                float dp = normal.x * -scene.light.direction.x + normal.y * -scene.light.direction.y +
-                           normal.z * -scene.light.direction.z;
+                DirectionalLight light = scene.light;
+                light.direction = Vector3::normalize(light.direction);
+
+                float dp = normal.x * -light.direction.x + normal.y * -light.direction.y +
+                           normal.z * -light.direction.z;
                 if (dp < 0.1f) {
                     dp = 0.1f;
                 }
