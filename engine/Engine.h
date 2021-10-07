@@ -24,79 +24,72 @@ private:
 
     Scene scene = Scene();
 
-//    std::vector<Polygon> clipPolygonByCamera(Polygon &polygon) const {
-//        Polygon clipped[2];
-//        int nClippedTriangles = Polygon::clipAgainstPlane(
-//                { 0.0f, 0.0f, scene.camera.fNear },
-//                { 0.0f, 0.0f, 1.0f },
-//                polygon,
-//                clipped[0],
-//                clipped[1]
-//        );
-//
-//        std::vector<Polygon> v;
-//        for (int n = 0; n < nClippedTriangles; n++) {
-//            v.emplace_back(clipped[n]);
-//        }
-//
-//        return v;
-//    }
-//
-//    std::vector<Polygon> clipPolygonByScreen(Polygon &polygon) {
-//        Polygon clipped[2];
-//        std::list<Polygon> listTriangles;
-//
-//        // Add initial triangle
-//        listTriangles.push_back(polygon);
-//        unsigned long nNewTriangles = 1;
-//
-//        for (int p = 0; p < 4; p++) {
-//            int nTrisToAdd = 0;
-//            while (nNewTriangles > 0) {
-//                // Take triangle from front of queue
-//                Polygon test = listTriangles.front();
-//                listTriangles.pop_front();
-//                nNewTriangles--;
-//
-//                // Clip it against a plane. We only need to test each
-//                // subsequent plane, against subsequent new triangles
-//                // as all triangles after a plane clip are guaranteed
-//                // to lie on the inside of the plane. I like how this
-//                // comment is almost completely and utterly justified
-//                switch (p) {
-//                    case 0:
-//                        nTrisToAdd = Polygon::clipAgainstPlane({0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, test,
-//                                                               clipped[0], clipped[1]);
-//                        break;
-//                    case 1:
-//                        nTrisToAdd = Polygon::clipAgainstPlane({0.0f, (float) renderer.getScreenRect().h - 1.0f, 0.0f},
-//                                                               {0.0f, -1.0f, 0.0f}, test, clipped[0], clipped[1]);
-//                        break;
-//                    case 2:
-//                        nTrisToAdd = Polygon::clipAgainstPlane({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, test,
-//                                                               clipped[0], clipped[1]);
-//                        break;
-//                    case 3:
-//                        nTrisToAdd = Polygon::clipAgainstPlane({(float) renderer.getScreenRect().w - 1.0f, 0.0f, 0.0f},
-//                                                               {-1.0f, 0.0f, 0.0f}, test, clipped[0], clipped[1]);
-//                        break;
-//                }
-//
-//                // Clipping may yield a variable number of triangles, so
-//                // add these new ones to the back of the queue for subsequent
-//                // clipping against next planes
-//                for (int w = 0; w < nTrisToAdd; w++) {
-//                    listTriangles.push_back(clipped[w]);
-//                }
-//
-//            }
-//            nNewTriangles = listTriangles.size();
-//        }
-//
-//        std::vector<Polygon> v;
-//        v.insert(std::end(v), std::begin(listTriangles), std::end(listTriangles));
-//        return v;
-//    }
+    std::vector<Polygon> clipPolygonByCamera(Polygon &polygon) const {
+        return polygon.clipAgainstPlane(
+                { 0.0f, 0.0f, scene.camera.fNear },
+                { 0.0f, 0.0f, 1.0f }
+        );
+    }
+
+    std::vector<Polygon> clipPolygonByScreen(Polygon &polygon) {
+        std::list<Polygon> listTriangles;
+
+        // Add initial triangle
+        listTriangles.push_back(polygon);
+        unsigned long nNewTriangles = 1;
+
+        for (int p = 0; p < 4; p++) {
+            while (nNewTriangles > 0) {
+                std::vector<Polygon> clipped;
+
+                // Take triangle from front of queue
+                Polygon test = listTriangles.front();
+                listTriangles.pop_front();
+                nNewTriangles--;
+
+                // Clip it against a plane. We only need to test each
+                // subsequent plane, against subsequent new triangles
+                // as all triangles after a plane clip are guaranteed
+                // to lie on the inside of the plane. I like how this
+                // comment is almost completely and utterly justified
+                switch (p) {
+                    case 0:
+                        clipped = test.clipAgainstPlane(
+                                {0.0f, 0.0f, 0.0f},
+                                {0.0f, 1.0f, 0.0f});
+                        break;
+                    case 1:
+                        clipped = test.clipAgainstPlane(
+                                {0.0f, (float) renderer.getScreenRect().h - 1.0f, 0.0f},
+                                {0.0f, -1.0f, 0.0f});
+                        break;
+                    case 2:
+                        clipped = test.clipAgainstPlane(
+                                {0.0f, 0.0f, 0.0f},
+                                {1.0f, 0.0f, 0.0f});
+                        break;
+                    case 3:
+                        clipped = test.clipAgainstPlane(
+                                {(float) renderer.getScreenRect().w - 1.0f, 0.0f, 0.0f},
+                                {-1.0f, 0.0f, 0.0f});
+                        break;
+                }
+
+                // Clipping may yield a variable number of triangles, so
+                // add these new ones to the back of the queue for subsequent
+                // clipping against next planes
+                for (auto &w : clipped) {
+                    listTriangles.push_back(w);
+                }
+
+            }
+            nNewTriangles = listTriangles.size();
+        }
+
+        std::vector<Polygon> v;
+        v.insert(std::end(v), std::begin(listTriangles), std::end(listTriangles));
+        return v;
+    }
 
     std::vector<Polygon> createPolygonsToRaster(Object &obj, Matrix4 &matProj, Matrix4 &matCamView, Matrix4 &matScreen) {
         std::vector<Polygon> polygonsToRaster;
@@ -130,33 +123,18 @@ private:
                 // Apply camera transformations
                 Polygon viewed = translated.matrixMultiplied(matCamView);
 
-                // -1 ... +1
-                Polygon projected = viewed.matrixMultiplied(matProj);
+                for (auto &clippedViewed: clipPolygonByCamera(viewed)) {
+                    // -1 ... +1
+                    Polygon projected = clippedViewed.matrixMultiplied(matProj);
 
-                // Screen width and height coordinates with inverted Y
-                Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+                    // Screen width and height coordinates with inverted Y
+                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
 
-                screenPolygon.color = color;
-                polygonsToRaster.emplace_back(screenPolygon);
-
-//                Polygon viewedPolygon = {viewedV0, viewedV1, viewedV2};
-//                for (auto &clippedViewedPolygon: clipPolygonByCamera(viewedPolygon)) {
-//                    // -1 ... +1
-//                    Vector3 projectedV0 = Matrix4::multiplyVector(clippedViewedPolygon.vertices[0], matProj);
-//                    Vector3 projectedV1 = Matrix4::multiplyVector(clippedViewedPolygon.vertices[1], matProj);
-//                    Vector3 projectedV2 = Matrix4::multiplyVector(clippedViewedPolygon.vertices[2], matProj);
-//
-//                    // Screen width and height coordinates with inverted Y
-//                    Vector3 screenV0 = Matrix4::multiplyVector(projectedV0, matScreen);
-//                    Vector3 screenV1 = Matrix4::multiplyVector(projectedV1, matScreen);
-//                    Vector3 screenV2 = Matrix4::multiplyVector(projectedV2, matScreen);
-//
-//                    Polygon screenPolygon = {screenV0, screenV1, screenV2};
-//                    for (auto clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
-//                        clippedScreenPolygon.color = color;
-//                        polygonsToRaster.emplace_back(clippedScreenPolygon);
-//                    }
-//                }
+                    for (auto clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
+                        clippedScreenPolygon.color = color;
+                        polygonsToRaster.emplace_back(clippedScreenPolygon);
+                    }
+                }
 
             }
         }
@@ -174,7 +152,7 @@ private:
         Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
         Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
-        // Store triagles for rastering later
+        // Store triangles for rastering later
         std::vector<Polygon> polygonsToRaster;
         for (Object &obj: scene.objects) {
             auto polygons = createPolygonsToRaster(obj, matProj, matCameraView, matScreen);
@@ -185,25 +163,6 @@ private:
             renderer.drawFilledScreenPolygon_Z(polygon);
         }
 
-//        sort(polygonsToRaster.begin(), polygonsToRaster.end(), [](Polygon &p0, Polygon &p1) {
-//            float z0 = (p0.vertices[0].z + p0.vertices[1].z + p0.vertices[2].z) / 3.0f;
-//            float z1 = (p1.vertices[0].z + p1.vertices[1].z + p1.vertices[2].z) / 3.0f;
-//            return z0 > z1;
-//        });
-
-//        for (Polygon &polygon: polygonsToRaster) {
-//            SDL_Point point0 = {(int) polygon.vertices[0].x, (int) polygon.vertices[0].y};
-//            SDL_Point point1 = {(int) polygon.vertices[1].x, (int) polygon.vertices[1].y};
-//            SDL_Point point2 = {(int) polygon.vertices[2].x, (int) polygon.vertices[2].y};
-//
-//            Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
-//
-//            if (selectedSceneRenderer == 1) {
-//                renderer.drawFilledTriangle2D(triangleOnScreen, polygon.color);
-//            } else {
-//                renderer.drawTriangle2D(triangleOnScreen, polygon.color);
-//            }
-//        }
     }
 
     void renderSceneL1() {

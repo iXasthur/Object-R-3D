@@ -9,10 +9,14 @@
 #include "../../utils/EulerAngle.h"
 
 class Camera {
+private:
+    Vector3 iUpVector = {0, 1, 0};
+    Vector3 iTargetVector = {0, 0, 1};
+
 public:
     float fFOV = 90.0f;
     float fFar = 1000.0f;
-    float fNear = 0.1f;
+    float fNear = 0.5f;
 
     Vector3 position;
     EulerAngle eulerRotation;
@@ -20,6 +24,14 @@ public:
     Camera(Vector3 position, EulerAngle eulerRotation) {
         this->position = position;
         this->eulerRotation = eulerRotation;
+    }
+
+    Vector3 getInitialUpVector() {
+        return this->iUpVector;
+    }
+
+    Vector3 getInitialTargetVector() {
+        return this->iTargetVector;
     }
 };
 

@@ -144,8 +144,8 @@ public:
     }
 
     static Matrix4 makeCameraView(Camera camera) {
-        Vector3 upVector = {0, 1, 0};
-        Vector3 targetVector = {0, 0, 1};
+        Vector3 upVector = camera.getInitialUpVector();
+        Vector3 targetVector = camera.getInitialTargetVector();
 
         Matrix4 m1 = Matrix4::makeRotationX(camera.eulerRotation.x);
         Matrix4 m2 = Matrix4::makeRotationY(camera.eulerRotation.y);
