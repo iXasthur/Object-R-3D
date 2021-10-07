@@ -13,31 +13,29 @@
 class Polygon {
 public:
     std::array<Vector3, 3> vertices{};
-//    std::array<Vector3, 3> normals{};
+    std::array<Vector3, 3> normals{};
 
     Color color = Color(255, 255, 255, 255);
 
     explicit Polygon(std::array<Vector3, 3> vertices) {
         this->vertices = vertices;
-//        for (auto &normal : normals) {
-//            normal = getNormal();
-//        }
+        for (auto &normal : normals) {
+            normal = getNormal();
+        }
     }
 
     Polygon(Vector3 v0, Vector3 v1, Vector3 v2) {
         std::array<Vector3, 3> array = {v0, v1, v2};
         this->vertices = array;
-//        for (auto &normal : normals) {
-//            normal = getNormal();
-//        }
+        for (auto &normal : normals) {
+            normal = getNormal();
+        }
     }
 
     Polygon(std::array<Vector3, 3> vertices, std::array<Vector3, 3> normals) {
         this->vertices = vertices;
-//        this->normals = normals;
+        this->normals = normals;
     }
-
-//    Polygon() = default;
 
     Vector3 getNormal() {
         Vector3 a = vertices[0] - vertices[1];

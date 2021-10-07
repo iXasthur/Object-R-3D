@@ -15,8 +15,6 @@ public:
     std::vector<Polygon> polygons;
     std::string name;
 
-    Color color = Color(255, 255, 255, 255);
-
     Object() = default;
 
     std::vector<float> getVertices() {
@@ -30,18 +28,6 @@ public:
         }
         return vertices;
     }
-
-//    std::vector<float> getNormals() {
-//        std::vector<float> normals;
-//        for (Polygon polygon : polygons) {
-//            for (Vector3 normal : polygon.normals) {
-//                for (float n : normal.toArray()) {
-//                    normals.emplace_back(n);
-//                }
-//            }
-//        }
-//        return normals;
-//    }
 
     void normalizePolygonVertices() {
         for (Polygon &polygon : polygons) {
@@ -125,35 +111,6 @@ public:
         return {maxX - minX, maxY - minY, maxZ - minZ};
     }
 
-//    static Object createCube() {
-//        static int cube_c = 0;
-//
-//        Object cube = Object();
-//        cube.name = "cube-" + std::to_string(cube_c++);
-//        cube.position = Vector3();
-//        cube.polygons = {
-//                // SOUTH
-//                {{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}},
-//                {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-//                // EAST
-//                {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-//                {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}},
-//                // NORTH
-//                {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f}},
-//                {{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-//                // WEST
-//                {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
-//                {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
-//                // TOP
-//                {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}},
-//                {{0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 0.0f}},
-//                // BOTTOM
-//                {{1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
-//                {{1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-//        };
-//
-//        return cube;
-//    }
 };
 
 
