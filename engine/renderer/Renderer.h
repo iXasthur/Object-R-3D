@@ -18,7 +18,7 @@ private:
     void drawPoint(int x, int y, float zf) {
         SDL_Point point = {x, y};
         if (SDL_PointInRect(&point, &screenRect)) {
-            if (zf > 0 && zf < 1 && zf < zBuffer[y][x]) {
+            if (zf < zBuffer[y][x]) {
                 SDL_RenderDrawPoint(renderer, x, y);
                 zBuffer[y][x] = zf;
             }
