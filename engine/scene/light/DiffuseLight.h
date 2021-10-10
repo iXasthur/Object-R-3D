@@ -8,23 +8,21 @@
 #include "../../utils/Color.h"
 
 class DiffuseLight {
-//public:
-//    Vector3 position;
-//    float ratio;
-//    Color color;
-//
-//    DiffuseLight(const Vector3 &position, float ratio, const Color &color) : position(position), ratio(ratio), color(color) {
-//
-//    }
-//
-//    [[nodiscard]] Color getValue(Vector3 n) const {
-//        n = Vector3::normalize(n);
-//        float nl = Vector3::dotProduct(n, this->position);
-//        if (nl < 0) {
-//            nl = 0;
-//        }
-//        return color.exposed(ratio * nl);
-//    }
+public:
+    float ratio;
+    Color color;
+
+    DiffuseLight(float ratio, const Color &color) : ratio(ratio), color(color) {
+
+    }
+
+    [[nodiscard]] Color getPixelColor(const Vector3 &n, const Vector3 &pos) const {
+        float nl = Vector3::dotProduct(Vector3::normalize(n), pos);
+        if (nl < 0) {
+            nl = 0;
+        }
+        return color.exposedRGB(ratio * nl);
+    }
 };
 
 

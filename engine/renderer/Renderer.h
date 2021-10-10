@@ -15,25 +15,24 @@ private:
     SDL_Rect screenRect = {0, 0, 0, 0};
     std::vector<std::vector<float>> zBuffer = std::vector<std::vector<float>>(0, std::vector<float>(0));
 
-    void drawPoint(int x, int y, float zf) {
+    void drawPoint(int x, int y, float zf, const Color &color) {
         SDL_Point point = {x, y};
         if (SDL_PointInRect(&point, &screenRect)) {
             if (zf < zBuffer[y][x]) {
+                SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
                 SDL_RenderDrawPoint(renderer, x, y);
                 zBuffer[y][x] = zf;
             }
         }
     }
 
-    void drawLine(const Vector3 &v0, const Vector3 &v1, const Color &color) {
+    void drawLine(const Polygon &polygon, const Vector3 &v0, const Vector3 &v1, const Light &light, const Color &color) {
         SDL_Point p0 = {(int) v0.x, (int) v0.y};
         SDL_Point p1 = {(int) v1.x, (int) v1.y};
 
         if (!SDL_IntersectRectAndLine(&screenRect, &p0.x, &p0.y, &p1.x, &p1.y)) {
             return;
         }
-
-        SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
 
         int x0 = p0.x;
         int y0 = p0.y;
@@ -47,7 +46,14 @@ private:
         int sy = y0 < y1 ? 1 : -1;
         int err = dx + dy;  /* error value e_xy */
         while (true) {
-            drawPoint(x0, y0, Vector3::getLineZtX(v0, v1, (float) x0));
+            int x = x0;
+            int y = y0;
+            float zf = Vector3::getLineZtX(v0, v1, (float) x0);
+            Vector3 n = polygon.getInterpolatedNormal({(float) x, (float) y, zf});
+            Color c = light.getPixelColor(color, polygon.getInterpolatedNormal(n));
+
+            drawPoint(x, y, zf, c);
+
             if (x0 == x1 && y0 == y1) {
                 break;
             }
@@ -63,7 +69,16 @@ private:
         }
     }
 
-    void drawTopFlatTriangle(std::array<Vector3, 3> v, const Color &color) {
+    void drawTopFlatTriangle(Polygon polygon, const Light &light, const Color &color) {
+        int rc = 0;
+        while (std::floor(polygon.vertices[0].y) != std::floor(polygon.vertices[1].y)) {
+            if (rc > 2) {
+                return;
+            }
+            polygon = polygon.getRotatedClockwise();
+            rc++;
+        }
+
         /*
           0 ---------- 1
             \	     /
@@ -73,6 +88,8 @@ private:
                 \/
                  2
         */
+
+        std::array<Vector3, 3> v = polygon.vertices;
 
         for (int i = 0; i < 3; i++) {
             v[i].x = std::floor(v[i].x);
@@ -92,11 +109,11 @@ private:
         float zOffset1 = v[2].z;
 
         for (int scanlineY = (int) v[2].y; scanlineY >= (int) v[0].y; scanlineY--) {
-            drawLine(
-                    {xOffset0, (float) scanlineY, zOffset0},
-                    {xOffset1, (float) scanlineY, zOffset1},
-                    color
-            );
+            Vector3 v0 = {xOffset0, (float) scanlineY, zOffset0};
+            Vector3 v1 = {xOffset1, (float) scanlineY, zOffset1};
+
+            drawLine(polygon, v0, v1, light, color);
+
             xOffset0 += dx0;
             xOffset1 += dx1;
             zOffset0 += dz0;
@@ -104,7 +121,16 @@ private:
         }
     }
 
-    void drawBottomFlatTriangle(std::array<Vector3, 3> v, const Color &color) {
+    void drawBottomFlatTriangle(Polygon polygon, const Light &light, const Color &color) {
+        int rc = 0;
+        while (std::floor(polygon.vertices[1].y) != std::floor(polygon.vertices[2].y)) {
+            if (rc > 2) {
+                return;
+            }
+            polygon = polygon.getRotatedClockwise();
+            rc++;
+        }
+
         /*
                 0
                 /\
@@ -112,8 +138,10 @@ private:
               /    \
              /      \
             /        \
-          1 ---------- 2
+          2 ---------- 1
         */
+
+        std::array<Vector3, 3> v = polygon.vertices;
 
         for (int i = 0; i < 3; i++) {
             v[i].x = std::floor(v[i].x);
@@ -133,11 +161,11 @@ private:
         float zOffset1 = v[0].z;
 
         for (int scanlineY = (int) v[0].y; scanlineY <= (int) v[1].y; scanlineY++) {
-            drawLine(
-                    {xOffset0, (float) scanlineY, zOffset0},
-                    {xOffset1, (float) scanlineY, zOffset1},
-                    color
-            );
+            Vector3 v0 = {xOffset0, (float) scanlineY, zOffset0};
+            Vector3 v1 = {xOffset1, (float) scanlineY, zOffset1};
+
+            drawLine(polygon, v0, v1, light, color);
+
             xOffset0 += dx0;
             xOffset1 += dx1;
             zOffset0 += dz0;
@@ -169,48 +197,19 @@ public:
         SDL_RenderClear(renderer);
     }
 
-    void drawPolygon(const Polygon &polygon, const Color &color) {
+    void drawPolygon(const Polygon &polygon, const Light &light, const Color &color) {
         if (polygon.isFlat()) {
             return;
         }
 
-        std::array<Vector3, 3> vertices = polygon.vertices;
-        std::array<Vector3, 3> normals;
-
-        // vertices[0] need to have lowest y among points
-        std::sort(vertices.begin(), vertices.end(), [&](const Vector3 &v0, const Vector3 &v1) {
-            return v0.y < v1.y;
-        });
-
-        for (int i = 0; i < 3; ++i) {
-            normals[i] = polygon.getNormalByVertex(vertices[i]);
-        }
-
-        Polygon sortedPolygon = Polygon(vertices, normals);
-
-        if (std::floor(sortedPolygon.vertices[1].y) == std::floor(sortedPolygon.vertices[2].y)) {
-            drawBottomFlatTriangle(sortedPolygon.vertices, color);
-
-        } else if (std::floor(sortedPolygon.vertices[0].y) == std::floor(sortedPolygon.vertices[1].y)) {
-            drawTopFlatTriangle(sortedPolygon.vertices, color);
-
+        if (polygon.isBottomFlat()) {
+            drawBottomFlatTriangle(polygon, light, color);
+        } else if (polygon.isTopFlat()) {
+            drawTopFlatTriangle(polygon, light, color);
         } else {
-            Vector3 splitPoint;
-            splitPoint.y = sortedPolygon.vertices[1].y;
-            splitPoint.x = Vector3::getLineXtY(sortedPolygon.vertices[0], sortedPolygon.vertices[2], splitPoint.y);
-            splitPoint.z = Vector3::getLineZtX(sortedPolygon.vertices[0], sortedPolygon.vertices[2], splitPoint.x);
-
-            std::array<Vector3, 3> points;
-
-            points[0] = sortedPolygon.vertices[0];
-            points[1] = sortedPolygon.vertices[1];
-            points[2] = splitPoint;
-            drawBottomFlatTriangle(points, color);
-
-            points[0] = sortedPolygon.vertices[1];
-            points[1] = splitPoint;
-            points[2] = sortedPolygon.vertices[2];
-            drawTopFlatTriangle(points, color);
+            auto split = polygon.splitHorizontally();
+            drawTopFlatTriangle(split[0], light, color);
+            drawBottomFlatTriangle(split[1], light, color);
         }
     }
 

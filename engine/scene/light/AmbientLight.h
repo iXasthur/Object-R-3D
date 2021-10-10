@@ -14,8 +14,8 @@ public:
 
     AmbientLight(float ratio, const Color &color) : ratio(ratio), color(color) {}
 
-    [[nodiscard]] Color getValue() const {
-        return color.exposed(ratio);
+    [[nodiscard]] Color getPixelColor() const {
+        return color.exposedRGB(ratio);
     }
 };
 

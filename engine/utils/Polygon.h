@@ -35,6 +35,87 @@ public:
         this->normals = normals;
     }
 
+    [[nodiscard]] Polygon getSortedY() const {
+        Polygon polygon = *this;
+
+        int rc = 0;
+        while (rc < 3) {
+            if (polygon.vertices[1].y <= polygon.vertices[0].y && polygon.vertices[1].y >= polygon.vertices[2].y) {
+                return polygon;
+            }
+            if (polygon.vertices[1].y >= polygon.vertices[0].y && polygon.vertices[1].y <= polygon.vertices[2].y) {
+                return polygon;
+            }
+
+            polygon = polygon.getRotatedClockwise();
+            rc++;
+        }
+
+        throw std::invalid_argument("Unable to create Y sorted polygon");
+    }
+
+    // 0 is top
+    // 1 is bottom
+    [[nodiscard]] std::array<Polygon, 2> splitHorizontally() const {
+        Polygon ySorted = getSortedY();
+
+        Vector3 splitPointVertex;
+        Vector3 splitPointNormal;
+        splitPointVertex.y = ySorted.vertices[1].y;
+        splitPointVertex.x = Vector3::getLineXtY(ySorted.vertices[0], ySorted.vertices[2], splitPointVertex.y);
+        splitPointVertex.z = Vector3::getLineZtX(ySorted.vertices[0], ySorted.vertices[2], splitPointVertex.x);
+        splitPointNormal = getInterpolatedNormal(splitPointVertex);
+
+        std::array<Vector3, 3> vTop;
+        std::array<Vector3, 3> nTop;
+        std::array<Vector3, 3> vBottom;
+        std::array<Vector3, 3> nBottom;
+        if (ySorted.vertices[1].x < splitPointVertex.x) {
+            vBottom = {ySorted.vertices[1], ySorted.vertices[2], splitPointVertex};
+            nBottom = {ySorted.normals[1], ySorted.normals[2], splitPointNormal};
+            vTop = {ySorted.vertices[1], splitPointVertex, ySorted.vertices[0]};
+            nTop = {ySorted.normals[1], splitPointNormal, ySorted.normals[0]};
+        } else {
+            vBottom = {ySorted.vertices[0], ySorted.vertices[1], splitPointVertex};
+            nBottom = {ySorted.normals[0], ySorted.normals[1], splitPointNormal};
+            vTop = {ySorted.vertices[2], splitPointVertex, ySorted.vertices[1]};
+            nTop = {ySorted.normals[2], splitPointNormal, ySorted.normals[1]};
+        }
+
+        Polygon pTop = {vTop, nTop};
+        Polygon pBottom = {vBottom, nBottom};
+
+        return {pTop, pBottom};
+    }
+
+    [[nodiscard]] Polygon getRotatedClockwise() const {
+        std::array<Vector3, 3> v = {vertices[2], vertices[0], vertices[1]};
+        std::array<Vector3, 3> n = {normals[2], normals[0], normals[1]};
+        return {v, n};
+    }
+
+    [[nodiscard]] bool isBottomFlat() const {
+        std::array<Vector3, 3> vSorted = vertices;
+        std::sort(vSorted.begin(), vSorted.end(), [&](const Vector3 &v0, const Vector3 &v1) {
+            return v0.y < v1.y;
+        });
+
+        return std::floor(vSorted[1].y) == std::floor(vSorted[2].y);
+    }
+
+    [[nodiscard]] bool isTopFlat() const {
+        std::array<Vector3, 3> vSorted = vertices;
+        std::sort(vSorted.begin(), vSorted.end(), [&](const Vector3 &v0, const Vector3 &v1) {
+            return v0.y < v1.y;
+        });
+
+        return std::floor(vSorted[0].y) == std::floor(vSorted[1].y);
+    }
+
+    [[nodiscard]] Vector3 getInterpolatedNormal(const Vector3 &at) const {
+        return getNormal();
+    }
+
     [[nodiscard]] Vector3 getNormalByVertex(const Vector3 &vertex) const {
         for (int i = 0; i < 3; ++i) {
             if (Vector3::equals(vertices[i], vertex)) {
@@ -42,7 +123,7 @@ public:
             }
         }
 
-        throw std::invalid_argument( "Received invalid vertex" );
+        throw std::invalid_argument("Received invalid vertex");
     }
 
     [[nodiscard]] Vector3 getNormal() const {
@@ -144,9 +225,9 @@ public:
             };
 
             out.normals = {
-                    getNormalByVertex(*inside_points[0]),
-                    getNormalByVertex(*outside_points[0]),
-                    getNormalByVertex(*outside_points[1])
+                    getInterpolatedNormal(out.vertices[0]),
+                    getInterpolatedNormal(out.vertices[1]),
+                    getInterpolatedNormal(out.vertices[2]),
             };
 
             return {out}; // Return the newly formed single triangle
@@ -171,9 +252,9 @@ public:
             };
 
             out0.normals = {
-                    getNormalByVertex(*inside_points[0]),
-                    getNormalByVertex(*inside_points[1]),
-                    getNormalByVertex(*outside_points[0])
+                    getInterpolatedNormal(out0.vertices[0]),
+                    getInterpolatedNormal(out0.vertices[1]),
+                    getInterpolatedNormal(out0.vertices[2]),
             };
 
             // The second triangle is composed of one of he inside points, a
@@ -186,9 +267,9 @@ public:
             };
 
             out1.normals = {
-                    getNormalByVertex(*inside_points[1]),
-                    out0.normals[2],
-                    getNormalByVertex(*outside_points[0])
+                    getInterpolatedNormal(out1.vertices[0]),
+                    getInterpolatedNormal(out1.vertices[1]),
+                    getInterpolatedNormal(out1.vertices[2]),
             };
 
             return {out0, out1}; // Return two newly formed triangles which form a quad

@@ -105,7 +105,7 @@ private:
         return v;
     }
 
-    [[nodiscard]] std::vector<Polygon> createPolygonsToRaster(const Object &obj, const Matrix4 &matProj, const Matrix4 &matCamView, const Matrix4 &matScreen) const {
+    [[nodiscard]] std::vector<Polygon> createPolygonsToRaster(const Object &obj, const Matrix4 &matCamView, const Matrix4 &matProj, const Matrix4 &matScreen) const {
         std::vector<Polygon> polygonsToRaster;
 
         Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
@@ -153,14 +153,18 @@ private:
         Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
         Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
+        // TODO: Draw light object
+
         for (const Object &obj: scene.objects) {
-            std::vector<Polygon> polygons = createPolygonsToRaster(obj, matProj, matCameraView, matScreen);
+            std::vector<Polygon> polygons = createPolygonsToRaster(obj, matCameraView, matProj, matScreen);
             for (const Polygon &polygon: polygons) {
-                renderer.drawPolygon(polygon, obj.color);
+                Light light = scene.light;
+                light.position = Matrix4::multiplyVector(light.position, matCameraView);
+                light.position = Matrix4::multiplyVector(light.position, matProj);
+                light.position = Matrix4::multiplyVector(light.position, matScreen);
+                renderer.drawPolygon(polygon, light, obj.color);
             }
         }
-
-        // TODO: Draw light object
     }
 
     void processInputFast() {
@@ -328,7 +332,8 @@ public:
         for (const Object &obj : scene.objects) {
             s += obj.name + ", ";
         }
-        s += scene.camera.position.toString();
+        s += scene.camera.position.toString() + ", ";
+        s += "light_pos: " + scene.light.position.toString();
         return s;
     }
 };
