@@ -15,7 +15,7 @@ private:
 
 public:
     float fFOV = 90.0f;
-    float fFar = 1000.0f;
+    float fFar = 10.0f;
     float fNear = 1.0f;
 
     Vector3 position;
