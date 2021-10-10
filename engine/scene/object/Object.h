@@ -41,8 +41,11 @@ public:
             return;
         }
 
+        Vector3 dim = dimension();
+
         float lowestX = polygons[0].vertices[0].x;
         float lowestY = polygons[0].vertices[0].y;
+        float lowestZ = polygons[0].vertices[0].z;
 
         for (const Polygon &polygon : polygons) {
             for (const Vector3 &vertex : polygon.vertices) {
@@ -53,13 +56,18 @@ public:
                 if (vertex.x < lowestX) {
                     lowestX = vertex.x;
                 }
+
+                if (vertex.z < lowestZ) {
+                    lowestZ = vertex.z;
+                }
             }
         }
 
         for (Polygon &polygon : polygons) {
             for (Vector3 &vertex : polygon.vertices) {
-                vertex.y -= lowestY;
-                vertex.x -= lowestX;
+                vertex.x -= lowestX + dim.x / 2;
+                vertex.y -= lowestY + dim.y / 2;
+                vertex.z -= lowestZ + dim.z / 2;
             }
         }
     }
