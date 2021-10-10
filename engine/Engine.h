@@ -271,7 +271,7 @@ private:
             // Updates properties of the screen
             // Gets real size of the window (fix for macOS/resizing)
             // + Background (Clears with color)
-            renderer.updateScreen({24, 24, 24, 255});
+            renderer.updateScreen({20, 20, 20, 255});
 
             renderScene();
 

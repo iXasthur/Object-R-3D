@@ -15,7 +15,7 @@ public:
     std::vector<Polygon> polygons;
     std::string name;
 
-    Color color = Color(255, 255, 255, 255);
+    Color color = Color(0, 0, 0, 255);
 
     Object() = default;
 
