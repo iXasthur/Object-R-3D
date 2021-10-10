@@ -10,7 +10,6 @@
 #include <SDL2/SDL.h>
 #include "scene/Scene.h"
 #include "utils/Matrix4.h"
-#include "utils/Triangle2D.h"
 #include "renderer/Renderer.h"
 #include <cmath>
 #include <list>
@@ -20,18 +19,31 @@ private:
     SDL_Window *window = nullptr;
     Renderer renderer = Renderer(nullptr);
 
-    int selectedSceneRenderer = 0;
-
     Scene scene = Scene();
 
-    std::vector<Polygon> clipPolygonByCamera(Polygon &polygon) const {
-        return polygon.clipAgainstPlane(
+    [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
+        Vector3 target = scene.camera.getInitialTargetVector();
+
+        std::vector<Polygon> clippedNear = polygon.clipAgainstPlane(
                 { 0.0f, 0.0f, scene.camera.fNear },
-                { 0.0f, 0.0f, 1.0f }
+                {target.x, target.y, target.z}
         );
+
+        std::vector<Polygon> clippedFar;
+
+        for (const auto &p : clippedNear) {
+            std::vector<Polygon> clipped = polygon.clipAgainstPlane(
+                    { 0.0f, 0.0f, scene.camera.fFar },
+                    {target.x, target.y, -target.z}
+            );
+
+            clippedFar.insert(std::end(clippedFar), std::begin(clipped), std::end(clipped));
+        }
+
+        return clippedFar;
     }
 
-    std::vector<Polygon> clipPolygonByScreen(Polygon &polygon) {
+    [[nodiscard]] std::vector<Polygon> clipPolygonByScreen(const Polygon &polygon) const {
         std::list<Polygon> listTriangles;
 
         // Add initial triangle
@@ -73,6 +85,8 @@ private:
                                 {(float) renderer.getScreenRect().w - 1.0f, 0.0f, 0.0f},
                                 {-1.0f, 0.0f, 0.0f});
                         break;
+                    default:
+                        break;
                 }
 
                 // Clipping may yield a variable number of triangles, so
@@ -91,47 +105,34 @@ private:
         return v;
     }
 
-    std::vector<Polygon> createPolygonsToRaster(Object &obj, Matrix4 &matProj, Matrix4 &matCamView, Matrix4 &matScreen) {
+    [[nodiscard]] std::vector<Polygon> createPolygonsToRaster(const Object &obj, const Matrix4 &matProj, const Matrix4 &matCamView, const Matrix4 &matScreen) const {
         std::vector<Polygon> polygonsToRaster;
 
         Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
-        for (Polygon &polygon: obj.polygons) {
+        for (const Polygon &polygon: obj.polygons) {
             Vector3 normal = polygon.getNormal();
             normal = Vector3::normalize(normal);
 
             Polygon translated = polygon.matrixMultiplied(moveMatrix);
 
-            Vector3 translatedCenter = translated.vertices[0] + translated.vertices[1] + translated.vertices[2];
+            Vector3 translatedCenter = Vector3::add(Vector3::add(translated.vertices[0], translated.vertices[1]), translated.vertices[2]);
             translatedCenter = Vector3::div(translatedCenter, 3);
 
             Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 
             if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
-                // How similar is normal to light direction
-                DirectionalLight light = scene.light;
-                light.direction = Vector3::normalize(light.direction);
-
-                float dp = normal.x * -light.direction.x + normal.y * -light.direction.y +
-                           normal.z * -light.direction.z;
-                if (dp < 0.1f) {
-                    dp = 0.1f;
-                }
-
-                Color color = polygon.color.exposed(dp);
-
                 // Apply camera transformations
                 Polygon viewed = translated.matrixMultiplied(matCamView);
 
-                for (auto &clippedViewed: clipPolygonByCamera(viewed)) {
+                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
                     // -1 ... +1
                     Polygon projected = clippedViewed.matrixMultiplied(matProj);
 
                     // Screen width and height coordinates with inverted Y
                     Polygon screenPolygon = projected.matrixMultiplied(matScreen);
 
-                    for (auto clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
-                        clippedScreenPolygon.color = color;
+                    for (const auto &clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
                         polygonsToRaster.emplace_back(clippedScreenPolygon);
                     }
                 }
@@ -142,7 +143,7 @@ private:
         return polygonsToRaster;
     }
 
-    void renderSceneL2() {
+    void renderScene() {
         Matrix4 matProj = Matrix4::makeProjection(
                 scene.camera.fFOV,
                 renderer.getAspectRatio(),
@@ -152,55 +153,14 @@ private:
         Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
         Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
-        // Store triangles for rastering later
-        std::vector<Polygon> polygonsToRaster;
-        for (Object &obj: scene.objects) {
-            auto polygons = createPolygonsToRaster(obj, matProj, matCameraView, matScreen);
-            polygonsToRaster.insert(std::end(polygonsToRaster), std::begin(polygons), std::end(polygons));
-        }
-
-        for (Polygon &polygon: polygonsToRaster) {
-            renderer.drawFilledScreenPolygon_Z(polygon);
-        }
-
-    }
-
-    void renderSceneL1() {
-        Matrix4 matProj = Matrix4::makeProjection(
-                scene.camera.fFOV,
-                renderer.getAspectRatio(),
-                scene.camera.fNear,
-                scene.camera.fFar
-        );
-        Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
-        Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
-
-//        printf("Drawing %d objects to scene\n", scene.objects.size());
-        for (Object &obj: scene.objects) {
-            Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
-
-            for (Polygon &polygon: obj.polygons) {
-                // Move in world
-                Polygon translated = polygon.matrixMultiplied(moveMatrix);
-
-                // Apply camera transformations
-                Polygon viewed = translated.matrixMultiplied(matCameraView);
-
-                // -1 ... +1
-                Polygon projected = viewed.matrixMultiplied(matProj);
-
-                // Screen width and height coordinates with inverted Y
-                Polygon screen = projected.matrixMultiplied(matScreen);
-
-                SDL_Point point0 = {(int) screen.vertices[0].x, (int) screen.vertices[0].y};
-                SDL_Point point1 = {(int) screen.vertices[1].x, (int) screen.vertices[1].y};
-                SDL_Point point2 = {(int) screen.vertices[2].x, (int) screen.vertices[2].y};
-
-                Triangle2D triangleOnScreen = Triangle2D(point0, point1, point2);
-
-                renderer.drawTriangle2D(triangleOnScreen, polygon.color);
+        for (const Object &obj: scene.objects) {
+            std::vector<Polygon> polygons = createPolygonsToRaster(obj, matProj, matCameraView, matScreen);
+            for (const Polygon &polygon: polygons) {
+                renderer.drawPolygon(polygon, obj.color);
             }
         }
+
+        // TODO: Draw light object
     }
 
     void processInputFast() {
@@ -301,12 +261,6 @@ private:
                         case SDL_SCANCODE_R:
                             scene.resetCamera();
                             break;
-                        case SDL_SCANCODE_1:
-                            selectedSceneRenderer = 0;
-                            break;
-                        case SDL_SCANCODE_2:
-                            selectedSceneRenderer = 1;
-                            break;
                     }
                 }
             }
@@ -317,19 +271,9 @@ private:
             // Updates properties of the screen
             // Gets real size of the window (fix for macOS/resizing)
             // + Background (Clears with color)
-            renderer.updateScreen({0, 0, 0, 255});
+            renderer.updateScreen({24, 24, 24, 255});
 
-            switch (selectedSceneRenderer) {
-                case 0:
-                    renderSceneL1();
-                    break;
-                case 1:
-                    renderSceneL2();
-                    break;
-                default:
-                    printf("Invalid scene renderer was selected (%d)\n", selectedSceneRenderer);
-                    break;
-            }
+            renderScene();
 
             updateWindowTitle();
 
@@ -384,8 +328,7 @@ public:
         for (const Object &obj : scene.objects) {
             s += obj.name + ", ";
         }
-        s += scene.camera.position.toString() + ", ";
-        s += "renderer: " + std::to_string(selectedSceneRenderer);
+        s += scene.camera.position.toString();
         return s;
     }
 };

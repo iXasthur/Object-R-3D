@@ -15,29 +15,15 @@ public:
     std::vector<Polygon> polygons;
     std::string name;
 
+    Color color = Color(255, 255, 255, 255);
+
     Object() = default;
 
-    std::vector<float> getVertices() {
-        std::vector<float> vertices;
-        for (Polygon polygon : polygons) {
-            for (Vector3 vertex : polygon.vertices) {
-                for (float v : vertex.toArray()) {
-                    vertices.emplace_back(v);
-                }
-            }
-        }
-        return vertices;
-    }
-
-    void normalizePolygonVertices() {
-        for (Polygon &polygon : polygons) {
-            for (Vector3 &vertex : polygon.vertices) {
-                vertex.normalize();
-            }
-        }
-    }
-
     void resizeToHeight(float h) {
+        if (polygons.empty()) {
+            return;
+        }
+
         Vector3 dim = dimension();
         float delta = h / dim.y;
 
@@ -51,59 +37,63 @@ public:
     }
 
     void centerPolygonVertices() {
-        Vector3 lowestVertex;
+        if (polygons.empty()) {
+            return;
+        }
 
-        for (Polygon &polygon : polygons) {
-            for (Vector3 &vertex : polygon.vertices) {
-                if (vertex.y < lowestVertex.y) {
-                    lowestVertex = vertex;
+        float lowestX = polygons[0].vertices[0].x;
+        float lowestY = polygons[0].vertices[0].y;
+
+        for (const Polygon &polygon : polygons) {
+            for (const Vector3 &vertex : polygon.vertices) {
+                if (vertex.y < lowestY) {
+                    lowestY = vertex.y;
+                }
+
+                if (vertex.x < lowestX) {
+                    lowestX = vertex.x;
                 }
             }
         }
 
         for (Polygon &polygon : polygons) {
             for (Vector3 &vertex : polygon.vertices) {
-                vertex.y -= lowestVertex.y;
+                vertex.y -= lowestY;
+                vertex.x -= lowestX;
             }
         }
     }
 
-    Vector3 dimension() {
-        float minX = 0;
-        float maxX = 0;
-        float minY = 0;
-        float maxY = 0;
-        float minZ = 0;
-        float maxZ = 0;
+    [[nodiscard]] Vector3 dimension() const {
+        if (polygons.empty()) {
+            return {0, 0, 0};
+        }
 
-        if (!polygons.empty()) {
-            Vector3 fv = polygons.front().vertices.front();
-            minX = fv.x;
-            maxX = fv.x;
-            minY = fv.y;
-            maxY = fv.y;
-            minZ = fv.z;
-            maxZ = fv.z;
+        float minX = polygons[0].vertices[0].x;
+        float maxX = polygons[0].vertices[0].x;
+        float minY = polygons[0].vertices[0].y;
+        float maxY = polygons[0].vertices[0].y;
+        float minZ = polygons[0].vertices[0].z;
+        float maxZ = polygons[0].vertices[0].z;
 
-            for (Polygon polygon : polygons) {
-                for (Vector3 vertex : polygon.vertices) {
-                    if (vertex.x < minX) {
-                        minX = vertex.x;
-                    } else if (vertex.x > maxX) {
-                        maxX = vertex.x;
-                    }
+        for (const Polygon &polygon : polygons) {
+            for (const Vector3 &vertex : polygon.vertices) {
+                if (vertex.x < minX) {
+                    minX = vertex.x;
+                } else if (vertex.x > maxX) {
+                    maxX = vertex.x;
+                }
 
-                    if (vertex.y < minY) {
-                        minY = vertex.y;
-                    } else if (vertex.y > maxY) {
-                        maxY = vertex.y;
-                    }
+                if (vertex.y < minY) {
+                    minY = vertex.y;
+                } else if (vertex.y > maxY) {
+                    maxY = vertex.y;
+                }
 
-                    if (vertex.z < minZ) {
-                        minZ = vertex.z;
-                    } else if (vertex.z > maxZ) {
-                        maxZ = vertex.z;
-                    }
+                if (vertex.z < minZ) {
+                    minZ = vertex.z;
+                } else if (vertex.z > maxZ) {
+                    maxZ = vertex.z;
                 }
             }
         }

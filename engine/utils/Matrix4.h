@@ -17,7 +17,7 @@ public:
 
     // ---- 3D-GE LIB ----
 
-    static Vector3 multiplyVector(Vector3 &i, Matrix4 &m) {
+    static Vector3 multiplyVector(const Vector3 &i, const Matrix4 &m) {
         Vector3 o;
         o.x = i.x * m.m[0][0] + i.y * m.m[1][0] + i.z * m.m[2][0] + m.m[3][0];
         o.y = i.x * m.m[0][1] + i.y * m.m[1][1] + i.z * m.m[2][1] + m.m[3][1];
@@ -109,17 +109,6 @@ public:
     }
 
     static Matrix4 makeScreen(int screenWidth, int screenHeight) {
-//        // Mirror Y coordinate
-//        projected.y = -projectedV0.y;
-//
-//        // +0 ... +2
-//        projected.x += 1.0f;
-//        projected.y += 1.0f;
-//
-//        // Convert +0 ... +2 to screen width and height
-//        projected.x *= 0.5f * (float) screenRect.w;
-//        projected.y *= 0.5f * (float) screenRect.h;
-
         float fHalfWidth = (float) screenWidth * 0.5f;
         float fHalfHeight = (float) screenHeight * 0.5f;
 
@@ -133,7 +122,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 multiplyMatrix(Matrix4 &m1, Matrix4 &m2) {
+    static Matrix4 multiplyMatrix(const Matrix4 &m1, const Matrix4 &m2) {
         Matrix4 matrix;
         for (int c = 0; c < 4; c++) {
             for (int r = 0; r < 4; r++) {
@@ -143,7 +132,7 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeCameraView(Camera camera) {
+    static Matrix4 makeCameraView(const Camera &camera) {
         Vector3 upVector = camera.getInitialUpVector();
         Vector3 targetVector = camera.getInitialTargetVector();
 
@@ -152,7 +141,9 @@ public:
         Matrix4 matCameraRot = Matrix4::multiplyMatrix(m1, m2);
         Vector3 lookDirection = Matrix4::multiplyVector(targetVector, matCameraRot);
         targetVector = Vector3::add(camera.position, lookDirection);
-        Matrix4 matCamera = Matrix4::pointAt(camera.position, targetVector, upVector);
+
+        Vector3 pos = camera.position;
+        Matrix4 matCamera = Matrix4::pointAt(pos, targetVector, upVector);
 
         // Quick inverse
         Matrix4 matView;
@@ -166,7 +157,7 @@ public:
         return matView;
     }
 
-    static Matrix4 pointAt(Vector3 &pos, Vector3 &target, Vector3 &up) {
+    static Matrix4 pointAt(const Vector3 &pos, const Vector3 &target, const Vector3 &up) {
         // Calculate new forward direction
         Vector3 newForward = Vector3::sub(target, pos);
         newForward = Vector3::normalize(newForward);

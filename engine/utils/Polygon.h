@@ -11,31 +11,18 @@
 #include "Matrix4.h"
 
 class Polygon {
-private:
-    Vector3 getNormalByVertex(Vector3 &vertex) {
-        for (int i = 0; i < 3; ++i) {
-            if (Vector3::equals(vertices[i], vertex)) {
-                return normals[i];
-            }
-        }
-
-        return {0, 1, 0};
-    }
-
 public:
     std::array<Vector3, 3> vertices{};
     std::array<Vector3, 3> normals{};
 
-    Color color = Color(255, 255, 255, 255);
-
-    explicit Polygon(std::array<Vector3, 3> vertices) {
+    explicit Polygon(const std::array<Vector3, 3> &vertices) {
         this->vertices = vertices;
         for (auto &normal : normals) {
             normal = getNormal();
         }
     }
 
-    Polygon(Vector3 v0, Vector3 v1, Vector3 v2) {
+    Polygon(const Vector3 &v0, const Vector3 &v1, const Vector3 &v2) {
         std::array<Vector3, 3> array = {v0, v1, v2};
         this->vertices = array;
         for (auto &normal : normals) {
@@ -43,18 +30,28 @@ public:
         }
     }
 
-    Polygon(std::array<Vector3, 3> vertices, std::array<Vector3, 3> normals) {
+    Polygon(const std::array<Vector3, 3> &vertices, const std::array<Vector3, 3> &normals) {
         this->vertices = vertices;
         this->normals = normals;
     }
 
-    Vector3 getNormal() {
-        Vector3 a = vertices[0] - vertices[1];
-        Vector3 b = vertices[0] - vertices[2];
-        return Vector3::cross(a, b);
+    [[nodiscard]] Vector3 getNormalByVertex(const Vector3 &vertex) const {
+        for (int i = 0; i < 3; ++i) {
+            if (Vector3::equals(vertices[i], vertex)) {
+                return normals[i];
+            }
+        }
+
+        throw std::invalid_argument( "Received invalid vertex" );
     }
 
-    Polygon matrixMultiplied(Matrix4 &mx) {
+    [[nodiscard]] Vector3 getNormal() const {
+        Vector3 a = Vector3::sub(vertices[0], vertices[1]);
+        Vector3 b = Vector3::sub(vertices[0], vertices[2]);
+        return Vector3::crossProduct(a, b);
+    }
+
+    [[nodiscard]] Polygon matrixMultiplied(const Matrix4 &mx) const {
         return {
             Matrix4::multiplyVector(vertices[0], mx),
             Matrix4::multiplyVector(vertices[1], mx),
@@ -64,6 +61,7 @@ public:
 
     [[nodiscard]] bool isFlat() const {
         Polygon roundedPolygon = *this;
+
         for (int i = 0; i < 3; i++) {
             roundedPolygon.vertices[i].x = std::floor(roundedPolygon.vertices[i].x);
             roundedPolygon.vertices[i].y = std::floor(roundedPolygon.vertices[i].y);
@@ -82,20 +80,20 @@ public:
         return false;
     }
 
-    std::vector<Polygon> clipAgainstPlane(Vector3 plane_p, Vector3 plane_n) {
+    [[nodiscard]] std::vector<Polygon> clipAgainstPlane(const Vector3 &plane_p, const Vector3 &plane_n) const {
         // Make sure plane normal is indeed normal
-        plane_n = Vector3::normalize(plane_n);
+        Vector3 pn = Vector3::normalize(plane_n);
 
         // Return signed shortest distance from point to plane, plane normal must be normalised
-        auto dist = [&](Vector3 &p)
+        auto dist = [&](const Vector3 &p)
         {
-            return (plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - Vector3::dotProduct(plane_n, plane_p));
+            return (pn.x * p.x + pn.y * p.y + pn.z * p.z - Vector3::dotProduct(pn, plane_p));
         };
 
         // Create two temporary storage arrays to classify points either side of plane
         // If distance sign is positive, point lies on "inside" of plane
-        Vector3 *inside_points[3];  int nInsidePointCount = 0;
-        Vector3 *outside_points[3]; int nOutsidePointCount = 0;
+        const Vector3 *inside_points[3];  int nInsidePointCount = 0;
+        const Vector3 *outside_points[3]; int nOutsidePointCount = 0;
 
         // Get signed distance of each point in triangle to plane
         float d0 = dist(this->vertices[0]);
@@ -141,8 +139,8 @@ public:
                     *inside_points[0],
                     // but the two new points are at the locations where the
                     // original sides of the triangle (lines) intersect with the plane
-                    Vector3::intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[0]),
-                    Vector3::intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[1])
+                    Vector3::intersectPlane(plane_p, pn, *inside_points[0], *outside_points[0]),
+                    Vector3::intersectPlane(plane_p, pn, *inside_points[0], *outside_points[1])
             };
 
             out.normals = {
@@ -169,7 +167,7 @@ public:
             out0.vertices = {
                     *inside_points[0],
                     *inside_points[1],
-                    Vector3::intersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[0])
+                    Vector3::intersectPlane(plane_p, pn, *inside_points[0], *outside_points[0])
             };
 
             out0.normals = {
@@ -184,7 +182,7 @@ public:
             out1.vertices = {
                     *inside_points[1],
                     out0.vertices[2],
-                    Vector3::intersectPlane(plane_p, plane_n, *inside_points[1], *outside_points[0])
+                    Vector3::intersectPlane(plane_p, pn, *inside_points[1], *outside_points[0])
             };
 
             out1.normals = {

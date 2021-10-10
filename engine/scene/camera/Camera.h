@@ -21,16 +21,16 @@ public:
     Vector3 position;
     EulerAngle eulerRotation;
 
-    Camera(Vector3 position, EulerAngle eulerRotation) {
+    Camera(const Vector3 &position, const EulerAngle &eulerRotation) {
         this->position = position;
         this->eulerRotation = eulerRotation;
     }
 
-    Vector3 getInitialUpVector() {
+    [[nodiscard]] Vector3 getInitialUpVector() const {
         return this->iUpVector;
     }
 
-    Vector3 getInitialTargetVector() {
+    [[nodiscard]] Vector3 getInitialTargetVector() const {
         return this->iTargetVector;
     }
 };

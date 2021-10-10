@@ -22,35 +22,8 @@ public:
 
     }
 
-    Vector3 operator-(const Vector3 &b) const {
-        Vector3 vector;
-        vector.x = this->x - b.x;
-        vector.y = this->y - b.y;
-        vector.z = this->z - b.z;
-        return vector;
-    }
-
-    Vector3 operator+(const Vector3 &b) const {
-        Vector3 vector;
-        vector.x = this->x + b.x;
-        vector.y = this->y + b.y;
-        vector.z = this->z + b.z;
-        return vector;
-    }
-
     std::array<float, 3> toArray() {
         return {x, y, z};
-    }
-
-    [[nodiscard]] float length() const {
-        return std::sqrt((x * x) + (y * y) + (z * z));
-    }
-
-    void normalize() {
-        float length = this->length();
-        x = x / length;
-        y = y / length;
-        z = z / length;
     }
 
     [[nodiscard]] std::string toString() const {
@@ -69,56 +42,46 @@ public:
         return s;
     }
 
-    static Vector3 cross(Vector3 v1, Vector3 v2) {
-        Vector3 v;
-        v.x = v1.y * v2.z - v1.z * v2.y;
-        v.y = v1.z * v2.x - v1.x * v2.z;
-        v.z = v1.x * v2.y - v1.y * v2.x;
-        return v;
-    }
-
 
     // ---- 3D-GE LIB ----
 
-    static Vector3 add(Vector3 &v1, Vector3 &v2) {
+    static Vector3 add(const Vector3 &v1, const Vector3 &v2) {
         return { v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
     }
 
-    static Vector3 sub(Vector3 &v1, Vector3 &v2) {
+    static Vector3 sub(const Vector3 &v1, const Vector3 &v2) {
         return { v1.x - v2.x, v1.y - v2.y, v1.z - v2.z };
     }
 
-    static Vector3 mul(Vector3 &v1, float k) {
+    static Vector3 mul(const Vector3 &v1, float k) {
         return { v1.x * k, v1.y * k, v1.z * k };
     }
 
-    static Vector3 div(Vector3 &v1, float k) {
+    static Vector3 div(const Vector3 &v1, float k) {
         return { v1.x / k, v1.y / k, v1.z / k };
     }
 
-    static float dotProduct(Vector3 &v1, Vector3 &v2) {
+    static float dotProduct(const Vector3 &v1, const Vector3 &v2) {
         return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
     }
 
-    static float length(Vector3 &v)
-    {
+    static float length(const Vector3 &v) {
         return sqrtf(Vector3::dotProduct(v, v));
     }
 
-    static bool equals(Vector3 &v1, Vector3 &v2) {
+    static bool equals(const Vector3 &v1, const Vector3 &v2) {
         if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z){
             return true;
         }
         return false;
     }
 
-    static Vector3 normalize(Vector3 &v) {
+    static Vector3 normalize(const Vector3 &v) {
         float l = Vector3::length(v);
         return { v.x / l, v.y / l, v.z / l };
     }
 
-    static Vector3 crossProduct(Vector3 &v1, Vector3 &v2)
-    {
+    static Vector3 crossProduct(const Vector3 &v1, const Vector3 &v2) {
         Vector3 v;
         v.x = v1.y * v2.z - v1.z * v2.y;
         v.y = v1.z * v2.x - v1.x * v2.z;
@@ -126,25 +89,24 @@ public:
         return v;
     }
 
-    static Vector3 intersectPlane(Vector3 &plane_p, Vector3 &plane_n, Vector3 &lineStart, Vector3 &lineEnd)
-    {
-        plane_n = Vector3::normalize(plane_n);
-        float plane_d = -Vector3::dotProduct(plane_n, plane_p);
-        float ad = Vector3::dotProduct(lineStart, plane_n);
-        float bd = Vector3::dotProduct(lineEnd, plane_n);
+    static Vector3 intersectPlane(const Vector3 &plane_p, const Vector3 &plane_n, const Vector3 &lineStart, const Vector3 &lineEnd) {
+        Vector3 pn = Vector3::normalize(plane_n);
+        float plane_d = -Vector3::dotProduct(pn, plane_p);
+        float ad = Vector3::dotProduct(lineStart, pn);
+        float bd = Vector3::dotProduct(lineEnd, pn);
         float t = (-plane_d - ad) / (bd - ad);
         Vector3 lineStartToEnd = Vector3::sub(lineEnd, lineStart);
         Vector3 lineToIntersect = Vector3::mul(lineStartToEnd, t);
         return Vector3::add(lineStart, lineToIntersect);
     }
 
-    static float getLineZtX(Vector3 linePoint0, Vector3 linePoint1, float targetX) {
+    static float getLineZtX(const Vector3 &linePoint0, const Vector3 &linePoint1, float targetX) {
         Vector3 r = Vector3::sub(linePoint1, linePoint0);
         float t = (targetX - linePoint0.x) / r.x;
         return linePoint0.z + t * r.z;
     }
 
-    static float getLineXtY(Vector3 linePoint0, Vector3 linePoint1, float targetY) {
+    static float getLineXtY(const Vector3 &linePoint0, const Vector3 &linePoint1, float targetY) {
         Vector3 r = Vector3::sub(linePoint1, linePoint0);
         float t = (targetY - linePoint0.y) / r.y;
         return linePoint0.x + t * r.x;

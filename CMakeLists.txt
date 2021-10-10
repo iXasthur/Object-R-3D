@@ -26,11 +26,9 @@ add_executable(
         engine/utils/Color.h
         engine/utils/EulerAngle.h
         engine/scene/object/ObjectLoader.h
-        engine/scene/light/DirectionalLight.h
         engine/utils/Matrix4.h
-        engine/utils/Triangle2D.h
         engine/renderer/Renderer.h
-)
+        engine/scene/light/Light.h engine/scene/light/AmbientLight.h engine/scene/light/DiffuseLight.h engine/scene/light/SpecularLight.h)
 
 if(WIN32) # Windows
     target_link_libraries(${PROJECT_NAME} ${SDL2_LIB_DIR}/libSDL2.dll.a ${SDL2_LIB_DIR}/libSDL2main.a)

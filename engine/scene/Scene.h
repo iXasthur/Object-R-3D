@@ -9,7 +9,7 @@
 #include <array>
 #include <cstdlib>
 #include "./object/Object.h"
-#include "./light/DirectionalLight.h"
+#include "./light/Light.h"
 #include "./camera/Camera.h"
 #include "../utils/Color.h"
 #include "./object/ObjectLoader.h"
@@ -17,8 +17,12 @@
 class Scene {
 public:
     std::vector<Object> objects{};
-    Camera camera = Camera({0 , 0, -5}, {0, 0, 0});
-    DirectionalLight light = DirectionalLight({1, 1, 1});
+    Camera camera = Camera({0, 0, 0}, {0, 0, 0});
+    Light light = Light(
+            {0.1f, {255,255,255, 255}},
+            {},
+            {}
+            );
 
     Scene() {
         std::string dir = "../objects/";
@@ -32,6 +36,8 @@ public:
             obj.resizeToHeight(2);
             add(obj);
         }
+
+        resetCamera();
     };
 
     void resetCamera() {
