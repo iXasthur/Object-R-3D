@@ -24,17 +24,14 @@ public:
         o.z = i.x * m.m[0][2] + i.y * m.m[1][2] + i.z * m.m[2][2] + m.m[3][2];
 
         float w = i.x * m.m[0][3] + i.y * m.m[1][3] + i.z * m.m[2][3] + m.m[3][3];
-        if (w != 0.0f)
-        {
+        if (w != 1.0f) {
+            if (w == 0.0f) {
+                std::cout << "w == 0" << std::endl;
+            }
+
             o.x /= w;
             o.y /= w;
             o.z /= w;
-        } else {
-            std::cout << "w == 0" << std::endl;
-
-            o.x = std::numeric_limits<float>::max();
-            o.y = std::numeric_limits<float>::max();
-            o.z = std::numeric_limits<float>::max();
         }
 
         return o;
@@ -53,8 +50,8 @@ public:
         Matrix4 matrix;
         matrix.m[0][0] = 1.0f;
         matrix.m[1][1] = cosf(fAngleRad);
-        matrix.m[1][2] = sinf(fAngleRad);
-        matrix.m[2][1] = -sinf(fAngleRad);
+        matrix.m[1][2] = -sinf(fAngleRad);
+        matrix.m[2][1] = sinf(fAngleRad);
         matrix.m[2][2] = cosf(fAngleRad);
         matrix.m[3][3] = 1.0f;
         return matrix;
@@ -64,8 +61,8 @@ public:
         Matrix4 matrix;
         matrix.m[0][0] = cosf(fAngleRad);
         matrix.m[0][2] = sinf(fAngleRad);
-        matrix.m[2][0] = -sinf(fAngleRad);
         matrix.m[1][1] = 1.0f;
+        matrix.m[2][0] = -sinf(fAngleRad);
         matrix.m[2][2] = cosf(fAngleRad);
         matrix.m[3][3] = 1.0f;
         return matrix;
@@ -74,8 +71,8 @@ public:
     static Matrix4 makeRotationZ(float fAngleRad) {
         Matrix4 matrix;
         matrix.m[0][0] = cosf(fAngleRad);
-        matrix.m[0][1] = sinf(fAngleRad);
-        matrix.m[1][0] = -sinf(fAngleRad);
+        matrix.m[0][1] = -sinf(fAngleRad);
+        matrix.m[1][0] = sinf(fAngleRad);
         matrix.m[1][1] = cosf(fAngleRad);
         matrix.m[2][2] = 1.0f;
         matrix.m[3][3] = 1.0f;
@@ -104,10 +101,12 @@ public:
     }
 
     static Matrix4 makeProjection(float fFovDegrees, float fAspectRatio, float fNear, float fFar) {
-        float fFovRad = 1.0f / tanf(fFovDegrees * 0.5f / 180.0f * 3.14159f);
+        float fFovRad = fFovDegrees / 180.0f * (float) M_PI;
+        float q = 1.0f / tanf(fFovRad / 2.0f);
+
         Matrix4 matrix;
-        matrix.m[0][0] = fAspectRatio * fFovRad;
-        matrix.m[1][1] = fFovRad;
+        matrix.m[0][0] = fAspectRatio * q;
+        matrix.m[1][1] = q;
         matrix.m[2][2] = fFar / (fFar - fNear);
         matrix.m[3][2] = (-fFar * fNear) / (fFar - fNear);
         matrix.m[2][3] = 1.0f;
@@ -124,8 +123,8 @@ public:
         matrix.m[1][1] = -fHalfHeight;
         matrix.m[2][2] = 1;
         matrix.m[3][3] = 1;
-        matrix.m[3][0] = -1.0f + fHalfWidth;
-        matrix.m[3][1] = -1.0f + fHalfHeight;
+        matrix.m[3][0] = fHalfWidth;
+        matrix.m[3][1] = fHalfHeight;
         return matrix;
     }
 
@@ -143,7 +142,7 @@ public:
         Vector3 upVector = camera.getInitialUpVector();
         Vector3 targetVector = camera.getInitialTargetVector();
 
-        Matrix4 m1 = Matrix4::makeRotationX(camera.eulerRotation.x);
+        Matrix4 m1 = Matrix4::makeRotationX(-camera.eulerRotation.x);
         Matrix4 m2 = Matrix4::makeRotationY(camera.eulerRotation.y);
         Matrix4 matCameraRot = Matrix4::multiplyMatrix(m1, m2);
         Vector3 lookDirection = Matrix4::multiplyVector(targetVector, matCameraRot);

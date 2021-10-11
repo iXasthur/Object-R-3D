@@ -242,7 +242,7 @@ private:
             }
         }
 
-//        printf("Camera direction: x:%f y:%f z:%f, ", scene.camera.direction.x, scene.camera.direction.y, scene.camera.direction.z);
+//        printf("Camera position: x:%f y:%f z:%f, ", scene.camera.position.x, scene.camera.position.y, scene.camera.position.z);
 //        printf("euler angle: x:%f y:%f z:%f, ", scene.camera.eulerRotation.x, scene.camera.eulerRotation.y, scene.camera.eulerRotation.z);
 //        printf("fov: %f\n", scene.camera.fFOV);
     }
