@@ -30,6 +30,8 @@ public:
             o.y /= w;
             o.z /= w;
         } else {
+            std::cout << "w == 0" << std::endl;
+
             o.x = std::numeric_limits<float>::max();
             o.y = std::numeric_limits<float>::max();
             o.z = std::numeric_limits<float>::max();

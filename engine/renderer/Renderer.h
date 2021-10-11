@@ -17,13 +17,16 @@ private:
 
     void drawPoint(int x, int y, float zf, const Color &color) {
         SDL_Point point = {x, y};
-        if (SDL_PointInRect(&point, &screenRect)) {
-            if (zf < zBuffer[y][x]) {
-                SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
-                SDL_RenderDrawPoint(renderer, x, y);
-                zBuffer[y][x] = zf;
-            }
-        }
+
+        SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
+        SDL_RenderDrawPoint(renderer, x, y);
+//        if (SDL_PointInRect(&point, &screenRect)) {
+//            if (zf < zBuffer[y][x]) {
+//                SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
+//                SDL_RenderDrawPoint(renderer, x, y);
+//                zBuffer[y][x] = zf;
+//            }
+//        }
     }
 
     void drawLine(const Vector3 &v0, const Vector3 &v1, const Vector3 &n0, const Vector3 &n1, const Light &light, const Color &color) {
@@ -49,7 +52,7 @@ private:
             int x = x0;
             int y = y0;
             float zf = Vector3::getLineZtX(v0, v1, (float) x0);
-            Vector3 n = Vector3::div(Vector3::add(n0, n1), 2);
+            Vector3 n = Vector3::getInterpolatedNormalY(v0, v1, n0, n1, (float) y);
             Color c = light.getPixelColor(color, n);
 
             drawPoint(x, y, zf, c);
@@ -69,20 +72,20 @@ private:
         }
     }
 
-    void drawTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
-//        drawLine(screenPolygon, worldPolygon, screenPolygon.vertices[0], screenPolygon.vertices[1], light, color);
-//        drawLine(screenPolygon, worldPolygon, screenPolygon.vertices[1], screenPolygon.vertices[2], light, color);
-//        drawLine(screenPolygon, worldPolygon, screenPolygon.vertices[2], screenPolygon.vertices[0], light, color);
+    void drawTriangle(Polygon screenPolygon, const Light &light, const Color &color) {
+//        if (screenPolygon.isBottomFlat()) {
+//            drawBottomFlatTriangle(screenPolygon, light, color);
+//        } else if (screenPolygon.isTopFlat()) {
+//            drawTopFlatTriangle(screenPolygon, light, color);
+//        } else {
+//            auto split = screenPolygon.splitHorizontally();
+//            drawTopFlatTriangle(split[0], light, color);
+//            drawBottomFlatTriangle(split[1], light, color);
+//        }
 
-        if (screenPolygon.isBottomFlat()) {
-            drawBottomFlatTriangle(screenPolygon, light, color);
-        } else if (screenPolygon.isTopFlat()) {
-            drawTopFlatTriangle(screenPolygon, light, color);
-        } else {
-            auto split = screenPolygon.splitHorizontally();
-            drawTopFlatTriangle(split[0], light, color);
-            drawBottomFlatTriangle(split[1], light, color);
-        }
+        drawLine(screenPolygon.vertices[0], screenPolygon.vertices[1], screenPolygon.normals[0], screenPolygon.normals[1], light, color);
+        drawLine(screenPolygon.vertices[1], screenPolygon.vertices[2], screenPolygon.normals[1], screenPolygon.normals[2], light, color);
+        drawLine(screenPolygon.vertices[2], screenPolygon.vertices[0], screenPolygon.normals[2], screenPolygon.normals[0], light, color);
     }
 
     void drawTopFlatTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
