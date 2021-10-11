@@ -125,17 +125,25 @@ private:
                 // Apply camera transformations
                 Polygon viewed = translated.matrixMultiplied(matCamView);
 
-                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-                    // -1 ... +1
-                    Polygon projected = clippedViewed.matrixMultiplied(matProj);
+                // -1 ... +1
+                Polygon projected = viewed.matrixMultiplied(matProj);
 
-                    // Screen width and height coordinates with inverted Y
-                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+                // Screen width and height coordinates with inverted Y
+                Polygon screenPolygon = projected.matrixMultiplied(matScreen);
 
-                    for (const auto &clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
-                        polygonsToRaster.emplace_back(clippedScreenPolygon);
-                    }
-                }
+                polygonsToRaster.emplace_back(screenPolygon);
+
+//                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+//                    // -1 ... +1
+//                    Polygon projected = clippedViewed.matrixMultiplied(matProj);
+//
+//                    // Screen width and height coordinates with inverted Y
+//                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+//
+//                    for (const auto &clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
+//                        polygonsToRaster.emplace_back(clippedScreenPolygon);
+//                    }
+//                }
 
             }
         }
@@ -154,14 +162,14 @@ private:
         Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
         // TODO: Draw light object
+        Light light = scene.light;
+        light.position = Matrix4::multiplyVector(light.position, matCameraView);
+        light.position = Matrix4::multiplyVector(light.position, matProj);
+        light.position = Matrix4::multiplyVector(light.position, matScreen);
 
         for (const Object &obj: scene.objects) {
             std::vector<Polygon> polygons = createPolygonsToRaster(obj, matCameraView, matProj, matScreen);
             for (const Polygon &polygon: polygons) {
-                Light light = scene.light;
-                light.position = Matrix4::multiplyVector(light.position, matCameraView);
-                light.position = Matrix4::multiplyVector(light.position, matProj);
-                light.position = Matrix4::multiplyVector(light.position, matScreen);
                 renderer.drawPolygon(polygon, light, obj.color);
             }
         }

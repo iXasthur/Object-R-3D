@@ -29,7 +29,12 @@ public:
             o.x /= w;
             o.y /= w;
             o.z /= w;
+        } else {
+            o.x = std::numeric_limits<float>::max();
+            o.y = std::numeric_limits<float>::max();
+            o.z = std::numeric_limits<float>::max();
         }
+
         return o;
     }
 

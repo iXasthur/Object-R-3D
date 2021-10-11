@@ -26,10 +26,9 @@ public:
 
     }
 
-    [[nodiscard]] Color getPixelColor(const Color &objColor, const Vector3 &n) const {
+    [[nodiscard]] Color getPixelColor(const Color &objColor, const Vector3 &objPosition, const Vector3 &objNormal) const {
         Color a = ambient.getPixelColor();
-//        Color d = diffuse.getPixelColor(n, position);
-        Color d = {0, 0, 0, 255};
+        Color d = diffuse.getPixelColor(objNormal, objPosition, position);
         Color s = {0, 0, 0, 255};
         return objColor.plusRGB(a).plusRGB(d).plusRGB(s);
     }

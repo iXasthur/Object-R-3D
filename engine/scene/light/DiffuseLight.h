@@ -16,8 +16,10 @@ public:
 
     }
 
-    [[nodiscard]] Color getPixelColor(const Vector3 &n, const Vector3 &pos) const {
-        float nl = Vector3::dotProduct(Vector3::normalize(n), pos);
+    [[nodiscard]] Color getPixelColor(const Vector3 &objNormal, const Vector3 &objPosition, const Vector3 &lightPosition) const {
+        Vector3 n = Vector3::normalize(objNormal);
+        Vector3 l = Vector3::sub(lightPosition, objPosition);
+        float nl = Vector3::dotProduct(n, l);
         if (nl < 0) {
             nl = 0;
         }

@@ -50,7 +50,8 @@ private:
             int y = y0;
             float zf = Vector3::getLineZtX(v0, v1, (float) x0);
             Vector3 n = polygon.getInterpolatedNormal({(float) x, (float) y, zf});
-            Color c = light.getPixelColor(color, polygon.getInterpolatedNormal(n));
+            Vector3 p = {(float) x, (float) y, zf};
+            Color c = light.getPixelColor(color, p, n);
 
             drawPoint(x, y, zf, c);
 
