@@ -19,8 +19,8 @@ public:
     std::vector<Object> objects{};
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
-            {10.0f, 10.0f, -10.0f},
-            {0.1f, {255, 255, 255, 255}},
+            {0.0f, 10.0f, 0.0f},
+            {0.2f, {255, 255, 255, 255}},
             {1.0f, {255, 255, 255, 255}},
             {}
             );
