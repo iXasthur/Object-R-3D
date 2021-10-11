@@ -115,7 +115,6 @@ public:
     static Vector3 getInterpolatedNormalY(const Vector3 &v0, const Vector3 &v1, const Vector3 &n0, const Vector3 &n1, float y) {
         float y0 = v0.y;
         float y1 = v1.y;
-        float ym = (y0 + y1) / 2.0f;
 
         Vector3 in0 = Vector3::mul(n0, (y - y1) / (y0 - y1));
         Vector3 in1 = Vector3::mul(n1, (y0 - y) / (y0 - y1));

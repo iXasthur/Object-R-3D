@@ -19,7 +19,7 @@ public:
     std::vector<Object> objects{};
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
-            {-1.0f, 0.0f, -1.0f}, // screen space
+            {1.0f, 0.0f, 1.0f}, // screen space
             {0.05f, {255, 255, 255, 255}},
             {1.0f, {255, 255, 255, 255}},
             {}
@@ -42,7 +42,7 @@ public:
     };
 
     void resetCamera() {
-        camera = Camera({0 , 0, 2}, {0, M_PI, 0});
+        camera = Camera({0 , 0, -2}, {0, 0, 0});
     }
 
     void add(const Object &obj) {
