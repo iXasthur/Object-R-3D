@@ -77,15 +77,15 @@ public:
         std::array<Vector3, 3> vBottom;
         std::array<Vector3, 3> nBottom;
         if (ySorted.vertices[1].x < splitPointVertex.x) {
-            vBottom = {ySorted.vertices[1], ySorted.vertices[2], splitPointVertex};
-            nBottom = {ySorted.normals[1], ySorted.normals[2], splitPointNormal};
+            vTop = {ySorted.vertices[0], splitPointVertex, ySorted.vertices[1]};
+            nTop = {ySorted.normals[0], splitPointNormal, ySorted.normals[1]};
+            vBottom = {ySorted.vertices[2], ySorted.vertices[1], splitPointVertex};
+            nBottom = {ySorted.normals[2], ySorted.normals[1], splitPointNormal};
+        } else {
             vTop = {ySorted.vertices[1], splitPointVertex, ySorted.vertices[0]};
             nTop = {ySorted.normals[1], splitPointNormal, ySorted.normals[0]};
-        } else {
-            vBottom = {ySorted.vertices[0], ySorted.vertices[1], splitPointVertex};
-            nBottom = {ySorted.normals[0], ySorted.normals[1], splitPointNormal};
-            vTop = {ySorted.vertices[2], splitPointVertex, ySorted.vertices[1]};
-            nTop = {ySorted.normals[2], splitPointNormal, ySorted.normals[1]};
+            vBottom = {ySorted.vertices[1], ySorted.vertices[2], splitPointVertex};
+            nBottom = {ySorted.normals[1], ySorted.normals[2], splitPointNormal};
         }
 
         Polygon pTop = {vTop, nTop};
