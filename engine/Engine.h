@@ -105,44 +105,6 @@ private:
         return v;
     }
 
-    [[nodiscard]] std::vector<Polygon> createPolygonsToRaster(const Object &obj, const Matrix4 &matCamView, const Matrix4 &matProj, const Matrix4 &matScreen) const {
-        std::vector<Polygon> polygonsToRaster;
-
-        Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
-
-        for (const Polygon &polygon: obj.polygons) {
-            Vector3 normal = polygon.getNormal();
-            normal = Vector3::normalize(normal);
-
-            Polygon translated = polygon.matrixMultiplied(moveMatrix);
-
-            Vector3 translatedCenter = Vector3::add(Vector3::add(translated.vertices[0], translated.vertices[1]), translated.vertices[2]);
-            translatedCenter = Vector3::div(translatedCenter, 3);
-
-            Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
-
-            if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
-                // Apply camera transformations
-                Polygon viewed = translated.matrixMultiplied(matCamView);
-
-                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-                    // -1 ... +1
-                    Polygon projected = clippedViewed.matrixMultiplied(matProj);
-
-                    // Screen width and height coordinates with inverted Y
-                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
-
-                    for (const auto &clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
-                        polygonsToRaster.emplace_back(clippedScreenPolygon);
-                    }
-                }
-
-            }
-        }
-
-        return polygonsToRaster;
-    }
-
     void renderScene() {
         Matrix4 matProj = Matrix4::makeProjection(
                 scene.camera.fFOV,
@@ -160,11 +122,37 @@ private:
         light.position = Matrix4::multiplyVector(light.position, matScreen);
 
         for (const Object &obj: scene.objects) {
-            std::vector<Polygon> polygons = createPolygonsToRaster(obj, matCameraView, matProj, matScreen);
-            for (const Polygon &polygon: polygons) {
-                renderer.drawPolygon(polygon, light, obj.color);
+            Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
+
+            for (const Polygon &polygon: obj.polygons) {
+                Vector3 normal = polygon.getNormal();
+                normal = Vector3::normalize(normal);
+
+                Polygon translated = polygon.matrixMultiplied(moveMatrix);
+
+                Vector3 translatedCenter = Vector3::add(Vector3::add(translated.vertices[0], translated.vertices[1]), translated.vertices[2]);
+                translatedCenter = Vector3::div(translatedCenter, 3);
+
+                Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
+
+                if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
+                    // Apply camera transformations
+                    Polygon viewed = translated.matrixMultiplied(matCameraView);
+
+                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+                        // -1 ... +1
+                        Polygon projected = clippedViewed.matrixMultiplied(matProj);
+
+                        // Screen width and height coordinates with inverted Y
+                        Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+
+                        renderer.drawPolygon(screenPolygon, light, obj.color);
+                    }
+
+                }
             }
         }
+
     }
 
     void processInputFast() {
