@@ -111,6 +111,24 @@ public:
         float t = (targetY - linePoint0.y) / r.y;
         return linePoint0.x + t * r.x;
     }
+
+    static Vector3 getInterpolatedNormalY(const Vector3 &v0, const Vector3 &v1, const Vector3 &n0, const Vector3 &n1, float y) {
+        float y0 = v0.y;
+        float y1 = v1.y;
+        float ym = (y0 + y1) / 2.0f;
+
+        Vector3 in0 = Vector3::mul(n0, (y - y1) / (y0 - y1));
+        Vector3 in1 = Vector3::mul(n1, (y0 - y) / (y0 - y1));
+        Vector3 in = Vector3::add(in0, in1);
+
+//        std::cout << "-----" << std::endl;
+//        std::cout << n0.toString() << "       ";
+//        std::cout << in.toString() << "       ";
+//        std::cout << n1.toString() << "       ";
+//        std::cout << std::endl;
+
+        return in;
+    }
 };
 
 

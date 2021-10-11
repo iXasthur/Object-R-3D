@@ -26,7 +26,7 @@ private:
         }
     }
 
-    void drawLine(const Polygon &polygon, const Vector3 &v0, const Vector3 &v1, const Light &light, const Color &color) {
+    void drawLine(const Vector3 &v0, const Vector3 &v1, const Vector3 &n0, const Vector3 &n1, const Light &light, const Color &color) {
         SDL_Point p0 = {(int) v0.x, (int) v0.y};
         SDL_Point p1 = {(int) v1.x, (int) v1.y};
 
@@ -49,9 +49,8 @@ private:
             int x = x0;
             int y = y0;
             float zf = Vector3::getLineZtX(v0, v1, (float) x0);
-            Vector3 n = polygon.getInterpolatedNormal({(float) x, (float) y, zf});
-            Vector3 p = {(float) x, (float) y, zf};
-            Color c = light.getPixelColor(color, p, n);
+            Vector3 n = Vector3::div(Vector3::add(n0, n1), 2);
+            Color c = light.getPixelColor(color, n);
 
             drawPoint(x, y, zf, c);
 
@@ -70,13 +69,31 @@ private:
         }
     }
 
-    void drawTopFlatTriangle(Polygon polygon, const Light &light, const Color &color) {
+    void drawTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
+//        drawLine(screenPolygon, worldPolygon, screenPolygon.vertices[0], screenPolygon.vertices[1], light, color);
+//        drawLine(screenPolygon, worldPolygon, screenPolygon.vertices[1], screenPolygon.vertices[2], light, color);
+//        drawLine(screenPolygon, worldPolygon, screenPolygon.vertices[2], screenPolygon.vertices[0], light, color);
+
+        if (screenPolygon.isBottomFlat()) {
+            drawBottomFlatTriangle(screenPolygon, light, color);
+        } else if (screenPolygon.isTopFlat()) {
+            drawTopFlatTriangle(screenPolygon, light, color);
+        } else {
+            auto split = screenPolygon.splitHorizontally();
+            drawTopFlatTriangle(split[0], light, color);
+            drawBottomFlatTriangle(split[1], light, color);
+        }
+    }
+
+    void drawTopFlatTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
+        Polygon drawPolygon = screenPolygon;
+
         int rc = 0;
-        while (std::floor(polygon.vertices[0].y) != std::floor(polygon.vertices[1].y)) {
+        while (std::floor(drawPolygon.vertices[0].y) != std::floor(drawPolygon.vertices[1].y)) {
             if (rc > 2) {
                 return;
             }
-            polygon = polygon.getRotatedClockwise();
+            drawPolygon = drawPolygon.getRotatedClockwise();
             rc++;
         }
 
@@ -90,7 +107,8 @@ private:
                  2
         */
 
-        std::array<Vector3, 3> v = polygon.vertices;
+        std::array<Vector3, 3> v = drawPolygon.vertices;
+        std::array<Vector3, 3> n = drawPolygon.normals;
 
         for (int i = 0; i < 3; i++) {
             v[i].x = std::floor(v[i].x);
@@ -112,8 +130,10 @@ private:
         for (int scanlineY = (int) v[2].y; scanlineY >= (int) v[0].y; scanlineY--) {
             Vector3 v0 = {xOffset0, (float) scanlineY, zOffset0};
             Vector3 v1 = {xOffset1, (float) scanlineY, zOffset1};
+            Vector3 n0 = Vector3::getInterpolatedNormalY(v[0], v[2], n[0], n[2], v0.y);
+            Vector3 n1 = Vector3::getInterpolatedNormalY(v[1], v[2], n[1], n[2], v1.y);
 
-            drawLine(polygon, v0, v1, light, color);
+            drawLine(v0, v1, n0, n1, light, color);
 
             xOffset0 += dx0;
             xOffset1 += dx1;
@@ -122,13 +142,15 @@ private:
         }
     }
 
-    void drawBottomFlatTriangle(Polygon polygon, const Light &light, const Color &color) {
+    void drawBottomFlatTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
+        Polygon drawPolygon = screenPolygon;
+
         int rc = 0;
-        while (std::floor(polygon.vertices[1].y) != std::floor(polygon.vertices[2].y)) {
+        while (std::floor(drawPolygon.vertices[1].y) != std::floor(drawPolygon.vertices[2].y)) {
             if (rc > 2) {
                 return;
             }
-            polygon = polygon.getRotatedClockwise();
+            drawPolygon = drawPolygon.getRotatedClockwise();
             rc++;
         }
 
@@ -142,7 +164,8 @@ private:
           2 ---------- 1
         */
 
-        std::array<Vector3, 3> v = polygon.vertices;
+        std::array<Vector3, 3> v = drawPolygon.vertices;
+        std::array<Vector3, 3> n = drawPolygon.normals;
 
         for (int i = 0; i < 3; i++) {
             v[i].x = std::floor(v[i].x);
@@ -164,8 +187,10 @@ private:
         for (int scanlineY = (int) v[0].y; scanlineY <= (int) v[1].y; scanlineY++) {
             Vector3 v0 = {xOffset0, (float) scanlineY, zOffset0};
             Vector3 v1 = {xOffset1, (float) scanlineY, zOffset1};
+            Vector3 n0 = Vector3::getInterpolatedNormalY(v[1], v[0], n[1], n[0], v0.y);
+            Vector3 n1 = Vector3::getInterpolatedNormalY(v[2], v[0], n[2], n[0], v1.y);
 
-            drawLine(polygon, v0, v1, light, color);
+            drawLine(v0, v1, n0, n1, light, color);
 
             xOffset0 += dx0;
             xOffset1 += dx1;
@@ -198,20 +223,12 @@ public:
         SDL_RenderClear(renderer);
     }
 
-    void drawPolygon(const Polygon &polygon, const Light &light, const Color &color) {
-        if (polygon.isFlat()) {
+    void drawPolygon(const Polygon &screenPolygon, const Light &light, const Color &color) {
+        if (screenPolygon.isFlat()) {
             return;
         }
 
-        if (polygon.isBottomFlat()) {
-            drawBottomFlatTriangle(polygon, light, color);
-        } else if (polygon.isTopFlat()) {
-            drawTopFlatTriangle(polygon, light, color);
-        } else {
-            auto split = polygon.splitHorizontally();
-            drawTopFlatTriangle(split[0], light, color);
-            drawBottomFlatTriangle(split[1], light, color);
-        }
+        drawTriangle(screenPolygon, light, color);
     }
 
 };

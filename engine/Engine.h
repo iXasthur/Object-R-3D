@@ -13,6 +13,7 @@
 #include "renderer/Renderer.h"
 #include <cmath>
 #include <list>
+#include <iomanip>
 
 class Engine {
 private:
@@ -21,89 +22,89 @@ private:
 
     Scene scene = Scene();
 
-    [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
-        Vector3 target = scene.camera.getInitialTargetVector();
-
-        std::vector<Polygon> clippedNear = polygon.clipAgainstPlane(
-                { 0.0f, 0.0f, scene.camera.fNear },
-                {target.x, target.y, target.z}
-        );
-
-        std::vector<Polygon> clippedFar;
-
-        for (const auto &p : clippedNear) {
-            std::vector<Polygon> clipped = polygon.clipAgainstPlane(
-                    { 0.0f, 0.0f, scene.camera.fFar },
-                    {target.x, target.y, -target.z}
-            );
-
-            clippedFar.insert(std::end(clippedFar), std::begin(clipped), std::end(clipped));
-        }
-
-        return clippedFar;
-    }
-
-    [[nodiscard]] std::vector<Polygon> clipPolygonByScreen(const Polygon &polygon) const {
-        std::list<Polygon> listTriangles;
-
-        // Add initial triangle
-        listTriangles.push_back(polygon);
-        unsigned long nNewTriangles = 1;
-
-        for (int p = 0; p < 4; p++) {
-            while (nNewTriangles > 0) {
-                std::vector<Polygon> clipped;
-
-                // Take triangle from front of queue
-                Polygon test = listTriangles.front();
-                listTriangles.pop_front();
-                nNewTriangles--;
-
-                // Clip it against a plane. We only need to test each
-                // subsequent plane, against subsequent new triangles
-                // as all triangles after a plane clip are guaranteed
-                // to lie on the inside of the plane. I like how this
-                // comment is almost completely and utterly justified
-                switch (p) {
-                    case 0:
-                        clipped = test.clipAgainstPlane(
-                                {0.0f, 0.0f, 0.0f},
-                                {0.0f, 1.0f, 0.0f});
-                        break;
-                    case 1:
-                        clipped = test.clipAgainstPlane(
-                                {0.0f, (float) renderer.getScreenRect().h - 1.0f, 0.0f},
-                                {0.0f, -1.0f, 0.0f});
-                        break;
-                    case 2:
-                        clipped = test.clipAgainstPlane(
-                                {0.0f, 0.0f, 0.0f},
-                                {1.0f, 0.0f, 0.0f});
-                        break;
-                    case 3:
-                        clipped = test.clipAgainstPlane(
-                                {(float) renderer.getScreenRect().w - 1.0f, 0.0f, 0.0f},
-                                {-1.0f, 0.0f, 0.0f});
-                        break;
-                    default:
-                        break;
-                }
-
-                // Clipping may yield a variable number of triangles, so
-                // add these new ones to the back of the queue for subsequent
-                // clipping against next planes
-                for (auto &w : clipped) {
-                    listTriangles.push_back(w);
-                }
-
-            }
-            nNewTriangles = listTriangles.size();
-        }
-
-        std::vector<Polygon> v;
-        v.insert(std::end(v), std::begin(listTriangles), std::end(listTriangles));
-        return v;
-    }
+//    [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
+//        Vector3 target = scene.camera.getInitialTargetVector();
+//
+//        std::vector<Polygon> clippedNear = polygon.clipAgainstPlane(
+//                { 0.0f, 0.0f, scene.camera.fNear },
+//                {target.x, target.y, target.z}
+//        );
+//
+//        std::vector<Polygon> clippedFar;
+//
+//        for (const auto &p : clippedNear) {
+//            std::vector<Polygon> clipped = polygon.clipAgainstPlane(
+//                    { 0.0f, 0.0f, scene.camera.fFar },
+//                    {target.x, target.y, -target.z}
+//            );
+//
+//            clippedFar.insert(std::end(clippedFar), std::begin(clipped), std::end(clipped));
+//        }
+//
+//        return clippedFar;
+//    }
+//
+//    [[nodiscard]] std::vector<Polygon> clipPolygonByScreen(const Polygon &polygon) const {
+//        std::list<Polygon> listTriangles;
+//
+//        // Add initial triangle
+//        listTriangles.push_back(polygon);
+//        unsigned long nNewTriangles = 1;
+//
+//        for (int p = 0; p < 4; p++) {
+//            while (nNewTriangles > 0) {
+//                std::vector<Polygon> clipped;
+//
+//                // Take triangle from front of queue
+//                Polygon test = listTriangles.front();
+//                listTriangles.pop_front();
+//                nNewTriangles--;
+//
+//                // Clip it against a plane. We only need to test each
+//                // subsequent plane, against subsequent new triangles
+//                // as all triangles after a plane clip are guaranteed
+//                // to lie on the inside of the plane. I like how this
+//                // comment is almost completely and utterly justified
+//                switch (p) {
+//                    case 0:
+//                        clipped = test.clipAgainstPlane(
+//                                {0.0f, 0.0f, 0.0f},
+//                                {0.0f, 1.0f, 0.0f});
+//                        break;
+//                    case 1:
+//                        clipped = test.clipAgainstPlane(
+//                                {0.0f, (float) renderer.getScreenRect().h - 1.0f, 0.0f},
+//                                {0.0f, -1.0f, 0.0f});
+//                        break;
+//                    case 2:
+//                        clipped = test.clipAgainstPlane(
+//                                {0.0f, 0.0f, 0.0f},
+//                                {1.0f, 0.0f, 0.0f});
+//                        break;
+//                    case 3:
+//                        clipped = test.clipAgainstPlane(
+//                                {(float) renderer.getScreenRect().w - 1.0f, 0.0f, 0.0f},
+//                                {-1.0f, 0.0f, 0.0f});
+//                        break;
+//                    default:
+//                        break;
+//                }
+//
+//                // Clipping may yield a variable number of triangles, so
+//                // add these new ones to the back of the queue for subsequent
+//                // clipping against next planes
+//                for (auto &w : clipped) {
+//                    listTriangles.push_back(w);
+//                }
+//
+//            }
+//            nNewTriangles = listTriangles.size();
+//        }
+//
+//        std::vector<Polygon> v;
+//        v.insert(std::end(v), std::begin(listTriangles), std::end(listTriangles));
+//        return v;
+//    }
 
     void renderScene() {
         Matrix4 matProj = Matrix4::makeProjection(
@@ -116,10 +117,6 @@ private:
         Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
         // TODO: Draw light object
-        Light light = scene.light;
-        light.position = Matrix4::multiplyVector(light.position, matCameraView);
-        light.position = Matrix4::multiplyVector(light.position, matProj);
-        light.position = Matrix4::multiplyVector(light.position, matScreen);
 
         for (const Object &obj: scene.objects) {
             Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
@@ -139,15 +136,23 @@ private:
                     // Apply camera transformations
                     Polygon viewed = translated.matrixMultiplied(matCameraView);
 
-                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-                        // -1 ... +1
-                        Polygon projected = clippedViewed.matrixMultiplied(matProj);
+                    // -1 ... +1
+                    Polygon projected = viewed.matrixMultiplied(matProj);
 
-                        // Screen width and height coordinates with inverted Y
-                        Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+                    // Screen width and height coordinates with inverted Y
+                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
 
-                        renderer.drawPolygon(screenPolygon, light, obj.color);
-                    }
+                    renderer.drawPolygon(screenPolygon, scene.light, obj.color);
+
+//                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+//                        // -1 ... +1
+//                        Polygon projected = clippedViewed.matrixMultiplied(matProj);
+//
+//                        // Screen width and height coordinates with inverted Y
+//                        Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+//
+//                        renderer.drawPolygon(screenPolygon, light, obj.color);
+//                    }
 
                 }
             }
@@ -226,7 +231,7 @@ private:
             }
         }
 
-//        printf("Camera position: x:%f y:%f z:%f, ", scene.camera.position.x, scene.camera.position.y, scene.camera.position.z);
+//        printf("Camera direction: x:%f y:%f z:%f, ", scene.camera.direction.x, scene.camera.direction.y, scene.camera.direction.z);
 //        printf("euler angle: x:%f y:%f z:%f, ", scene.camera.eulerRotation.x, scene.camera.eulerRotation.y, scene.camera.eulerRotation.z);
 //        printf("fov: %f\n", scene.camera.fFOV);
     }
@@ -321,7 +326,7 @@ public:
             s += obj.name + ", ";
         }
         s += scene.camera.position.toString() + ", ";
-        s += "light_pos: " + scene.light.position.toString();
+        s += "light_direction: " + scene.light.direction.toString();
         return s;
     }
 };

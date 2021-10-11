@@ -19,8 +19,8 @@ public:
     std::vector<Object> objects{};
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
-            {0.0f, 10.0f, 0.0f},
-            {0.2f, {255, 255, 255, 255}},
+            {-1.0f, 0.0f, -1.0f}, // screen space
+            {0.05f, {255, 255, 255, 255}},
             {1.0f, {255, 255, 255, 255}},
             {}
             );
@@ -28,9 +28,9 @@ public:
     Scene() {
         std::string dir = "../objects/";
 
-//        std::vector<std::string> names = {"cube.obj", "stone.obj", "deer.obj", "monkey.obj"};
+//        std::vector<std::string> names = {"cube.obj", "stone.obj", "deer.obj", "monkey.obj", "sphere.obj"};
 
-        std::vector<std::string> names = {"deer.obj"};
+        std::vector<std::string> names = {"sphere.obj"};
         for (auto &name : names) {
             Object obj = ObjectLoader::loadObjModel(dir + name);
             obj.centerPolygonVertices();
@@ -42,7 +42,7 @@ public:
     };
 
     void resetCamera() {
-        camera = Camera({0 , 0, -2}, {0, 0, 0});
+        camera = Camera({0 , 0, 2}, {0, M_PI, 0});
     }
 
     void add(const Object &obj) {
