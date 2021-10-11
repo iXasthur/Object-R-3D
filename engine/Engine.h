@@ -125,25 +125,17 @@ private:
                 // Apply camera transformations
                 Polygon viewed = translated.matrixMultiplied(matCamView);
 
-                // -1 ... +1
-                Polygon projected = viewed.matrixMultiplied(matProj);
+                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+                    // -1 ... +1
+                    Polygon projected = clippedViewed.matrixMultiplied(matProj);
 
-                // Screen width and height coordinates with inverted Y
-                Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+                    // Screen width and height coordinates with inverted Y
+                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
 
-                polygonsToRaster.emplace_back(screenPolygon);
-
-//                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-//                    // -1 ... +1
-//                    Polygon projected = clippedViewed.matrixMultiplied(matProj);
-//
-//                    // Screen width and height coordinates with inverted Y
-//                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
-//
-//                    for (const auto &clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
-//                        polygonsToRaster.emplace_back(clippedScreenPolygon);
-//                    }
-//                }
+                    for (const auto &clippedScreenPolygon: clipPolygonByScreen(screenPolygon)) {
+                        polygonsToRaster.emplace_back(clippedScreenPolygon);
+                    }
+                }
 
             }
         }
