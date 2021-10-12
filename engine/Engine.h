@@ -122,50 +122,38 @@ private:
             Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
             for (const Polygon &polygon: obj.polygons) {
-//                Vector3 normal = polygon.getNormal();
-//                normal = Vector3::normalize(normal);
+                Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
 
                 Polygon translated = polygon.matrixMultiplied(moveMatrix);
 
-//                Vector3 translatedCenter = Vector3::add(Vector3::add(translated.vertices[0], translated.vertices[1]), translated.vertices[2]);
-//                translatedCenter = Vector3::div(translatedCenter, 3);
-//
-//                Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
+                Vector3 translatedCenter = Vector3::add(Vector3::add(translated.vertices[0], translated.vertices[1]), translated.vertices[2]);
+                translatedCenter = Vector3::div(translatedCenter, 3);
 
-                // Apply camera transformations
-                Polygon viewed = translated.matrixMultiplied(matCameraView);
+                Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 
-                // -1 ... +1
-                Polygon projected = viewed.matrixMultiplied(matProj);
+                if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
+                    // Apply camera transformations
+                    Polygon viewed = translated.matrixMultiplied(matCameraView);
 
-                // Screen width and height coordinates with inverted Y
-                Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+                    // -1 ... +1
+                    Polygon projected = viewed.matrixMultiplied(matProj);
 
-                renderer.drawPolygon(screenPolygon, scene.light, obj.color);
+                    // Screen width and height coordinates with inverted Y
+                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
 
-//                if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
-//                    // Apply camera transformations
-//                    Polygon viewed = translated.matrixMultiplied(matCameraView);
+                    renderer.drawPolygon(screenPolygon, scene.light, obj.color);
+
+//                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+//                        // -1 ... +1
+//                        Polygon projected = clippedViewed.matrixMultiplied(matProj);
 //
-//                    // -1 ... +1
-//                    Polygon projected = viewed.matrixMultiplied(matProj);
+//                        // Screen width and height coordinates with inverted Y
+//                        Polygon screenPolygon = projected.matrixMultiplied(matScreen);
 //
-//                    // Screen width and height coordinates with inverted Y
-//                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
-//
-//                    renderer.drawPolygon(screenPolygon, scene.light, obj.color);
-//
-////                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-////                        // -1 ... +1
-////                        Polygon projected = clippedViewed.matrixMultiplied(matProj);
-////
-////                        // Screen width and height coordinates with inverted Y
-////                        Polygon screenPolygon = projected.matrixMultiplied(matScreen);
-////
-////                        renderer.drawPolygon(screenPolygon, light, obj.color);
-////                    }
-//
-//                }
+//                        renderer.drawPolygon(screenPolygon, light, obj.color);
+//                    }
+
+                }
             }
         }
 

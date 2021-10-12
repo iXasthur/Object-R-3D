@@ -18,15 +18,13 @@ private:
     void drawPoint(int x, int y, float zf, const Color &color) {
         SDL_Point point = {x, y};
 
-        SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
-        SDL_RenderDrawPoint(renderer, x, y);
-//        if (SDL_PointInRect(&point, &screenRect)) {
-//            if (zf < zBuffer[y][x]) {
-//                SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
-//                SDL_RenderDrawPoint(renderer, x, y);
-//                zBuffer[y][x] = zf;
-//            }
-//        }
+        if (SDL_PointInRect(&point, &screenRect)) {
+            if (zf < zBuffer[y][x]) {
+                SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
+                SDL_RenderDrawPoint(renderer, x, y);
+                zBuffer[y][x] = zf;
+            }
+        }
     }
 
     void drawLine(const Vector3 &v0, const Vector3 &v1, const Vector3 &n0, const Vector3 &n1, const Light &light, const Color &color) {
@@ -54,6 +52,16 @@ private:
             float zf = Vector3::getLineZtX(v0, v1, (float) x0);
             Vector3 n = Vector3::getInterpolatedNormalY(v0, v1, n0, n1, (float) y);
             Color c = light.getPixelColor(color, n);
+
+            if (std::isnan(zf)) {
+                zf = std::numeric_limits<float>::lowest();
+                c = {255, 0, 0, 255};
+            }
+
+            if (std::isnan(n.x) || std::isnan(n.y) || std::isnan(n.z)) {
+                zf = std::numeric_limits<float>::lowest();
+                c = {0, 255, 0, 255};
+            }
 
             drawPoint(x, y, zf, c);
 

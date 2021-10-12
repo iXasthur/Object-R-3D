@@ -102,13 +102,13 @@ public:
 
     static float getLineZtX(const Vector3 &linePoint0, const Vector3 &linePoint1, float targetX) {
         Vector3 r = Vector3::sub(linePoint1, linePoint0);
-        float t = (targetX - linePoint0.x) / r.x;
+        float t = (targetX - linePoint0.x) / r.x; // FIXME
         return linePoint0.z + t * r.z;
     }
 
     static float getLineXtY(const Vector3 &linePoint0, const Vector3 &linePoint1, float targetY) {
         Vector3 r = Vector3::sub(linePoint1, linePoint0);
-        float t = (targetY - linePoint0.y) / r.y;
+        float t = (targetY - linePoint0.y) / r.y; // FIXME
         return linePoint0.x + t * r.x;
     }
 
@@ -116,8 +116,8 @@ public:
         float y0 = v0.y;
         float y1 = v1.y;
 
-        Vector3 in0 = Vector3::mul(n0, (y - y1) / (y0 - y1));
-        Vector3 in1 = Vector3::mul(n1, (y0 - y) / (y0 - y1));
+        Vector3 in0 = Vector3::mul(n0, (y - y1) / (y0 - y1)); // FIXME
+        Vector3 in1 = Vector3::mul(n1, (y0 - y) / (y0 - y1)); // FIXME
         Vector3 in = Vector3::add(in0, in1);
 
 //        std::cout << "-----" << std::endl;

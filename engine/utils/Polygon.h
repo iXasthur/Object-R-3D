@@ -18,7 +18,7 @@ public:
     explicit Polygon(const std::array<Vector3, 3> &vertices) {
         this->vertices = vertices;
         for (auto &normal : normals) {
-            normal = getNormal();
+            normal = getFaceNormal();
         }
     }
 
@@ -26,7 +26,7 @@ public:
         std::array<Vector3, 3> array = {v0, v1, v2};
         this->vertices = array;
         for (auto &normal : normals) {
-            normal = getNormal();
+            normal = getFaceNormal();
         }
     }
 
@@ -128,7 +128,7 @@ public:
         throw std::invalid_argument("Received invalid vertex");
     }
 
-    [[nodiscard]] Vector3 getNormal() const {
+    [[nodiscard]] Vector3 getFaceNormal() const {
         Vector3 a = Vector3::sub(vertices[0], vertices[1]);
         Vector3 b = Vector3::sub(vertices[0], vertices[2]);
         return Vector3::crossProduct(a, b);
