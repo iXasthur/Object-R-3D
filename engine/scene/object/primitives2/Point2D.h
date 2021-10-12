@@ -15,6 +15,10 @@ public:
 
     Point2D() : x(0), y(0) {}
 
+    static Point2D nan() {
+        float nan = std::numeric_limits<float>::quiet_NaN();
+        return {nan, nan};
+    }
 };
 
 

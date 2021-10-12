@@ -43,7 +43,7 @@ public:
             return v0.position.x + t * r.x;
         }
 
-        std::cout << "getXtYZ == nan" << std::endl;
+//        std::cout << "getXtYZ == nan" << std::endl;
 
         return std::numeric_limits<float>::quiet_NaN();
     }
@@ -61,7 +61,7 @@ public:
             return v0.position.y + t * r.y;
         }
 
-        std::cout << "getYtXZ == nan" << std::endl;
+//        std::cout << "getYtXZ == nan" << std::endl;
 
         return std::numeric_limits<float>::quiet_NaN();
     }
@@ -79,19 +79,21 @@ public:
             return v0.position.z + t * r.z;
         }
 
-        std::cout << "getZtXY == nan" << std::endl;
+//        std::cout << "getZtXY == nan" << std::endl;
 
         return std::numeric_limits<float>::quiet_NaN();
     }
 
-    [[nodiscard]] Vector3 getInterpolatedNormalXY(float x, float y) const {
+    [[nodiscard]] Vector3 getInterpolatedNormal(float x, float y, float z) const {
         Vector3 n0 = v0.normal;
         Vector3 n1 = v1.normal;
 
-        float y0 = v0.position.y;
-        float y1 = v1.position.y;
         float x0 = v0.position.x;
         float x1 = v1.position.x;
+        float y0 = v0.position.y;
+        float y1 = v1.position.y;
+        float z0 = v0.position.z;
+        float z1 = v1.position.z;
 
         Vector3 in0;
         Vector3 in1;
@@ -101,8 +103,11 @@ public:
         } else if (x0 != x1) {
             in0 = Vector3::mul(n0, (x - x1) / (x0 - x1));
             in1 = Vector3::mul(n1, (x0 - x) / (x0 - x1));
+        } else if (z0 != z1) {
+            in0 = Vector3::mul(n0, (z - z1) / (z0 - z1));
+            in1 = Vector3::mul(n1, (z0 - z) / (z0 - z1));
         } else {
-            std::cout << "getInterpolatedNormalXY == nan" << std::endl;
+//            std::cout << "getInterpolatedNormalXY == nan" << std::endl;
             return Vector3::nan();
         }
 

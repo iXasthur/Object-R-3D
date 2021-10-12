@@ -12,6 +12,7 @@
 #include "Vertex.h"
 #include "Line.h"
 #include "../primitives2/Line2D.h"
+#include <SDL2/SDL.h>
 
 class Polygon {
 public:
@@ -42,69 +43,67 @@ public:
         };
     }
 
-    [[nodiscard]] Polygon getSortedY() const {
-        Polygon polygon = *this;
-
-        int rc = 0;
-        while (rc < 3) {
-            if (polygon.vertices[1].position.y <= polygon.vertices[0].position.y && polygon.vertices[1].position.y >= polygon.vertices[2].position.y) {
-                return polygon;
-            }
-            if (polygon.vertices[1].position.y >= polygon.vertices[0].position.y && polygon.vertices[1].position.y <= polygon.vertices[2].position.y) {
-                return polygon;
-            }
-
-            polygon = polygon.getRotatedClockwise();
-            rc++;
-        }
-
-        throw std::invalid_argument("Unable to create Y sorted polygon");
-    }
+//    [[nodiscard]] Polygon getAlignedY() const {
+//        Polygon polygon = *this;
+//
+//        int rc = 0;
+//        while (rc < 3) {
+//            if (polygon.vertices[1].position.y <= polygon.vertices[0].position.y && polygon.vertices[1].position.y >= polygon.vertices[2].position.y) {
+//                return polygon;
+//            }
+//            if (polygon.vertices[1].position.y >= polygon.vertices[0].position.y && polygon.vertices[1].position.y <= polygon.vertices[2].position.y) {
+//                return polygon;
+//            }
+//
+//            polygon = polygon.getRotatedClockwise();
+//            rc++;
+//        }
+//
+//        throw std::invalid_argument("Unable to create Y sorted polygon");
+//    }
 
     // 0 is top
     // 1 is bottom
-    [[nodiscard]] std::array<Polygon, 2> splitHorizontally() const {
-        Line2D sLine2D = {
-                {vertices[0].position.x, vertices[0].position.y},
-                {vertices[1].position.x, vertices[1].position.y}
-        };
-        Line sLine3D = {vertices[0], vertices[1]};
-
-        Polygon ySorted = getSortedY();
-
-        float splitY = ySorted.vertices[1].position.y;
-
-        Line2D sLineY = {{std::numeric_limits<float>::lowest(), splitY}, {std::numeric_limits<float>::max(), splitY}};
-        Point2D split2d = Line2D::intersection(sLine2D, sLineY);
-
-        Vector3 splitPointVertex;
-        Vector3 splitPointNormal;
-        splitPointVertex.x = split2d.x;
-        splitPointVertex.y = split2d.y;
-        splitPointVertex.z = sLine3D.getZtXY(splitPointVertex.x, splitPointVertex.y);
-        splitPointNormal = sLine3D.getInterpolatedNormalXY(splitPointVertex.x, splitPointVertex.y);
-
-        std::array<Vector3, 3> vTop;
-        std::array<Vector3, 3> nTop;
-        std::array<Vector3, 3> vBottom;
-        std::array<Vector3, 3> nBottom;
-        if (ySorted.vertices[1].position.x < splitPointVertex.x) {
-            vTop = {ySorted.vertices[0].position, splitPointVertex, ySorted.vertices[1].position};
-            nTop = {ySorted.vertices[0].normal, splitPointNormal, ySorted.vertices[1].normal};
-            vBottom = {ySorted.vertices[2].position, ySorted.vertices[1].position, splitPointVertex};
-            nBottom = {ySorted.vertices[2].normal, ySorted.vertices[1].normal, splitPointNormal};
-        } else {
-            vTop = {ySorted.vertices[1].position, splitPointVertex, ySorted.vertices[0].position};
-            nTop = {ySorted.vertices[1].normal, splitPointNormal, ySorted.vertices[0].normal};
-            vBottom = {ySorted.vertices[1].position, ySorted.vertices[2].position, splitPointVertex};
-            nBottom = {ySorted.vertices[1].normal, ySorted.vertices[2].normal, splitPointNormal};
-        }
-
-        Polygon pTop = {vTop, nTop};
-        Polygon pBottom = {vBottom, nBottom};
-
-        return {pTop, pBottom};
-    }
+//    [[nodiscard]] std::array<Polygon, 2> splitHorizontally() const {
+//        Line2D sLine2D = {
+//                {vertices[0].position.x, vertices[0].position.y},
+//                {vertices[1].position.x, vertices[1].position.y}
+//        };
+//        Line sLine3D = {vertices[0], vertices[1]};
+//
+//        Polygon ySorted = getAlignedY();
+//
+//        float splitY = ySorted.vertices[1].position.y;
+//        float splitX = sLine2D.getXtY(splitY);
+//
+//        Vector3 splitPointVertex;
+//        Vector3 splitPointNormal;
+//        splitPointVertex.x = splitX;
+//        splitPointVertex.y = splitY;
+//        splitPointVertex.z = sLine3D.getZtXY(splitPointVertex.x, splitPointVertex.y);
+//        splitPointNormal = sLine3D.getInterpolatedNormalXY(splitPointVertex.x, splitPointVertex.y);
+//
+//        std::array<Vector3, 3> vTop;
+//        std::array<Vector3, 3> nTop;
+//        std::array<Vector3, 3> vBottom;
+//        std::array<Vector3, 3> nBottom;
+//        if (ySorted.vertices[1].position.x < splitPointVertex.x) {
+//            vTop = {ySorted.vertices[0].position, splitPointVertex, ySorted.vertices[1].position};
+//            nTop = {ySorted.vertices[0].normal, splitPointNormal, ySorted.vertices[1].normal};
+//            vBottom = {ySorted.vertices[2].position, ySorted.vertices[1].position, splitPointVertex};
+//            nBottom = {ySorted.vertices[2].normal, ySorted.vertices[1].normal, splitPointNormal};
+//        } else {
+//            vTop = {ySorted.vertices[1].position, splitPointVertex, ySorted.vertices[0].position};
+//            nTop = {ySorted.vertices[1].normal, splitPointNormal, ySorted.vertices[0].normal};
+//            vBottom = {ySorted.vertices[1].position, ySorted.vertices[2].position, splitPointVertex};
+//            nBottom = {ySorted.vertices[1].normal, ySorted.vertices[2].normal, splitPointNormal};
+//        }
+//
+//        Polygon pTop = {vTop, nTop};
+//        Polygon pBottom = {vBottom, nBottom};
+//
+//        return {pTop, pBottom};
+//    }
 
     [[nodiscard]] Vector3 getCenter() const {
         Vector3 center = Vector3::div(Vector3::add(vertices[0].position, vertices[1].position), 2);
@@ -117,21 +116,21 @@ public:
         return Polygon(v);
     }
 
-    [[nodiscard]] bool isBottomFlat() const {
-        std::array<Vertex, 3> vSorted = vertices;
-        std::sort(vSorted.begin(), vSorted.end(), [&](const Vertex &v0, const Vertex &v1) {
-            return v0.position.y < v1.position.y;
-        });
-        return std::floor(vSorted[1].position.y) == std::floor(vSorted[2].position.y);
-    }
-
-    [[nodiscard]] bool isTopFlat() const {
-        std::array<Vertex, 3> vSorted = vertices;
-        std::sort(vSorted.begin(), vSorted.end(), [&](const Vertex &v0, const Vertex &v1) {
-            return v0.position.y < v1.position.y;
-        });
-        return std::floor(vSorted[0].position.y) == std::floor(vSorted[1].position.y);
-    }
+//    [[nodiscard]] bool isBottomFlat() const {
+//        std::array<Vertex, 3> vSorted = vertices;
+//        std::sort(vSorted.begin(), vSorted.end(), [&](const Vertex &v0, const Vertex &v1) {
+//            return v0.position.y < v1.position.y;
+//        });
+//        return std::floor(vSorted[1].position.y) == std::floor(vSorted[2].position.y);
+//    }
+//
+//    [[nodiscard]] bool isTopFlat() const {
+//        std::array<Vertex, 3> vSorted = vertices;
+//        std::sort(vSorted.begin(), vSorted.end(), [&](const Vertex &v0, const Vertex &v1) {
+//            return v0.position.y < v1.position.y;
+//        });
+//        return std::floor(vSorted[0].position.y) == std::floor(vSorted[1].position.y);
+//    }
 
     [[nodiscard]] Vector3 getFaceNormal() const {
         return Polygon::discoverFaceNormal(vertices[0].position, vertices[1].position, vertices[2].position);

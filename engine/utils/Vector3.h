@@ -90,6 +90,7 @@ public:
         float nan = std::numeric_limits<float>::quiet_NaN();
         return {nan, nan, nan};
     }
+
 };
 
 
