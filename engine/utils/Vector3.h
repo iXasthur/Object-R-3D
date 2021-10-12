@@ -27,19 +27,16 @@ public:
     }
 
     [[nodiscard]] std::string toString() const {
-        std::string s;
-
-        std::string xs = std::to_string(x);
-        xs = xs.substr(0, xs.find('.') + 3);
+        std::string xx = std::to_string(x);
+        xx = xx.substr(0, xx.find('.') + 3);
 
         std::string xy = std::to_string(y);
-        xy = xy.substr(0, xs.find('.') + 3);
+        xy = xy.substr(0, xx.find('.') + 3);
 
         std::string xz = std::to_string(z);
         xz = xz.substr(0, xz.find('.') + 3);
 
-        s = "x: " + xs + " y: " + xy + " z: " + xz;
-        return s;
+        return "x: " + xx + " y: " + xy + " z: " + xz;
     }
 
 
@@ -89,6 +86,10 @@ public:
         return v;
     }
 
+    static Vector3 nan() {
+        float nan = std::numeric_limits<float>::quiet_NaN();
+        return {nan, nan, nan};
+    }
 };
 
 

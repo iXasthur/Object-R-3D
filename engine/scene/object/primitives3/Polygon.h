@@ -11,6 +11,7 @@
 #include "../../../utils/Matrix4.h"
 #include "Vertex.h"
 #include "Line.h"
+#include "../primitives2/Line2D.h"
 
 class Polygon {
 public:
@@ -63,16 +64,25 @@ public:
     // 0 is top
     // 1 is bottom
     [[nodiscard]] std::array<Polygon, 2> splitHorizontally() const {
-        Line vLine = {vertices[0], vertices[1]};
+        Line2D sLine2D = {
+                {vertices[0].position.x, vertices[0].position.y},
+                {vertices[1].position.x, vertices[1].position.y}
+        };
+        Line sLine3D = {vertices[0], vertices[1]};
 
         Polygon ySorted = getSortedY();
 
+        float splitY = ySorted.vertices[1].position.y;
+
+        Line2D sLineY = {{std::numeric_limits<float>::lowest(), splitY}, {std::numeric_limits<float>::max(), splitY}};
+        Point2D split2d = Line2D::intersection(sLine2D, sLineY);
+
         Vector3 splitPointVertex;
         Vector3 splitPointNormal;
-        splitPointVertex.y = ySorted.vertices[1].position.y;
-        splitPointVertex.x = vLine.getLineXtY(splitPointVertex.y);
-        splitPointVertex.z = vLine.getLineZtX(splitPointVertex.x);
-        splitPointNormal = vLine.getInterpolatedNormalY(splitPointVertex.y);
+        splitPointVertex.x = split2d.x;
+        splitPointVertex.y = split2d.y;
+        splitPointVertex.z = sLine3D.getZtXY(splitPointVertex.x, splitPointVertex.y);
+        splitPointNormal = sLine3D.getInterpolatedNormalXY(splitPointVertex.x, splitPointVertex.y);
 
         std::array<Vector3, 3> vTop;
         std::array<Vector3, 3> nTop;

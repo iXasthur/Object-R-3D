@@ -46,6 +46,22 @@ public:
         c.B += color.B;
         return c.withFixedBorders();
     }
+
+    [[nodiscard]] std::string toString() const {
+        std::string xr = std::to_string(R);
+        xr = xr.substr(0, xr.find('.') + 3);
+
+        std::string xg = std::to_string(G);
+        xg = xg.substr(0, xr.find('.') + 3);
+
+        std::string xb = std::to_string(B);
+        xb = xb.substr(0, xb.find('.') + 3);
+
+        std::string xa = std::to_string(A);
+        xa = xa.substr(0, xb.find('.') + 3);
+
+        return "r: " + xr + " g: " + xg + " b: " + xb + " a: " + xa;
+    }
 };
 
 

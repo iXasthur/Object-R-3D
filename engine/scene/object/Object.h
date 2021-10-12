@@ -6,7 +6,7 @@
 #define V_3D_OBJECT_H
 
 #include <vector>
-#include "primitives/Polygon.h"
+#include "primitives3/Polygon.h"
 #include "../../utils/Color.h"
 
 class Object {

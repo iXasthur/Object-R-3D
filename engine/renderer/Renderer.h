@@ -8,7 +8,7 @@
 #include <SDL2/SDL.h>
 #include <cmath>
 #include "../utils/Color.h"
-#include "../scene/object/primitives/Line.h"
+#include "../scene/object/primitives3/Line.h"
 
 class Renderer {
 private:
@@ -29,10 +29,18 @@ private:
     }
 
     void drawLine(const Vertex &v0, const Vertex &v1, const Light &light, const Color &color) {
-        Line vLine = {v0, v1};
+        Vertex vf0 = v0;
+        vf0.position.x = std::floor(vf0.position.x);
+        vf0.position.y = std::floor(vf0.position.y);
 
-        SDL_Point p0 = {(int) v0.position.x, (int) v0.position.y};
-        SDL_Point p1 = {(int) v1.position.x, (int) v1.position.y};
+        Vertex vf1 = v1;
+        vf1.position.x = std::floor(vf1.position.x);
+        vf1.position.y = std::floor(vf1.position.y);
+
+        Line vLine = {vf0, vf1};
+
+        SDL_Point p0 = {(int) vf0.position.x, (int) vf0.position.y};
+        SDL_Point p1 = {(int) vf1.position.x, (int) vf1.position.y};
 
         if (!SDL_IntersectRectAndLine(&screenRect, &p0.x, &p0.y, &p1.x, &p1.y)) {
             return;
@@ -52,8 +60,8 @@ private:
         while (true) {
             int x = x0;
             int y = y0;
-            float zf = vLine.getLineZtX((float) x0);
-            Vector3 n = vLine.getInterpolatedNormalY((float) y);
+            float zf = vLine.getZtXY((float) x, (float) y);
+            Vector3 n = vLine.getInterpolatedNormalXY((float) x, (float) y);
             Color c = light.getPixelColor(color, n);
 
             if (std::isnan(zf)) {
