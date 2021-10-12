@@ -19,7 +19,7 @@ add_executable(
         engine/scene/Scene.h
         engine/scene/object/Object.h
         engine/scene/camera/Camera.h
-        engine/utils/Polygon.h
+        engine/scene/object/primitives/Polygon.h
         engine/utils/Vector3.h
         engine/utils/Vector4.h
         engine/Engine.h
@@ -28,7 +28,12 @@ add_executable(
         engine/scene/object/ObjectLoader.h
         engine/utils/Matrix4.h
         engine/renderer/Renderer.h
-        engine/scene/light/Light.h engine/scene/light/AmbientLight.h engine/scene/light/DiffuseLight.h engine/scene/light/SpecularLight.h)
+        engine/scene/light/Light.h
+        engine/scene/light/AmbientLight.h
+        engine/scene/light/DiffuseLight.h
+        engine/scene/light/SpecularLight.h
+        engine/scene/object/primitives/Vertex.h
+        engine/scene/object/primitives/Line.h engine/scene/object/primitives/Plane.h)
 
 if(WIN32) # Windows
     target_link_libraries(${PROJECT_NAME} ${SDL2_LIB_DIR}/libSDL2.dll.a ${SDL2_LIB_DIR}/libSDL2main.a)

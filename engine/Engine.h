@@ -126,8 +126,7 @@ private:
 
                 Polygon translated = polygon.matrixMultiplied(moveMatrix);
 
-                Vector3 translatedCenter = Vector3::add(Vector3::add(translated.vertices[0], translated.vertices[1]), translated.vertices[2]);
-                translatedCenter = Vector3::div(translatedCenter, 3);
+                Vector3 translatedCenter = translated.getCenter();
 
                 Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 

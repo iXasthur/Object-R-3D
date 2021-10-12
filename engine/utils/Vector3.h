@@ -89,45 +89,6 @@ public:
         return v;
     }
 
-    static Vector3 intersectPlane(const Vector3 &plane_p, const Vector3 &plane_n, const Vector3 &lineStart, const Vector3 &lineEnd) {
-        Vector3 pn = Vector3::normalize(plane_n);
-        float plane_d = -Vector3::dotProduct(pn, plane_p);
-        float ad = Vector3::dotProduct(lineStart, pn);
-        float bd = Vector3::dotProduct(lineEnd, pn);
-        float t = (-plane_d - ad) / (bd - ad);
-        Vector3 lineStartToEnd = Vector3::sub(lineEnd, lineStart);
-        Vector3 lineToIntersect = Vector3::mul(lineStartToEnd, t);
-        return Vector3::add(lineStart, lineToIntersect);
-    }
-
-    static float getLineZtX(const Vector3 &linePoint0, const Vector3 &linePoint1, float targetX) {
-        Vector3 r = Vector3::sub(linePoint1, linePoint0);
-        float t = (targetX - linePoint0.x) / r.x; // FIXME
-        return linePoint0.z + t * r.z;
-    }
-
-    static float getLineXtY(const Vector3 &linePoint0, const Vector3 &linePoint1, float targetY) {
-        Vector3 r = Vector3::sub(linePoint1, linePoint0);
-        float t = (targetY - linePoint0.y) / r.y; // FIXME
-        return linePoint0.x + t * r.x;
-    }
-
-    static Vector3 getInterpolatedNormalY(const Vector3 &v0, const Vector3 &v1, const Vector3 &n0, const Vector3 &n1, float y) {
-        float y0 = v0.y;
-        float y1 = v1.y;
-
-        Vector3 in0 = Vector3::mul(n0, (y - y1) / (y0 - y1)); // FIXME
-        Vector3 in1 = Vector3::mul(n1, (y0 - y) / (y0 - y1)); // FIXME
-        Vector3 in = Vector3::add(in0, in1);
-
-//        std::cout << "-----" << std::endl;
-//        std::cout << n0.toString() << "       ";
-//        std::cout << in.toString() << "       ";
-//        std::cout << n1.toString() << "       ";
-//        std::cout << std::endl;
-
-        return in;
-    }
 };
 
 

@@ -6,7 +6,7 @@
 #define V_3D_OBJECT_H
 
 #include <vector>
-#include "../../utils/Polygon.h"
+#include "primitives/Polygon.h"
 #include "../../utils/Color.h"
 
 class Object {
@@ -28,10 +28,10 @@ public:
         float delta = h / dim.y;
 
         for (Polygon &polygon : polygons) {
-            for (Vector3 &vertex : polygon.vertices) {
-                vertex.x *= delta;
-                vertex.y *= delta;
-                vertex.z *= delta;
+            for (Vertex &vertex : polygon.vertices) {
+                vertex.position.x *= delta;
+                vertex.position.y *= delta;
+                vertex.position.z *= delta;
             }
         }
     }
@@ -43,31 +43,31 @@ public:
 
         Vector3 dim = dimension();
 
-        float lowestX = polygons[0].vertices[0].x;
-        float lowestY = polygons[0].vertices[0].y;
-        float lowestZ = polygons[0].vertices[0].z;
+        float lowestX = polygons[0].vertices[0].position.x;
+        float lowestY = polygons[0].vertices[0].position.y;
+        float lowestZ = polygons[0].vertices[0].position.z;
 
         for (const Polygon &polygon : polygons) {
-            for (const Vector3 &vertex : polygon.vertices) {
-                if (vertex.y < lowestY) {
-                    lowestY = vertex.y;
+            for (const Vertex &vertex : polygon.vertices) {
+                if (vertex.position.y < lowestY) {
+                    lowestY = vertex.position.y;
                 }
 
-                if (vertex.x < lowestX) {
-                    lowestX = vertex.x;
+                if (vertex.position.x < lowestX) {
+                    lowestX = vertex.position.x;
                 }
 
-                if (vertex.z < lowestZ) {
-                    lowestZ = vertex.z;
+                if (vertex.position.z < lowestZ) {
+                    lowestZ = vertex.position.z;
                 }
             }
         }
 
         for (Polygon &polygon : polygons) {
-            for (Vector3 &vertex : polygon.vertices) {
-                vertex.x -= lowestX + dim.x / 2;
-                vertex.y -= lowestY + dim.y / 2;
-                vertex.z -= lowestZ + dim.z / 2;
+            for (Vertex &vertex : polygon.vertices) {
+                vertex.position.x -= lowestX + dim.x / 2;
+                vertex.position.y -= lowestY + dim.y / 2;
+                vertex.position.z -= lowestZ + dim.z / 2;
             }
         }
     }
@@ -77,31 +77,31 @@ public:
             return {0, 0, 0};
         }
 
-        float minX = polygons[0].vertices[0].x;
-        float maxX = polygons[0].vertices[0].x;
-        float minY = polygons[0].vertices[0].y;
-        float maxY = polygons[0].vertices[0].y;
-        float minZ = polygons[0].vertices[0].z;
-        float maxZ = polygons[0].vertices[0].z;
+        float minX = polygons[0].vertices[0].position.x;
+        float maxX = polygons[0].vertices[0].position.x;
+        float minY = polygons[0].vertices[0].position.y;
+        float maxY = polygons[0].vertices[0].position.y;
+        float minZ = polygons[0].vertices[0].position.z;
+        float maxZ = polygons[0].vertices[0].position.z;
 
         for (const Polygon &polygon : polygons) {
-            for (const Vector3 &vertex : polygon.vertices) {
-                if (vertex.x < minX) {
-                    minX = vertex.x;
-                } else if (vertex.x > maxX) {
-                    maxX = vertex.x;
+            for (const Vertex &vertex : polygon.vertices) {
+                if (vertex.position.x < minX) {
+                    minX = vertex.position.x;
+                } else if (vertex.position.x > maxX) {
+                    maxX = vertex.position.x;
                 }
 
-                if (vertex.y < minY) {
-                    minY = vertex.y;
-                } else if (vertex.y > maxY) {
-                    maxY = vertex.y;
+                if (vertex.position.y < minY) {
+                    minY = vertex.position.y;
+                } else if (vertex.position.y > maxY) {
+                    maxY = vertex.position.y;
                 }
 
-                if (vertex.z < minZ) {
-                    minZ = vertex.z;
-                } else if (vertex.z > maxZ) {
-                    maxZ = vertex.z;
+                if (vertex.position.z < minZ) {
+                    minZ = vertex.position.z;
+                } else if (vertex.position.z > maxZ) {
+                    maxZ = vertex.position.z;
                 }
             }
         }

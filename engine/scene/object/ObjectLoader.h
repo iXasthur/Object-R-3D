@@ -39,8 +39,8 @@ public:
             obj.name = obj.name.substr(find + 1);
         }
 
-        std::vector<Vector3> vertices;
         std::vector<Polygon> polygons;
+        std::vector<Vector3> positions;
         std::vector<Vector3> normals;
 
         std::ifstream in(filename, std::ios::in);
@@ -55,7 +55,7 @@ public:
                     v >> vertex.y;
                     v >> vertex.z;
 
-                    vertices.push_back(vertex);
+                    positions.push_back(vertex);
                 } else if (line.substr(0, 3) == "vn ") {
                     std::istringstream v(line.substr(3));
                     Vector3 normal;
@@ -103,50 +103,50 @@ public:
                         }
                     }
 
-                    std::array<Vector3, 3> pVertices;
+                    std::array<Vector3, 3> pPositions;
                     std::array<Vector3, 3> pNormals;
                     if (f.size() == 3) {
-                        pVertices[0] = vertices[f[0] - 1];
-                        pVertices[1] = vertices[f[1] - 1];
-                        pVertices[2] = vertices[f[2] - 1];
+                        pPositions[0] = positions[f[0] - 1];
+                        pPositions[1] = positions[f[1] - 1];
+                        pPositions[2] = positions[f[2] - 1];
 
                         if (!normals.empty()) {
                             pNormals[0] = normals[n[0] - 1];
                             pNormals[1] = normals[n[1] - 1];
                             pNormals[2] = normals[n[2] - 1];
-                            polygons.emplace_back(Polygon(pVertices, pNormals));
+                            polygons.emplace_back(Polygon(pPositions, pNormals));
                         } else {
-                            polygons.emplace_back(Polygon(pVertices));
+                            polygons.emplace_back(Polygon(pPositions));
                         }
 
                     } else if (f.size() == 4) {
-                        pVertices[0] = vertices[f[0] - 1];
-                        pVertices[1] = vertices[f[1] - 1];
-                        pVertices[2] = vertices[f[2] - 1];
+                        pPositions[0] = positions[f[0] - 1];
+                        pPositions[1] = positions[f[1] - 1];
+                        pPositions[2] = positions[f[2] - 1];
 
                         if (!normals.empty()) {
                             pNormals[0] = normals[n[0] - 1];
                             pNormals[1] = normals[n[1] - 1];
                             pNormals[2] = normals[n[2] - 1];
-                            polygons.emplace_back(Polygon(pVertices, pNormals));
+                            polygons.emplace_back(Polygon(pPositions, pNormals));
                         } else {
-                            polygons.emplace_back(Polygon(pVertices));
+                            polygons.emplace_back(Polygon(pPositions));
                         }
 
-                        pVertices[0] = vertices[f[0] - 1];
-                        pVertices[1] = vertices[f[2] - 1];
-                        pVertices[2] = vertices[f[3] - 1];
+                        pPositions[0] = positions[f[0] - 1];
+                        pPositions[1] = positions[f[2] - 1];
+                        pPositions[2] = positions[f[3] - 1];
 
                         if (!normals.empty()) {
                             pNormals[0] = normals[n[0] - 1];
                             pNormals[1] = normals[n[2] - 1];
                             pNormals[2] = normals[n[3] - 1];
-                            polygons.emplace_back(Polygon(pVertices, pNormals));
+                            polygons.emplace_back(Polygon(pPositions, pNormals));
                         } else {
-                            polygons.emplace_back(Polygon(pVertices));
+                            polygons.emplace_back(Polygon(pPositions));
                         }
                     } else {
-                        std::cerr << "Object face must have 3 or 4 vertices" << std::endl;
+                        std::cerr << "Object face must have 3 or 4 positions" << std::endl;
                     }
                 }
             }
