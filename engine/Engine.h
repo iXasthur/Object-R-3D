@@ -122,6 +122,11 @@ private:
             Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
             for (const Polygon &polygon: obj.polygons) {
+                // Force flat shading
+//                for (auto &item : polygon.vertices) {
+//                    item.normal = polygon.getFaceNormal();
+//                }
+
                 Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
 
                 Polygon translated = polygon.matrixMultiplied(moveMatrix);
