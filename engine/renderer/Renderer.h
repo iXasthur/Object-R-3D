@@ -28,7 +28,7 @@ private:
         }
     }
 
-    void drawLine(const Line &line, const Light &light, const Color &color) {
+    void drawLine(const Line &line, const Camera &camera, const Light &light, const Color &color, const float shininess) {
         Vertex vf0 = line.v0;
         vf0.position.x = std::floor(vf0.position.x);
         vf0.position.y = std::floor(vf0.position.y);
@@ -62,7 +62,6 @@ private:
             int y = y0;
             float zf = vLine.getZtXY((float) x, (float) y);
             Vector3 n = vLine.getInterpolatedNormal((float) x, (float) y, zf);
-            Color c = light.getPixelColor(color, n);
 
             if (std::isnan(zf)) {
 //                zf = std::numeric_limits<float>::lowest();
@@ -73,6 +72,14 @@ private:
 //                c = {0, 255, 0, 255};
 //                drawPoint(x, y, zf, c);
             } else {
+                Vector3 converted = {(float) x, (float) y, zf};
+                converted = Matrix4::multiplyVector(converted, matScreen_inverse);
+                converted = Matrix4::multiplyVector(converted, matProj_inverse);
+                converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
+                converted = Matrix4::multiplyVector(converted, matMove_inverse);
+
+                Vector3 lookDirection = Vector3::sub(converted, camera.position);
+                Color c = light.getPixelColor(lookDirection, n, color, shininess);
                 drawPoint(x, y, zf, c);
             }
 
@@ -91,7 +98,7 @@ private:
         }
     }
 
-    void drawPhongTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
+    void drawPhongTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
         std::array<Vertex, 3> vertices = screenPolygon.vertices;
         std::sort(vertices.begin(), vertices.end(), [&](Vertex &v0, Vertex &v1) {
             return v0.position.y < v1.position.y;
@@ -127,152 +134,42 @@ private:
                 Vector3 n01 = l01_3d.getInterpolatedNormal(x01, scanlineY, z01);
                 Vertex v01 = {{x01, scanlineY, z01}, n01};
                 Line line = {v01, v02};
-                drawLine(line, light, color);
+                drawLine(line, camera, light, color, shininess);
             } else {
                 float x12 = l12_2d.getXtY(scanlineY);
                 float z12 = l12_3d.getZtXY(x12, scanlineY);
                 Vector3 n12 = l12_3d.getInterpolatedNormal(x12, scanlineY, z12);
                 Vertex v12 = {{x12, scanlineY, z12}, n12};
                 Line line = {v12, v02};
-                drawLine(line, light, color);
+                drawLine(line, camera, light, color, shininess);
             }
 
             scanlineY = scanlineY + 1;
         }
     }
 
-    void drawWireframeTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
-        drawLine({screenPolygon.vertices[0], screenPolygon.vertices[1]}, light, color);
-        drawLine({screenPolygon.vertices[1], screenPolygon.vertices[2]}, light, color);
-        drawLine({screenPolygon.vertices[2], screenPolygon.vertices[0]}, light, color);
+    void drawWireframeTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+        drawLine({screenPolygon.vertices[0], screenPolygon.vertices[1]}, camera, light, color, shininess);
+        drawLine({screenPolygon.vertices[1], screenPolygon.vertices[2]}, camera, light, color, shininess);
+        drawLine({screenPolygon.vertices[2], screenPolygon.vertices[0]}, camera, light, color, shininess);
     }
 
-    void drawTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
-        drawPhongTriangle(screenPolygon, light, color);
-//        drawWireframeTriangle(screenPolygon, light, color);
+    void drawTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+        drawPhongTriangle(screenPolygon, camera, light, color, shininess);
+//        drawWireframeTriangle(screenPolygon, camera, light, color, shininess);
     }
-
-
-
-//    void drawTopFlatTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
-//        Polygon drawPolygon = screenPolygon;
-//
-//        int rc = 0;
-//        while (std::floor(drawPolygon.vertices[0].position.y) != std::floor(drawPolygon.vertices[1].position.y)) {
-//            if (rc > 2) {
-//                return;
-//            }
-//            drawPolygon = drawPolygon.getRotatedClockwise();
-//            rc++;
-//        }
-//
-//        /*
-//          0 ---------- 1
-//            \	     /
-//             \      /
-//              \	   /
-//               \  /
-//                \/
-//                 2
-//        */
-//
-//        std::array<Vertex, 3> v = drawPolygon.vertices;
-//        for (int i = 0; i < 3; i++) {
-//            v[i].position.x = std::floor(v[i].position.x);
-//            v[i].position.y = std::floor(v[i].position.y);
-//        }
-//
-//        Line l02 = {v[0], v[2]};
-//        Line l12 = {v[1], v[2]};
-//
-//        float dx0 = (v[0].position.x - v[2].position.x) / (v[2].position.y - v[0].position.y);
-//        float dx1 = (v[1].position.x - v[2].position.x) / (v[2].position.y - v[1].position.y);
-//
-//        float dz0 = (v[0].position.z - v[2].position.z) / (v[2].position.y - v[0].position.y);
-//        float dz1 = (v[1].position.z - v[2].position.z) / (v[2].position.y - v[1].position.y);
-//
-//        float xOffset0 = v[2].position.x;
-//        float xOffset1 = v[2].position.x;
-//
-//        float zOffset0 = v[2].position.z;
-//        float zOffset1 = v[2].position.z;
-//
-//        for (int scanlineY = (int) v[2].position.y; scanlineY >= (int) v[0].position.y; scanlineY--) {
-//            Vector3 v0 = {xOffset0, (float) scanlineY, zOffset0};
-//            Vector3 v1 = {xOffset1, (float) scanlineY, zOffset1};
-//            Vector3 n0 = l02.getInterpolatedNormalXY(v0.x, v0.y);
-//            Vector3 n1 = l12.getInterpolatedNormalXY(v1.x, v1.y);
-//
-//            Line line = {{v0, n0}, {v1, n1}};
-//            drawLine(line, light, color);
-//
-//            xOffset0 += dx0;
-//            xOffset1 += dx1;
-//            zOffset0 += dz0;
-//            zOffset0 += dz1;
-//        }
-//    }
-//
-//    void drawBottomFlatTriangle(const Polygon &screenPolygon, const Light &light, const Color &color) {
-//        Polygon drawPolygon = screenPolygon;
-//
-//        int rc = 0;
-//        while (std::floor(drawPolygon.vertices[1].position.y) != std::floor(drawPolygon.vertices[2].position.y)) {
-//            if (rc > 2) {
-//                return;
-//            }
-//            drawPolygon = drawPolygon.getRotatedClockwise();
-//            rc++;
-//        }
-//
-//        /*
-//                0
-//                /\
-//               /  \
-//              /    \
-//             /      \
-//            /        \
-//          2 ---------- 1
-//        */
-//
-//        std::array<Vertex, 3> v = drawPolygon.vertices;
-//        for (int i = 0; i < 3; i++) {
-//            v[i].position.x = std::floor(v[i].position.x);
-//            v[i].position.y = std::floor(v[i].position.y);
-//        }
-//
-//        Line l10 = {v[1], v[0]};
-//        Line l20 = {v[2], v[0]};
-//
-//        float dx0 = (v[1].position.x - v[0].position.x) / (v[1].position.y - v[0].position.y);
-//        float dx1 = (v[2].position.x - v[0].position.x) / (v[2].position.y - v[0].position.y);
-//
-//        float dz0 = (v[1].position.z - v[0].position.z) / (v[1].position.y - v[0].position.y);
-//        float dz1 = (v[2].position.z - v[0].position.z) / (v[2].position.y - v[0].position.y);
-//
-//        float xOffset0 = v[0].position.x;
-//        float xOffset1 = v[0].position.x;
-//
-//        float zOffset0 = v[0].position.z;
-//        float zOffset1 = v[0].position.z;
-//
-//        for (int scanlineY = (int) v[0].position.y; scanlineY <= (int) v[1].position.y; scanlineY++) {
-//            Vector3 v0 = {xOffset0, (float) scanlineY, zOffset0};
-//            Vector3 v1 = {xOffset1, (float) scanlineY, zOffset1};
-//            Vector3 n0 = l10.getInterpolatedNormalXY(v0.x, v0.y);
-//            Vector3 n1 = l20.getInterpolatedNormalXY(v1.x, v1.y);
-//
-//            Line line = {{v0, n0}, {v1, n1}};
-//            drawLine(line, light, color);
-//
-//            xOffset0 += dx0;
-//            xOffset1 += dx1;
-//            zOffset0 += dz0;
-//            zOffset0 += dz1;
-//        }
-//    }
 
 public:
+    Matrix4 matMove;
+    Matrix4 matCameraView;
+    Matrix4 matProj;
+    Matrix4 matScreen;
+
+    Matrix4 matMove_inverse;
+    Matrix4 matCameraView_inverse;
+    Matrix4 matProj_inverse;
+    Matrix4 matScreen_inverse;
+
     explicit Renderer(SDL_Renderer *r) : renderer(r) {
 
     }
@@ -292,16 +189,26 @@ public:
             std::fill(zBuffer[i].begin(), zBuffer[i].end(), std::numeric_limits<float>::max());
         }
 
+        matMove = {};
+        matCameraView = {};
+        matProj = {};
+        matScreen = {};
+        
+        matMove_inverse = {};
+        matCameraView_inverse = {};
+        matProj_inverse = {};
+        matScreen_inverse = {};
+
         SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
         SDL_RenderClear(renderer);
     }
 
-    void drawPolygon(const Polygon &screenPolygon, const Light &light, const Color &color) {
+    void drawPolygon(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
         if (screenPolygon.isFlat()) {
             return;
         }
 
-        drawTriangle(screenPolygon, light, color);
+        drawTriangle(screenPolygon, camera, light, color, shininess);
     }
 
 };

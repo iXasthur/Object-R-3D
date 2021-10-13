@@ -107,19 +107,12 @@ private:
 //    }
 
     void renderScene() {
-        Matrix4 matProj = Matrix4::makeProjection(
-                scene.camera.fFOV,
-                renderer.getAspectRatio(),
-                scene.camera.fNear,
-                scene.camera.fFar
-        );
-        Matrix4 matCameraView = Matrix4::makeCameraView(scene.camera);
-        Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
         // TODO: Draw light object
 
         for (const Object &obj: scene.objects) {
-            Matrix4 moveMatrix = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
+            renderer.matMove = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
+            renderer.matMove_inverse = Matrix4::invert(renderer.matMove);
 
             for (const Polygon &polygon: obj.polygons) {
                 // Force flat shading
@@ -129,23 +122,24 @@ private:
 
                 Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
 
-                Polygon translated = polygon.matrixMultiplied(moveMatrix);
+                Polygon translated = polygon.matrixMultiplied(renderer.matMove);
 
                 Vector3 translatedCenter = translated.getCenter();
 
                 Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 
                 if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
+
                     // Apply camera transformations
-                    Polygon viewed = translated.matrixMultiplied(matCameraView);
+                    Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
 
                     // -1 ... +1
-                    Polygon projected = viewed.matrixMultiplied(matProj);
+                    Polygon projected = viewed.matrixMultiplied(renderer.matProj);
 
                     // Screen width and height coordinates with inverted Y
-                    Polygon screenPolygon = projected.matrixMultiplied(matScreen);
+                    Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
 
-                    renderer.drawPolygon(screenPolygon, scene.light, obj.color);
+                    renderer.drawPolygon(screenPolygon, scene.camera, scene.light, obj.color, obj.shininess);
 
 //                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
 //                        // -1 ... +1
@@ -157,10 +151,28 @@ private:
 //                        renderer.drawPolygon(screenPolygon, light, obj.color);
 //                    }
 
+//                    std::cout << "----" << std::endl;
+//
+//                    std::cout << "   m: " << polygon.vertices[0].position.toString() << std::endl;
+//                    std::cout << "   w: " << translated.vertices[0].position.toString() << std::endl;
+//                    std::cout << "   v: " << viewed.vertices[0].position.toString() << std::endl;
+//                    std::cout << "   p: " << projected.vertices[0].position.toString() << std::endl;
+//                    std::cout << "   s: " << screenPolygon.vertices[0].position.toString() << std::endl;
+//
+//                    Polygon i_screen = screenPolygon.matrixMultiplied(Matrix4::invert(renderer.matScreen));
+//                    std::cout << "s->p: " << i_screen.vertices[0].position.toString() << std::endl;
+//
+//                    Polygon i_projected = i_screen.matrixMultiplied(Matrix4::invert(renderer.matProj));
+//                    std::cout << "p->v: " << i_projected.vertices[0].position.toString() << std::endl;
+//
+//                    Polygon i_viewed = i_projected.matrixMultiplied(Matrix4::invert(renderer.matCameraView));
+//                    std::cout << "v->w: " << i_viewed.vertices[0].position.toString() << std::endl;
+//
+//                    Polygon i_world = i_viewed.matrixMultiplied(Matrix4::invert(renderer.matMove));
+//                    std::cout << "w->m: " << i_world.vertices[0].position.toString() << std::endl;
                 }
             }
         }
-
     }
 
     void processInputFast() {
@@ -272,6 +284,24 @@ private:
             // Gets real size of the window (fix for macOS/resizing)
             // + Background (Clears with color)
             renderer.updateScreen({20, 20, 20, 255});
+
+            renderer.matCameraView = Matrix4::makeCameraView(
+                    scene.camera.getInitialUpVector(),
+                    scene.camera.getInitialTargetVector(),
+                    scene.camera.position,
+                    scene.camera.eulerRotation
+            );
+            renderer.matProj = Matrix4::makeProjection(
+                    scene.camera.fFOV,
+                    renderer.getAspectRatio(),
+                    scene.camera.fNear,
+                    scene.camera.fFar
+            );
+            renderer.matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
+
+            renderer.matCameraView_inverse = Matrix4::invert(renderer.matCameraView);
+            renderer.matProj_inverse = Matrix4::invert(renderer.matProj);
+            renderer.matScreen_inverse = Matrix4::invert(renderer.matScreen);
 
             renderScene();
 

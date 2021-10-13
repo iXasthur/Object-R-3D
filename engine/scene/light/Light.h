@@ -8,6 +8,7 @@
 #include "AmbientLight.h"
 #include "DiffuseLight.h"
 #include "SpecularLight.h"
+#include "../camera/Camera.h"
 
 class Light {
 public:
@@ -26,10 +27,10 @@ public:
 
     }
 
-    [[nodiscard]] Color getPixelColor(const Color &color, const Vector3 &normal) const {
+    [[nodiscard]] Color getPixelColor(const Vector3 &lookDirection, const Vector3 &normal, const Color &color, const float shininess) const {
         Color a = ambient.getPixelColor();
         Color d = diffuse.getPixelColor(normal, direction);
-        Color s = {0, 0, 0, 255};
+        Color s = specular.getPixelColor(normal, shininess, lookDirection, direction);
         return color.plusRGB(a).plusRGB(d).plusRGB(s);
     }
 };

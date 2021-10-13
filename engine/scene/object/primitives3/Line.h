@@ -121,6 +121,10 @@ public:
 
         return in;
     }
+
+    static Vector3 convert(const Line &from, const Line &to, const Vector3 &position) {
+        return Vector3::div(Vector3::add(to.v0.position, to.v1.position), 2);
+    }
 };
 
 

@@ -6,9 +6,105 @@
 #define TAMARA_3D_MATRIX4_H
 
 #include "Vector3.h"
-#include "../scene/camera/Camera.h"
+#include "EulerAngle.h"
 
 class Matrix4 {
+private:
+    static float getDeterminant(std::vector<std::vector<float>> vec) {
+        if(vec.size() != vec[0].size()) {
+            throw std::runtime_error("getDeterminant vec is not quadratic");
+        }
+
+        int dimension = (int) vec.size();
+
+        if(dimension == 0) {
+            return 1;
+        }
+
+        if(dimension == 1) {
+            return vec[0][0];
+        }
+
+        //Formula for 2x2-matrix
+        if(dimension == 2) {
+            return vec[0][0] * vec[1][1] - vec[0][1] * vec[1][0];
+        }
+
+        float result = 0;
+        int sign = 1;
+        for(int i = 0; i < dimension; i++) {
+
+            //Submatrix
+            std::vector<std::vector<float>> subVect(dimension - 1, std::vector<float> (dimension - 1));
+            for(int m = 1; m < dimension; m++) {
+                int z = 0;
+                for(int n = 0; n < dimension; n++) {
+                    if(n != i) {
+                        subVect[m-1][z] = vec[m][n];
+                        z++;
+                    }
+                }
+            }
+
+            //recursive call
+            result = result + (float) sign * vec[0][i] * getDeterminant(subVect);
+            sign = -sign;
+        }
+
+        return result;
+    }
+
+    static std::vector<std::vector<float>> getTranspose(const std::vector<std::vector<float>> &matrix1) {
+
+        //Transpose-matrix: height = width(matrix), width = height(matrix)
+        std::vector<std::vector<float>> solution(matrix1[0].size(), std::vector<float> (matrix1.size()));
+
+        //Filling solution-matrix
+        for(size_t i = 0; i < matrix1.size(); i++) {
+            for(size_t j = 0; j < matrix1[0].size(); j++) {
+                solution[j][i] = matrix1[i][j];
+            }
+        }
+
+        return solution;
+    }
+
+    static std::vector<std::vector<float>> getCofactor(const std::vector<std::vector<float>> &vec) {
+        if(vec.size() != vec[0].size()) {
+            throw std::runtime_error("getDeterminant vec is not quadratic");
+        }
+
+        std::vector<std::vector<float>> solution(vec.size(), std::vector<float> (vec.size()));
+        std::vector<std::vector<float>> subVec(vec.size() - 1, std::vector<float> (vec.size() - 1));
+
+        for(std::size_t i = 0; i < vec.size(); i++) {
+            for(std::size_t j = 0; j < vec[0].size(); j++) {
+
+                int p = 0;
+                for(size_t x = 0; x < vec.size(); x++) {
+                    if(x == i) {
+                        continue;
+                    }
+                    int q = 0;
+
+                    for(size_t y = 0; y < vec.size(); y++) {
+                        if(y == j) {
+                            continue;
+                        }
+
+                        subVec[p][q] = vec[x][y];
+                        q++;
+                    }
+                    p++;
+                }
+
+                solution[i][j] = powf(-1, (float) i + (float) j) * getDeterminant(subVec);
+            }
+        }
+
+        return solution;
+    }
+
 public:
     float m[4][4] = { 0 };
 
@@ -16,6 +112,26 @@ public:
 
 
     // ---- 3D-GE LIB ----
+
+    static std::vector<std::vector<float>> toVector(const Matrix4 &m) {
+        std::vector<std::vector<float>> out = std::vector<std::vector<float>>(4, std::vector<float>(4));
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                out[i][j] = m.m[i][j];
+            }
+        }
+        return out;
+    }
+
+    static Matrix4 fromVector(const std::vector<std::vector<float>> &vec) {
+        Matrix4 out;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                out.m[i][j] = vec[i][j];
+            }
+        }
+        return out;
+    }
 
     static Vector3 multiplyVector(const Vector3 &i, const Matrix4 &m) {
         Vector3 o;
@@ -26,7 +142,7 @@ public:
         float w = i.x * m.m[0][3] + i.y * m.m[1][3] + i.z * m.m[2][3] + m.m[3][3];
         if (w != 1.0f) {
             if (w == 0.0f) {
-                std::cout << "w == 0" << std::endl;
+//                std::cout << "w == 0" << std::endl;
             }
 
             o.x /= w;
@@ -138,20 +254,18 @@ public:
         return matrix;
     }
 
-    static Matrix4 makeCameraView(const Camera &camera) {
-        Vector3 upVector = camera.getInitialUpVector();
-        Vector3 targetVector = camera.getInitialTargetVector();
+    static Matrix4 makeCameraView(const Vector3 &initialUp, const Vector3 &initialTarget, const Vector3 &position, const EulerAngle &rotation) {
+        Vector3 upVector = initialUp;
+        Vector3 targetVector = initialTarget;
 
-        Matrix4 m1 = Matrix4::makeRotationX(-camera.eulerRotation.x);
-        Matrix4 m2 = Matrix4::makeRotationY(camera.eulerRotation.y);
+        Matrix4 m1 = Matrix4::makeRotationX(-rotation.x);
+        Matrix4 m2 = Matrix4::makeRotationY(rotation.y);
         Matrix4 matCameraRot = Matrix4::multiplyMatrix(m1, m2);
         Vector3 lookDirection = Matrix4::multiplyVector(targetVector, matCameraRot);
-        targetVector = Vector3::add(camera.position, lookDirection);
+        targetVector = Vector3::add(position, lookDirection);
 
-        Vector3 pos = camera.position;
-        Matrix4 matCamera = Matrix4::pointAt(pos, targetVector, upVector);
+        Matrix4 matCamera = Matrix4::pointAt(position, targetVector, upVector);
 
-        // Quick inverse
         Matrix4 matView;
         matView.m[0][0] = matCamera.m[0][0]; matView.m[0][1] = matCamera.m[1][0]; matView.m[0][2] = matCamera.m[2][0]; matView.m[0][3] = 0.0f;
         matView.m[1][0] = matCamera.m[0][1]; matView.m[1][1] = matCamera.m[1][1]; matView.m[1][2] = matCamera.m[2][1]; matView.m[1][3] = 0.0f;
@@ -183,6 +297,28 @@ public:
         matrix.m[2][0] = newForward.x;	matrix.m[2][1] = newForward.y;	matrix.m[2][2] = newForward.z;	matrix.m[2][3] = 0.0f;
         matrix.m[3][0] = pos.x;			matrix.m[3][1] = pos.y;			matrix.m[3][2] = pos.z;			matrix.m[3][3] = 1.0f;
         return matrix;
+    }
+
+    static Matrix4 invert(const Matrix4 &matrix) {
+        std::vector<std::vector<float>> vec = Matrix4::toVector(matrix);
+
+        float determinant = getDeterminant(vec);
+
+        if(determinant == 0) {
+            throw std::runtime_error("getInverse determinant is 0");
+        }
+
+        float d = 1.0f / determinant;
+
+        vec = getTranspose(getCofactor(vec));
+
+        for(size_t i = 0; i < vec.size(); i++) {
+            for(size_t j = 0; j < vec.size(); j++) {
+                vec[i][j] *= d;
+            }
+        }
+
+        return Matrix4::fromVector(vec);
     }
 };
 
