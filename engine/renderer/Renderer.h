@@ -76,7 +76,6 @@ private:
                 converted = Matrix4::multiplyVector(converted, matScreen_inverse);
                 converted = Matrix4::multiplyVector(converted, matProj_inverse);
                 converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
-                converted = Matrix4::multiplyVector(converted, matMove_inverse);
 
                 Vector3 lookDirection = Vector3::sub(converted, camera.position);
                 Color c = light.getPixelColor(lookDirection, n, color, shininess);
@@ -160,12 +159,10 @@ private:
     }
 
 public:
-    Matrix4 matMove;
     Matrix4 matCameraView;
     Matrix4 matProj;
     Matrix4 matScreen;
 
-    Matrix4 matMove_inverse;
     Matrix4 matCameraView_inverse;
     Matrix4 matProj_inverse;
     Matrix4 matScreen_inverse;
@@ -189,12 +186,10 @@ public:
             std::fill(zBuffer[i].begin(), zBuffer[i].end(), std::numeric_limits<float>::max());
         }
 
-        matMove = {};
         matCameraView = {};
         matProj = {};
         matScreen = {};
-        
-        matMove_inverse = {};
+
         matCameraView_inverse = {};
         matProj_inverse = {};
         matScreen_inverse = {};

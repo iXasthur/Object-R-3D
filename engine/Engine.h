@@ -111,8 +111,7 @@ private:
         // TODO: Draw light object
 
         for (const Object &obj: scene.objects) {
-            renderer.matMove = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
-            renderer.matMove_inverse = Matrix4::invert(renderer.matMove);
+            Matrix4 matMove = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
             for (const Polygon &polygon: obj.polygons) {
                 // Force flat shading
@@ -122,7 +121,7 @@ private:
 
                 Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
 
-                Polygon translated = polygon.matrixMultiplied(renderer.matMove);
+                Polygon translated = polygon.matrixMultiplied(matMove);
 
                 Vector3 translatedCenter = translated.getCenter();
 
