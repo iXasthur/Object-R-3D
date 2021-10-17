@@ -65,11 +65,11 @@ private:
 
             if (std::isnan(zf)) {
 //                zf = std::numeric_limits<float>::lowest();
-//                c = {255, 0, 0, 255};
+//                Color c = {255, 0, 0, 255};
 //                drawPoint(x, y, zf, c);
             } else if (std::isnan(n.x) || std::isnan(n.y) || std::isnan(n.z)) {
 //                zf = std::numeric_limits<float>::lowest();
-//                c = {0, 255, 0, 255};
+//                Color c = {0, 255, 0, 255};
 //                drawPoint(x, y, zf, c);
             } else {
                 Vector3 converted = {(float) x, (float) y, zf};
