@@ -258,12 +258,9 @@ private:
 
         Uint32 start;
         SDL_Event windowEvent;
-        while (isRunning)
-        {
-            while (SDL_PollEvent(&windowEvent))
-            {
-                if (windowEvent.type == SDL_QUIT)
-                {
+        while (isRunning) {
+            while (SDL_PollEvent(&windowEvent)) {
+                if (windowEvent.type == SDL_QUIT) {
                     isRunning = false;
                 }
 
@@ -341,8 +338,7 @@ public:
                 SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE
         );
 
-        if (this->window == nullptr)
-        {
+        if (this->window == nullptr) {
             printf("Error creating window! SDL_Error: %s\n", SDL_GetError());
             return false;
         } else {
