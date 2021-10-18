@@ -19,7 +19,7 @@ public:
     std::vector<Object> objects{};
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
-            {1.0f, 0.0f, 1.0f},
+            {-100.0f, 0.0f, -100.0f},
             {0.05f, {255, 255, 255, 255}},
             {1.0f, {155, 89, 182, 255}}, // Amethyst 155, 89, 182
             {0.4f, {255, 255, 255, 255}}

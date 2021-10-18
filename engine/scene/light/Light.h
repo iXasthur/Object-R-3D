@@ -12,25 +12,28 @@
 
 class Light {
 public:
-    Vector3 direction;
+    Vector3 position;
 
     AmbientLight ambient;
     DiffuseLight diffuse;
     SpecularLight specular;
 
     Light(
-            const Vector3 &direction,
+            const Vector3 &position,
             const AmbientLight &ambient,
             const DiffuseLight &diffuse,
             const SpecularLight &specular
-    ) : direction(direction), ambient(ambient), diffuse(diffuse), specular(specular) {
+    ) : position(position), ambient(ambient), diffuse(diffuse), specular(specular) {
 
     }
 
-    [[nodiscard]] Color getPixelColor(const Vector3 &lookDirection, const Vector3 &normal, const Color &color, const float shininess) const {
+    [[nodiscard]] Color getPixelColor(const Vector3 &position, const Vector3 &normal, const Camera &camera, const Color &color, const float shininess) const {
+        Vector3 lookDirection = Vector3::sub(position, camera.position);
+        Vector3 lightDirection = Vector3::sub(position, this->position);
+
         Color a = ambient.getPixelColor();
-        Color d = diffuse.getPixelColor(normal, direction);
-        Color s = specular.getPixelColor(normal, shininess, lookDirection, direction);
+        Color d = diffuse.getPixelColor(normal, lightDirection);
+        Color s = specular.getPixelColor(normal, shininess, lookDirection, lightDirection);
         return color.plusRGB(a).plusRGB(d).plusRGB(s);
     }
 };

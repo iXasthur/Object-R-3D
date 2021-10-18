@@ -354,7 +354,7 @@ public:
             s += obj.name + ", ";
         }
         s += scene.camera.position.toString() + ", ";
-        s += "light_direction: " + scene.light.direction.toString();
+        s += "light_position: " + scene.light.position.toString();
         return s;
     }
 };

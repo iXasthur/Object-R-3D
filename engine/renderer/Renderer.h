@@ -77,8 +77,8 @@ private:
                 converted = Matrix4::multiplyVector(converted, matProj_inverse);
                 converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
 
-                Vector3 lookDirection = Vector3::sub(converted, camera.position);
-                Color c = light.getPixelColor(lookDirection, n, color, shininess);
+
+                Color c = light.getPixelColor(converted, n, camera, color, shininess);
                 drawPoint(x, y, zf, c);
             }
 
