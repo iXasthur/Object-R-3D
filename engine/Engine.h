@@ -22,27 +22,22 @@ private:
 
     Scene scene = Scene();
 
-//    [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
-//        Vector3 target = scene.camera.getInitialTargetVector();
-//
-//        std::vector<Polygon> clippedNear = polygon.clipAgainstPlane(
-//                { 0.0f, 0.0f, scene.camera.fNear },
-//                {target.x, target.y, target.z}
-//        );
-//
-//        std::vector<Polygon> clippedFar;
-//
-//        for (const auto &p : clippedNear) {
-//            std::vector<Polygon> clipped = polygon.clipAgainstPlane(
-//                    { 0.0f, 0.0f, scene.camera.fFar },
-//                    {target.x, target.y, -target.z}
-//            );
-//
-//            clippedFar.insert(std::end(clippedFar), std::begin(clipped), std::end(clipped));
-//        }
-//
-//        return clippedFar;
-//    }
+    [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
+        Vector3 target = scene.camera.getInitialTargetVector();
+
+        Plane nearPlane = Plane({0.0f, 0.0f, scene.camera.fNear}, {target.x, target.y, target.z});
+        Plane farPlane = Plane({0.0f, 0.0f, scene.camera.fFar}, {target.x, target.y, -target.z});
+
+        std::vector<Polygon> clippedNear = polygon.clipAgainstPlane(nearPlane);
+
+        std::vector<Polygon> clippedFar;
+        for (const auto &p: clippedNear) {
+            std::vector<Polygon> clipped = polygon.clipAgainstPlane(farPlane);
+            clippedFar.insert(std::end(clippedFar), std::begin(clipped), std::end(clipped));
+        }
+
+        return clippedFar;
+    }
 //
 //    [[nodiscard]] std::vector<Polygon> clipPolygonByScreen(const Polygon &polygon) const {
 //        std::list<Polygon> listTriangles;
@@ -132,23 +127,15 @@ private:
                     // Apply camera transformations
                     Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
 
-                    // -1 ... +1
-                    Polygon projected = viewed.matrixMultiplied(renderer.matProj);
+                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+                        // -1 ... +1
+                        Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
 
-                    // Screen width and height coordinates with inverted Y
-                    Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
+                        // Screen width and height coordinates with inverted Y
+                        Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
 
-                    renderer.drawPolygon(screenPolygon, scene.camera, scene.light, obj.color, obj.shininess);
-
-//                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-//                        // -1 ... +1
-//                        Polygon projected = clippedViewed.matrixMultiplied(matProj);
-//
-//                        // Screen width and height coordinates with inverted Y
-//                        Polygon screenPolygon = projected.matrixMultiplied(matScreen);
-//
-//                        renderer.drawPolygon(screenPolygon, light, obj.color);
-//                    }
+                        renderer.drawPolygon(screenPolygon, scene.camera, scene.light, obj.color, obj.shininess);
+                    }
 
 //                    std::cout << "----" << std::endl;
 //

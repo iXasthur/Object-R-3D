@@ -15,7 +15,7 @@ public:
 
     Line(const Vertex &v0, const Vertex &v1) : v0(v0), v1(v1) {}
 
-    [[nodiscard]] Vector3 intersectPlane(const Plane &plane) const {
+    [[nodiscard]] Vertex intersectPlane(const Plane &plane) const {
         Vector3 plane_n = Vector3::normalize(plane_n);
         Vector3 plane_p = plane.p;
         Vector3 lineStart = v0.position;
@@ -27,7 +27,10 @@ public:
         float t = (plane_d - ad) / (bd - ad);
         Vector3 lineStartToEnd = Vector3::sub(lineEnd, lineStart);
         Vector3 lineToIntersect = Vector3::mul(lineStartToEnd, t);
-        return Vector3::add(lineStart, lineToIntersect);
+
+        Vector3 position = Vector3::add(lineStart, lineToIntersect);
+        Vector3 normal = getInterpolatedNormal(position.x, position.y, position.z);
+        return {position, normal};
     }
 
     [[nodiscard]] float getXtYZ(float targetY, float targetZ) const {
