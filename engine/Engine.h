@@ -119,7 +119,6 @@ private:
             Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 
             if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
-
                 // Apply camera transformations
                 Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
 
