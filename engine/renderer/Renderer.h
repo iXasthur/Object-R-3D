@@ -186,16 +186,18 @@ public:
             std::fill(zBuffer[i].begin(), zBuffer[i].end(), std::numeric_limits<float>::max());
         }
 
-        matCameraView = {};
-        matProj = {};
-        matScreen = {};
-
-        matCameraView_inverse = {};
-        matProj_inverse = {};
-        matScreen_inverse = {};
-
         SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
         SDL_RenderClear(renderer);
+    }
+
+    void updateMatrices(const Matrix4 &matCameraView, const Matrix4 &matProj, const Matrix4 &matScreen) {
+        this->matCameraView = matCameraView;
+        this->matProj = matProj;
+        this->matScreen = matScreen;
+
+        this->matCameraView_inverse = Matrix4::invert(matCameraView);
+        this->matProj_inverse = Matrix4::invert(matProj);
+        this->matScreen_inverse = Matrix4::invert(matScreen);
     }
 
     void drawPolygon(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {

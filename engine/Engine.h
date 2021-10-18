@@ -276,23 +276,21 @@ private:
             // + Background (Clears with color)
             renderer.updateScreen({20, 20, 20, 255});
 
-            renderer.matCameraView = Matrix4::makeCameraView(
+            Matrix4 matCameraView = Matrix4::makeCameraView(
                     scene.camera.getInitialUpVector(),
                     scene.camera.getInitialTargetVector(),
                     scene.camera.position,
                     scene.camera.eulerRotation
             );
-            renderer.matProj = Matrix4::makeProjection(
+            Matrix4 matProj = Matrix4::makeProjection(
                     scene.camera.fFOV,
                     renderer.getAspectRatio(),
                     scene.camera.fNear,
                     scene.camera.fFar
             );
-            renderer.matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
+            Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
-            renderer.matCameraView_inverse = Matrix4::invert(renderer.matCameraView);
-            renderer.matProj_inverse = Matrix4::invert(renderer.matProj);
-            renderer.matScreen_inverse = Matrix4::invert(renderer.matScreen);
+            renderer.updateMatrices(matCameraView, matProj, matScreen);
 
             renderScene();
 
