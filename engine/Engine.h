@@ -156,8 +156,7 @@ private:
     }
 
     void renderScene() {
-        static float lightRotationYd = 0.02f;
-        scene.light.position = Matrix4::multiplyVector(scene.light.position, Matrix4::makeRotationY(lightRotationYd));
+        scene.light.position = Matrix4::multiplyVector(scene.light.position, Matrix4::makeRotationY(0.02f));
 
         for (const Object &obj: scene.objects) {
             renderObject(obj);
