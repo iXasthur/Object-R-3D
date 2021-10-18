@@ -157,13 +157,16 @@ private:
     }
 
     void renderScene() {
+//        scene.light.position.x += 0.05f;
+
         for (const Object &obj: scene.objects) {
             renderObject(obj);
         }
 
-        Object lightObject = scene.lightObject;
-        lightObject.position = scene.light.position;
-        renderObject(lightObject);
+        if (scene.light.model != nullptr) {
+            Object lightObject = scene.light.getObject();
+            renderObject(lightObject);
+        }
     }
 
     void processInputFast() {

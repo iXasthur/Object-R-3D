@@ -19,12 +19,11 @@ public:
     std::vector<Object> objects{};
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
-            {-10.0f, 10.0f, -10.0f},
+            {-3.0f, 3.0f, -3.0f},
             {0.05f, {255, 255, 255, 255}},
             {1.0f, {155, 89, 182, 255}}, // Amethyst 155, 89, 182
             {0.4f, {255, 255, 255, 255}}
             );
-    Object lightObject;
 
     Scene() {
         std::string dir = "../objects/";
@@ -33,18 +32,17 @@ public:
 
         std::vector<std::string> names = {"sphere.obj"};
         for (auto &name : names) {
-            Object obj = ObjectLoader::loadObjModel(dir + name);
+            Object obj = *ObjectLoader::loadObjModel(dir + name);
             obj.centerPolygonVertices();
             obj.resizeToHeight(2);
             add(obj);
         }
 
-        Object lo = ObjectLoader::loadObjModel(dir + "sphere.obj");
-        lo.color = {255, 255, 255, 255};
-        lo.centerPolygonVertices();
-        lo.resizeToHeight(0.2);
-
-        lightObject = lo;
+        Object *lo = ObjectLoader::loadObjModel(dir + "sphere.obj");
+        lo->color = {255, 255, 255, 255};
+        lo->centerPolygonVertices();
+        lo->resizeToHeight(0.2);
+        light.model = lo;
 
         resetCamera();
     };

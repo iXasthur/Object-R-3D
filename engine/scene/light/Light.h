@@ -14,6 +14,8 @@ class Light {
 public:
     Vector3 position;
 
+    Object *model;
+
     AmbientLight ambient;
     DiffuseLight diffuse;
     SpecularLight specular;
@@ -23,7 +25,7 @@ public:
             const AmbientLight &ambient,
             const DiffuseLight &diffuse,
             const SpecularLight &specular
-    ) : position(position), ambient(ambient), diffuse(diffuse), specular(specular) {
+    ) : position(position), model(nullptr), ambient(ambient), diffuse(diffuse), specular(specular) {
 
     }
 
@@ -35,6 +37,16 @@ public:
         Color d = diffuse.getPixelColor(normal, lightDirection);
         Color s = specular.getPixelColor(normal, shininess, lookDirection, lightDirection);
         return color.plusRGB(a).plusRGB(d).plusRGB(s);
+    }
+
+    [[nodiscard]] Object getObject() const {
+        if (model == nullptr) {
+            throw std::runtime_error("Light has no model");
+        }
+
+        Object obj = *model;
+        obj.position = position;
+        return obj;
     }
 };
 

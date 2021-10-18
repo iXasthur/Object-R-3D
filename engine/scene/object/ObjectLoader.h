@@ -25,18 +25,18 @@ private:
     }
 
 public:
-    static Object loadObjModel(const std::string &filename) {
-        Object obj = Object();
-        obj.name = filename;
+    static Object* loadObjModel(const std::string &filename) {
+        Object *obj = new Object();
+        obj->name = filename;
 
-        int find = obj.name.find_last_of('/');
+        int find = obj->name.find_last_of('/');
         if (find != std::string::npos) {
-            obj.name = obj.name.substr(find + 1);
+            obj->name = obj->name.substr(find + 1);
         }
 
-        find = obj.name.find_last_of('\\');
+        find = obj->name.find_last_of('\\');
         if (find != std::string::npos) {
-            obj.name = obj.name.substr(find + 1);
+            obj->name = obj->name.substr(find + 1);
         }
 
         std::vector<Polygon> polygons;
@@ -154,7 +154,7 @@ public:
             std::cerr << "Cannot open " << filename << std::endl;
         }
 
-        obj.polygons = polygons;
+        obj->polygons = polygons;
         return obj;
     }
 };
