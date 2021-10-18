@@ -101,41 +101,37 @@ private:
 //        return v;
 //    }
 
-    void renderScene() {
+    void renderObject(const Object &obj) {
+        Matrix4 matMove = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
-        // TODO: Draw light object
-
-        for (const Object &obj: scene.objects) {
-            Matrix4 matMove = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
-
-            for (const Polygon &polygon: obj.polygons) {
-                // Force flat shading
+        for (const Polygon &polygon: obj.polygons) {
+            // Force flat shading
 //                for (auto &item : polygon.vertices) {
 //                    item.normal = polygon.getFaceNormal();
 //                }
 
-                Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
+            Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
 
-                Polygon translated = polygon.matrixMultiplied(matMove);
+            Polygon translated = polygon.matrixMultiplied(matMove);
 
-                Vector3 translatedCenter = translated.getCenter();
+            Vector3 translatedCenter = translated.getCenter();
 
-                Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
+            Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 
-                if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
+            if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
 
-                    // Apply camera transformations
-                    Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
+                // Apply camera transformations
+                Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
 
-                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-                        // -1 ... +1
-                        Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
+                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+                    // -1 ... +1
+                    Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
 
-                        // Screen width and height coordinates with inverted Y
-                        Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
+                    // Screen width and height coordinates with inverted Y
+                    Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
 
-                        renderer.drawPolygon(screenPolygon, scene.camera, scene.light, obj.color, obj.shininess);
-                    }
+                    renderer.drawPolygon(screenPolygon, scene.camera, scene.light, obj.color, obj.shininess);
+                }
 
 //                    std::cout << "----" << std::endl;
 //
@@ -156,9 +152,18 @@ private:
 //
 //                    Polygon i_world = i_viewed.matrixMultiplied(Matrix4::invert(renderer.matMove));
 //                    std::cout << "w->m: " << i_world.vertices[0].position.toString() << std::endl;
-                }
             }
         }
+    }
+
+    void renderScene() {
+        for (const Object &obj: scene.objects) {
+            renderObject(obj);
+        }
+
+        Object lightObject = scene.lightObject;
+        lightObject.position = scene.light.position;
+        renderObject(lightObject);
     }
 
     void processInputFast() {
