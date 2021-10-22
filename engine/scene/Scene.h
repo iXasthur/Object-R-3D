@@ -16,7 +16,7 @@
 
 class Scene {
 public:
-    std::vector<Object> objects{};
+    Object object;
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
             {3.0f, 3.0f, 3.0f},
@@ -30,13 +30,11 @@ public:
 
         // "cube.obj", "stone.obj", "deer.obj", "monkey.obj", "sphere.obj", "shovel.obj"
 
-        std::vector<std::string> names = {"shovel.obj"};
-        for (auto &name : names) {
-            Object obj = *ObjectLoader::loadObjModel(dir + name);
-            obj.centerPolygonVertices();
-            obj.resizeToHeight(2);
-            add(obj);
-        }
+        std::string name = "shovel.obj";
+        Object obj = *ObjectLoader::loadObjModel(dir + name);
+        obj.centerPolygonVertices();
+        obj.resizeToHeight(2);
+        object = obj;
 
         Object *lo = ObjectLoader::loadObjModel(dir + "sphere.obj");
         lo->color = {255, 255, 255, 255};
@@ -51,24 +49,24 @@ public:
         camera = Camera({0 , 0, 2}, {0, M_PI, 0});
     }
 
-    void add(const Object &obj) {
-        objects.emplace_back(obj);
-        reorderObjects(2);
-    }
-
-    void reorderObjects(float delimiterSize) {
-        Vector3 pos;
-        for (int i = 0; i < objects.size(); ++i) {
-            if (i > 0) {
-                Vector3 lastDim = objects[i - 1].dimension();
-                Vector3 dim = objects[i].dimension();
-                pos.x += lastDim.x / 2 + dim.x / 2;
-                pos.x += delimiterSize;
-            }
-
-            objects[i].position.x = pos.x;
-        }
-    }
+//    void add(const Object &obj) {
+//        objects.emplace_back(obj);
+//        reorderObjects(2);
+//    }
+//
+//    void reorderObjects(float delimiterSize) {
+//        Vector3 pos;
+//        for (int i = 0; i < objects.size(); ++i) {
+//            if (i > 0) {
+//                Vector3 lastDim = objects[i - 1].dimension();
+//                Vector3 dim = objects[i].dimension();
+//                pos.x += lastDim.x / 2 + dim.x / 2;
+//                pos.x += delimiterSize;
+//            }
+//
+//            objects[i].position.x = pos.x;
+//        }
+//    }
 };
 
 

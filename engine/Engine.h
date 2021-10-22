@@ -24,6 +24,8 @@ private:
 
     Scene scene = Scene();
 
+    Uint32 frameDeltaTime = 0;
+
     [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
         Vector3 target = scene.camera.getInitialTargetVector();
 
@@ -177,9 +179,7 @@ private:
     void renderScene() {
 //        scene.light.position = Matrix4::multiplyVector(scene.light.position, Matrix4::makeRotationY(0.02f));
 
-        for (const Object &obj: scene.objects) {
-            renderObject(obj);
-        }
+        renderObject(scene.object);
 
         if (scene.light.model != nullptr) {
             Object lightObject = scene.light.getObject();
@@ -188,9 +188,14 @@ private:
     }
 
     void processInputFast() {
-        float positionOffset = 5.0f / (float)targetFps;
-        float rotationOffsetRad = 2.0f / (float)targetFps;
-        float fovOffset = 20.0f / (float)targetFps;
+//        float positionOffset = 5.0f / (float) targetFps;
+//        float rotationOffsetRad = 2.0f / (float) targetFps;
+//        float fovOffset = 20.0f / (float) targetFps;
+
+        auto dt = (float) frameDeltaTime / 1000.0f;
+        float positionOffset = 2.0f * dt;
+        float rotationOffsetRad = 1.0f * dt;
+        float fovOffset = 30.0f * dt;
 
         const Uint8 *state = SDL_GetKeyboardState(nullptr);
 
@@ -269,6 +274,8 @@ private:
         SDL_Renderer *sdl_renderer = SDL_CreateRenderer(window, -1, 0); // SDL_RENDERER_ACCELERATED is Default
         renderer = Renderer(sdl_renderer);
 
+        frameDeltaTime = 1000 / targetFps;
+
         Uint32 start;
         SDL_Event windowEvent;
         while (isRunning) {
@@ -314,9 +321,9 @@ private:
 
             // Renders window
             SDL_RenderPresent(sdl_renderer);
-            Uint32 ticks = SDL_GetTicks();
-            if (1000 / targetFps > ticks - start) {
-                SDL_Delay(1000 / targetFps - (ticks - start));
+            frameDeltaTime = SDL_GetTicks() - start;
+            if (1000 / targetFps > frameDeltaTime) {
+                SDL_Delay(1000 / targetFps - frameDeltaTime);
             }
         }
 
@@ -357,13 +364,15 @@ public:
         }
     }
 
-    std::string description() {
-        std::string s;
-        for (const Object &obj : scene.objects) {
-            s += obj.name + ", ";
-        }
-        s += scene.camera.position.toString() + ", ";
-        s += "light_position: " + scene.light.position.toString();
+    [[nodiscard]] std::string description() const {
+        std::string fov = std::to_string(scene.camera.fFOV);
+        fov = fov.substr(0, fov.find('.') + 3);
+
+        std::string s = scene.object.name + "; ";
+        s += "camera: " + scene.camera.position.toString() + ", ";
+        s += "fov: " + fov + ", ";
+        s += "euler: " + scene.camera.eulerRotation.toString() + ", ";
+        s += "light: " + scene.light.position.toString();
         return s;
     }
 };
