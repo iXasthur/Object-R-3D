@@ -258,7 +258,7 @@ public:
         Vector3 upVector = initialUp;
         Vector3 targetVector = initialTarget;
 
-        Matrix4 m1 = Matrix4::makeRotationX(-rotation.x);
+        Matrix4 m1 = Matrix4::makeRotationX(rotation.x);
         Matrix4 m2 = Matrix4::makeRotationY(rotation.y);
         Matrix4 matCameraRot = Matrix4::multiplyMatrix(m1, m2);
         Vector3 lookDirection = Matrix4::multiplyVector(targetVector, matCameraRot);

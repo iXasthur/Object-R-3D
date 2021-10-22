@@ -46,7 +46,7 @@ public:
     };
 
     void resetCamera() {
-        camera = Camera({0 , 0, 2}, {0, M_PI, 0});
+        camera = Camera({0 , 0, -2}, {0, 0, 0});
     }
 
 //    void add(const Object &obj) {

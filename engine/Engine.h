@@ -228,18 +228,18 @@ private:
         }
 
         if (state[SDL_SCANCODE_UP]) {
-            if (scene.camera.eulerRotation.x - rotationOffsetRad > -M_PI / 2.0f) {
-                scene.camera.eulerRotation.x -= rotationOffsetRad;
-            } else {
-                scene.camera.eulerRotation.x = -M_PI / 2.0f + 0.01f;
-            }
-        }
-
-        if (state[SDL_SCANCODE_DOWN]) {
             if (scene.camera.eulerRotation.x + rotationOffsetRad < M_PI / 2.0f) {
                 scene.camera.eulerRotation.x += rotationOffsetRad;
             } else {
                 scene.camera.eulerRotation.x = M_PI / 2.0f - 0.01f;
+            }
+        }
+
+        if (state[SDL_SCANCODE_DOWN]) {
+            if (scene.camera.eulerRotation.x - rotationOffsetRad > -M_PI / 2.0f) {
+                scene.camera.eulerRotation.x -= rotationOffsetRad;
+            } else {
+                scene.camera.eulerRotation.x = -M_PI / 2.0f + 0.01f;
             }
         }
 
