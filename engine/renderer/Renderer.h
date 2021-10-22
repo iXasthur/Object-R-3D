@@ -163,7 +163,7 @@ public:
     Matrix4 matScreen_inverse;
 
     explicit Renderer(SDL_Renderer *r) : renderer(r) {
-
+        SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
     }
 
     [[nodiscard]] SDL_Rect getScreenRect() const {
@@ -174,18 +174,13 @@ public:
         return (float) screenRect.h / (float) screenRect.w;
     }
 
-    void updateScreen(const Color &color) {
+    void updateScreen(const Color &color, const Matrix4 &matCameraView, const Matrix4 &matProj, const Matrix4 &matScreen) {
         SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
         zBuffer = std::vector<std::vector<float>>(screenRect.h, std::vector<float>(screenRect.w));
         for (int i = 0; i < screenRect.h; ++i) {
             std::fill(zBuffer[i].begin(), zBuffer[i].end(), std::numeric_limits<float>::max());
         }
 
-        SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
-        SDL_RenderClear(renderer);
-    }
-
-    void updateMatrices(const Matrix4 &matCameraView, const Matrix4 &matProj, const Matrix4 &matScreen) {
         this->matCameraView = matCameraView;
         this->matProj = matProj;
         this->matScreen = matScreen;
@@ -193,6 +188,9 @@ public:
         this->matCameraView_inverse = Matrix4::invert(matCameraView);
         this->matProj_inverse = Matrix4::invert(matProj);
         this->matScreen_inverse = Matrix4::invert(matScreen);
+
+        SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
+        SDL_RenderClear(renderer);
     }
 
     std::vector<Pixel> processPolygon(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {

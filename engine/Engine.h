@@ -289,11 +289,6 @@ private:
 
             processInputFast();
 
-            // Updates properties of the screen
-            // Gets real size of the window (fix for macOS/resizing)
-            // + Background (Clears with color)
-            renderer.updateScreen({20, 20, 20, 255});
-
             Matrix4 matCameraView = Matrix4::makeCameraView(
                     scene.camera.getInitialUpVector(),
                     scene.camera.getInitialTargetVector(),
@@ -308,7 +303,10 @@ private:
             );
             Matrix4 matScreen = Matrix4::makeScreen(renderer.getScreenRect().w, renderer.getScreenRect().h);
 
-            renderer.updateMatrices(matCameraView, matProj, matScreen);
+            // Updates properties of the screen
+            // Gets real size of the window (fix for macOS/resizing)
+            // + Background (Clears with color)
+            renderer.updateScreen({20, 20, 20, 255}, matCameraView, matProj, matScreen);
 
             renderScene();
 
