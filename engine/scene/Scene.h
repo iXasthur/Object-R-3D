@@ -19,9 +19,9 @@ public:
     std::vector<Object> objects{};
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
-            {-3.0f, 3.0f, -3.0f},
+            {3.0f, 3.0f, 3.0f},
             {0.05f, {255, 255, 255, 255}},
-            {1.0f, {155, 89, 182, 255}}, // Amethyst 155, 89, 182
+            {1.0f, {255, 255, 255, 255}}, // Amethyst 155, 89, 182
             {0.4f, {255, 255, 255, 255}}
             );
 
@@ -30,7 +30,7 @@ public:
 
 //        std::vector<std::string> names = {"cube.obj", "stone.obj", "deer.obj", "monkey.obj", "sphere.obj"};
 
-        std::vector<std::string> names = {"sphere.obj"};
+        std::vector<std::string> names = {"shovel.obj"};
         for (auto &name : names) {
             Object obj = *ObjectLoader::loadObjModel(dir + name);
             obj.centerPolygonVertices();
@@ -48,7 +48,7 @@ public:
     };
 
     void resetCamera() {
-        camera = Camera({0 , 0, -10}, {0, 0, 0});
+        camera = Camera({0 , 0, 2}, {0, M_PI, 0});
     }
 
     void add(const Object &obj) {

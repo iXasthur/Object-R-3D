@@ -46,6 +46,7 @@ public:
 
         Object obj = *model;
         obj.position = position;
+        obj.color = ambient.getPixelColor().plusRGB(diffuse.getPixelColor({0, 1, 0}, {0, -1, 0}));
         return obj;
     }
 };
