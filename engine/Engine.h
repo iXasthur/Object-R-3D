@@ -14,6 +14,8 @@
 #include <cmath>
 #include <list>
 #include <iomanip>
+#include <thread>
+#include <future>
 
 class Engine {
 private:
@@ -102,57 +104,74 @@ private:
 //    }
 
     void renderObject(const Object &obj) {
+        std::vector<Pixel> pixels;
+
         Matrix4 matMove = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
-        for (const Polygon &polygon: obj.polygons) {
-            // Force flat shading
-//                for (auto &item : polygon.vertices) {
-//                    item.normal = polygon.getFaceNormal();
-//                }
+        auto task = [&obj, &matMove, this](int start_polygon, int end_polygon, std::promise<std::vector<Pixel>> && ret) {
+            std::vector<Pixel> pixels;
 
-            Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
+            for (int i = start_polygon; i <= end_polygon; i++) {
+                const Polygon &polygon = obj.polygons[i];
 
-            Polygon translated = polygon.matrixMultiplied(matMove);
+                Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
+                Polygon translated = polygon.matrixMultiplied(matMove);
+                Vector3 translatedCenter = translated.getCenter();
+                Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 
-            Vector3 translatedCenter = translated.getCenter();
+                if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
+                    Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
 
-            Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
+                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+                        Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
+                        Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
 
-            if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
-                // Apply camera transformations
-                Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
+                        auto ps = renderer.processPolygon(screenPolygon, scene.camera, scene.light, obj.color, obj.shininess);
+                        pixels.insert(pixels.end(), ps.begin(), ps.end());
+                    }
 
-                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-                    // -1 ... +1
-                    Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
-
-                    // Screen width and height coordinates with inverted Y
-                    Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
-
-                    renderer.drawPolygon(screenPolygon, scene.camera, scene.light, obj.color, obj.shininess);
                 }
+            }
 
-//                    std::cout << "----" << std::endl;
-//
-//                    std::cout << "   m: " << polygon.vertices[0].position.toString() << std::endl;
-//                    std::cout << "   w: " << translated.vertices[0].position.toString() << std::endl;
-//                    std::cout << "   v: " << viewed.vertices[0].position.toString() << std::endl;
-//                    std::cout << "   p: " << projected.vertices[0].position.toString() << std::endl;
-//                    std::cout << "   s: " << screenPolygon.vertices[0].position.toString() << std::endl;
-//
-//                    Polygon i_screen = screenPolygon.matrixMultiplied(Matrix4::invert(renderer.matScreen));
-//                    std::cout << "s->p: " << i_screen.vertices[0].position.toString() << std::endl;
-//
-//                    Polygon i_projected = i_screen.matrixMultiplied(Matrix4::invert(renderer.matProj));
-//                    std::cout << "p->v: " << i_projected.vertices[0].position.toString() << std::endl;
-//
-//                    Polygon i_viewed = i_projected.matrixMultiplied(Matrix4::invert(renderer.matCameraView));
-//                    std::cout << "v->w: " << i_viewed.vertices[0].position.toString() << std::endl;
-//
-//                    Polygon i_world = i_viewed.matrixMultiplied(Matrix4::invert(renderer.matMove));
-//                    std::cout << "w->m: " << i_world.vertices[0].position.toString() << std::endl;
+            ret.set_value(pixels);
+        };
+
+        int threads_count = (int) std::thread::hardware_concurrency();
+        int polygons_count = (int) obj.polygons.size();
+        int thread_polygons_count = std::ceil((float) polygons_count / (float) threads_count);
+
+        std::vector<std::future<std::vector<Pixel>>> futures;
+
+        int start = 0;
+        int end = thread_polygons_count;
+        while (start <= polygons_count - 1) {
+            std::promise<std::vector<Pixel>> thread_promise;
+            futures.emplace_back(thread_promise.get_future());
+            auto thread = std::thread(task, start, end, std::move(thread_promise));
+            thread.detach();
+
+            start += thread_polygons_count;
+            end += thread_polygons_count;
+
+            if (end > polygons_count - 1) {
+                end = polygons_count - 1;
             }
         }
+
+        int i = 0;
+        while (!futures.empty()) {
+            if (i > futures.size() - 1) {
+                i = 0;
+            }
+
+            if (futures[i].wait_for(std::literals::chrono_literals::operator""ns(0)) == std::future_status::ready) {
+                renderer.drawPixels(futures[i].get());
+                futures.erase(futures.begin() + i);
+            }
+
+            i++;
+        }
+
     }
 
     void renderScene() {

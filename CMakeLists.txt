@@ -37,8 +37,12 @@ add_executable(
         engine/scene/object/primitives3/Plane.h
         engine/scene/object/primitives2/Point2D.h
         engine/scene/object/primitives2/Line2D.h
-        lib/thread-pool-2.0.0/thread_pool.hpp
-        )
+        engine/scene/object/primitives2/Pixel.h
+)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(Tamara_3D Threads::Threads)
 
 if(WIN32) # Windows
     target_link_libraries(${PROJECT_NAME} ${SDL2_LIB_DIR}/libSDL2.dll.a ${SDL2_LIB_DIR}/libSDL2main.a)

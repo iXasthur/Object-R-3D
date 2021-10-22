@@ -9,6 +9,7 @@
 #include <cmath>
 #include "../utils/Color.h"
 #include "../scene/object/primitives3/Line.h"
+#include "../scene/object/primitives2/Pixel.h"
 
 class Renderer {
 private:
@@ -16,19 +17,9 @@ private:
     SDL_Rect screenRect = {0, 0, 0, 0};
     std::vector<std::vector<float>> zBuffer = std::vector<std::vector<float>>(0, std::vector<float>(0));
 
-    void drawPoint(int x, int y, float zf, const Color &color) {
-        SDL_Point point = {x, y};
+    std::vector<Pixel> processLine(const Line &line, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+        std::vector<Pixel> pixels;
 
-        if (SDL_PointInRect(&point, &screenRect)) {
-            if (zf < zBuffer[y][x]) {
-                SDL_SetRenderDrawColor(renderer, color.R, color.G, color.B, color.A);
-                SDL_RenderDrawPoint(renderer, x, y);
-                zBuffer[y][x] = zf;
-            }
-        }
-    }
-
-    void drawLine(const Line &line, const Camera &camera, const Light &light, const Color &color, const float shininess) {
         Vertex vf0 = line.v0;
         vf0.position.x = std::floor(vf0.position.x);
         vf0.position.y = std::floor(vf0.position.y);
@@ -43,7 +34,7 @@ private:
         SDL_Point p1 = {(int) vLine.v1.position.x, (int) vLine.v1.position.y};
 
         if (!SDL_IntersectRectAndLine(&screenRect, &p0.x, &p0.y, &p1.x, &p1.y)) {
-            return;
+            return pixels;
         }
 
         int x0 = p0.x;
@@ -78,7 +69,17 @@ private:
                 converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
 
                 Color c = light.getPixelColor(converted, n, camera, color, shininess);
-                drawPoint(x, y, zf, c);
+
+                Pixel pixel = {(int) x, (int) y, zf, c};
+                pixels.emplace_back(pixel);
+
+//                if (SDL_PointInRect(&point, &screenRect)) {
+//                    if (zf < zBuffer[point.y][point.x]) {
+//                        Pixel pixel = {point.x, point.y, zf, c};
+//                        pixels.emplace_back(pixel);
+//                        zBuffer[point.y][point.x] = zf;
+//                    }
+//                }
             }
 
             if (x0 == x1 && y0 == y1) {
@@ -94,9 +95,13 @@ private:
                 y0 += sy;
             }
         }
+
+        return pixels;
     }
 
-    void drawPhongTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+    std::vector<Pixel> drawPhongTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+        std::vector<Pixel> pixels;
+
         std::array<Vertex, 3> vertices = screenPolygon.vertices;
         std::sort(vertices.begin(), vertices.end(), [&](Vertex &v0, Vertex &v1) {
             return v0.position.y < v1.position.y;
@@ -132,29 +137,28 @@ private:
                 Vector3 n01 = l01_3d.getInterpolatedNormal(x01, scanlineY, z01);
                 Vertex v01 = {{x01, scanlineY, z01}, n01};
                 Line line = {v01, v02};
-                drawLine(line, camera, light, color, shininess);
+
+                auto ps = processLine(line, camera, light, color, shininess);
+                pixels.insert(pixels.end(), ps.begin(), ps.end());
             } else {
                 float x12 = l12_2d.getXtY(scanlineY);
                 float z12 = l12_3d.getZtXY(x12, scanlineY);
                 Vector3 n12 = l12_3d.getInterpolatedNormal(x12, scanlineY, z12);
                 Vertex v12 = {{x12, scanlineY, z12}, n12};
                 Line line = {v12, v02};
-                drawLine(line, camera, light, color, shininess);
+
+                auto ps = processLine(line, camera, light, color, shininess);
+                pixels.insert(pixels.end(), ps.begin(), ps.end());
             }
 
             scanlineY = scanlineY + 1;
         }
+
+        return pixels;
     }
 
-    void drawWireframeTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
-        drawLine({screenPolygon.vertices[0], screenPolygon.vertices[1]}, camera, light, color, shininess);
-        drawLine({screenPolygon.vertices[1], screenPolygon.vertices[2]}, camera, light, color, shininess);
-        drawLine({screenPolygon.vertices[2], screenPolygon.vertices[0]}, camera, light, color, shininess);
-    }
-
-    void drawTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
-        drawPhongTriangle(screenPolygon, camera, light, color, shininess);
-//        drawWireframeTriangle(screenPolygon, camera, light, color, shininess);
+    std::vector<Pixel> drawTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+        return drawPhongTriangle(screenPolygon, camera, light, color, shininess);
     }
 
 public:
@@ -199,12 +203,27 @@ public:
         this->matScreen_inverse = Matrix4::invert(matScreen);
     }
 
-    void drawPolygon(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+    std::vector<Pixel> processPolygon(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
         if (screenPolygon.isFlat()) {
-            return;
+            return {};
         }
 
-        drawTriangle(screenPolygon, camera, light, color, shininess);
+        return drawTriangle(screenPolygon, camera, light, color, shininess);
+    }
+
+    void drawPixels(const std::vector<Pixel> &pixels) {
+        for (const auto &pixel : pixels) {
+            SDL_Point point = {(int) pixel.x, (int) pixel.y};
+            float zf = pixel.z;
+
+            if (SDL_PointInRect(&point, &screenRect)) {
+                if (zf < zBuffer[point.y][point.x]) {
+                    SDL_SetRenderDrawColor(renderer, pixel.color.R, pixel.color.G, pixel.color.B, pixel.color.A);
+                    SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
+                    zBuffer[point.y][point.x] = zf;
+                }
+            }
+        }
     }
 
 };
