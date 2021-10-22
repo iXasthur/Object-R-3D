@@ -72,14 +72,6 @@ private:
 
                 Pixel pixel = {(int) x, (int) y, zf, c};
                 pixels.emplace_back(pixel);
-
-//                if (SDL_PointInRect(&point, &screenRect)) {
-//                    if (zf < zBuffer[point.y][point.x]) {
-//                        Pixel pixel = {point.x, point.y, zf, c};
-//                        pixels.emplace_back(pixel);
-//                        zBuffer[point.y][point.x] = zf;
-//                    }
-//                }
             }
 
             if (x0 == x1 && y0 == y1) {
