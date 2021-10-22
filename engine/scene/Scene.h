@@ -28,7 +28,7 @@ public:
     Scene() {
         std::string dir = "../objects/";
 
-//        std::vector<std::string> names = {"cube.obj", "stone.obj", "deer.obj", "monkey.obj", "sphere.obj"};
+        // "cube.obj", "stone.obj", "deer.obj", "monkey.obj", "sphere.obj", "shovel.obj"
 
         std::vector<std::string> names = {"shovel.obj"};
         for (auto &name : names) {
