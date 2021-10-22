@@ -27,10 +27,8 @@ private:
     Uint32 frameDeltaTime = 0;
 
     [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
-        Vector3 target = scene.camera.getInitialTargetVector();
-
-        Plane nearPlane = Plane({0.0f, 0.0f, scene.camera.fNear}, {target.x, target.y, target.z});
-        Plane farPlane = Plane({0.0f, 0.0f, scene.camera.fFar}, {target.x, target.y, -target.z});
+        Plane nearPlane = Plane({0.0f, 0.0f, scene.camera.fNear}, {0.0f, 0.0f, 1.0f});
+        Plane farPlane = Plane({0.0f, 0.0f, scene.camera.fFar}, {0.0f, 0.0f, -1.0f});
 
         std::vector<Polygon> clippedNear = polygon.clipAgainstPlane(nearPlane);
 
