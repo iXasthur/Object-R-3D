@@ -175,7 +175,8 @@ private:
     }
 
     void renderScene() {
-//        scene.light.position = Matrix4::multiplyVector(scene.light.position, Matrix4::makeRotationY(0.02f));
+//        auto dt = (float) frameDeltaTime / 1000.0f;
+//        scene.light.position = Matrix4::multiplyVector(scene.light.position, Matrix4::makeRotationY(dt));
 
         renderObject(scene.object);
 
