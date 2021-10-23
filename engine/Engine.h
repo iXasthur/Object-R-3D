@@ -199,22 +199,22 @@ private:
 
         if (state[SDL_SCANCODE_W]) {
             scene.camera.position.x -= std::sin(scene.camera.eulerRotation.y) * positionOffset;
-            scene.camera.position.z += std::cos(scene.camera.eulerRotation.y) * positionOffset;
+            scene.camera.position.z -= std::cos(scene.camera.eulerRotation.y) * positionOffset;
         }
 
         if (state[SDL_SCANCODE_S]) {
             scene.camera.position.x += std::sin(scene.camera.eulerRotation.y) * positionOffset;
-            scene.camera.position.z -= std::cos(scene.camera.eulerRotation.y) * positionOffset;
+            scene.camera.position.z += std::cos(scene.camera.eulerRotation.y) * positionOffset;
         }
 
         if (state[SDL_SCANCODE_A]) {
-            scene.camera.position.z -= std::sin(scene.camera.eulerRotation.y) * positionOffset;
             scene.camera.position.x -= std::cos(scene.camera.eulerRotation.y) * positionOffset;
+            scene.camera.position.z += std::sin(scene.camera.eulerRotation.y) * positionOffset;
         }
 
         if (state[SDL_SCANCODE_D]) {
-            scene.camera.position.z += std::sin(scene.camera.eulerRotation.y) * positionOffset;
             scene.camera.position.x += std::cos(scene.camera.eulerRotation.y) * positionOffset;
+            scene.camera.position.z -= std::sin(scene.camera.eulerRotation.y) * positionOffset;
         }
 
         if (state[SDL_SCANCODE_SPACE]) {

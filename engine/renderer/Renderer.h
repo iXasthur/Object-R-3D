@@ -57,11 +57,13 @@ private:
             if (std::isnan(zf)) {
 //                zf = std::numeric_limits<float>::lowest();
 //                Color c = {255, 0, 0, 255};
-//                drawPoint(x, y, zf, c);
+//                Pixel pixel = {(int) x, (int) y, zf, c};
+//                pixels.emplace_back(pixel);
             } else if (std::isnan(n.x) || std::isnan(n.y) || std::isnan(n.z)) {
 //                zf = std::numeric_limits<float>::lowest();
 //                Color c = {0, 255, 0, 255};
-//                drawPoint(x, y, zf, c);
+//                Pixel pixel = {(int) x, (int) y, zf, c};
+//                pixels.emplace_back(pixel);
             } else {
                 Vector3 converted = {(float) x, (float) y, zf};
                 converted = Matrix4::multiplyVector(converted, matScreen_inverse);

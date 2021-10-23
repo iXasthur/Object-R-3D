@@ -235,7 +235,7 @@ public:
         float fHalfHeight = (float) screenHeight * 0.5f;
 
         Matrix4 matrix;
-        matrix.m[0][0] = fHalfWidth;
+        matrix.m[0][0] = -fHalfWidth;
         matrix.m[1][1] = -fHalfHeight;
         matrix.m[2][2] = 1;
         matrix.m[3][3] = 1;
@@ -258,8 +258,8 @@ public:
         Vector3 upVector = initialUp;
         Vector3 targetVector = initialTarget;
 
-        Matrix4 m1 = Matrix4::makeRotationX(rotation.x);
-        Matrix4 m2 = Matrix4::makeRotationY(rotation.y);
+        Matrix4 m1 = Matrix4::makeRotationX(-rotation.x);
+        Matrix4 m2 = Matrix4::makeRotationY(-rotation.y);
         Matrix4 matCameraRot = Matrix4::multiplyMatrix(m1, m2);
         Vector3 lookDirection = Matrix4::multiplyVector(targetVector, matCameraRot);
         targetVector = Vector3::add(position, lookDirection);

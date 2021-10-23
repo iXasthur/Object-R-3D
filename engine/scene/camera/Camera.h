@@ -11,7 +11,7 @@
 class Camera {
 private:
     Vector3 iUpVector = {0, 1, 0};
-    Vector3 iTargetVector = {0, 0, 1};
+    Vector3 iTargetVector = {0, 0, -1};
 
 public:
     float fFOV = 90.0f;
