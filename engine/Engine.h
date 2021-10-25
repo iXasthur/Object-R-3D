@@ -164,7 +164,7 @@ private:
                 i = 0;
             }
 
-            if (futures[i].wait_for(std::literals::chrono_literals::operator""ns(0)) == std::future_status::ready) {
+            if (futures[i].wait_for(std::literals::chrono_literals::operator""ns(0ull)) == std::future_status::ready) {
                 renderer.drawPixels(futures[i].get());
                 futures.erase(futures.begin() + i);
             }
