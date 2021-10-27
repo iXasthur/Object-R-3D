@@ -31,6 +31,14 @@ public:
 //        Af = (float) A / 255.0f;
     }
 
+    [[nodiscard]] Color exposedRGB(Color color) const {
+        Color c = *this;
+        c.R = (int) ((float) c.R * ((float) color.R) / 255.0f);
+        c.G = (int) ((float) c.G * ((float) color.G) / 255.0f);
+        c.B = (int) ((float) c.B * ((float) color.B) / 255.0f);
+        return c.withFixedBorders();
+    }
+
     [[nodiscard]] Color exposedRGB(float k) const {
         Color c = *this;
         c.R = (int) ((float) c.R * k);

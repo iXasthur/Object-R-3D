@@ -36,7 +36,7 @@ public:
         Color a = ambient.getPixelColor();
         Color d = diffuse.getPixelColor(normal, lightDirection);
         Color s = specular.getPixelColor(normal, shininess, lookDirection, lightDirection);
-        return color.plusRGB(a).plusRGB(d).plusRGB(s);
+        return color.exposedRGB(a.plusRGB(d).plusRGB(s));
     }
 
     [[nodiscard]] Object getObject() const {
