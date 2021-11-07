@@ -65,15 +65,20 @@ private:
 //                Pixel pixel = {(int) x, (int) y, zf, c};
 //                pixels.emplace_back(pixel);
             } else {
-                Vector3 converted = {(float) x, (float) y, zf};
-                converted = Matrix4::multiplyVector(converted, matScreen_inverse);
-                converted = Matrix4::multiplyVector(converted, matProj_inverse);
-                converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
+                if (!forceObjectColor) {
+                    Vector3 converted = {(float) x, (float) y, zf};
+                    converted = Matrix4::multiplyVector(converted, matScreen_inverse);
+                    converted = Matrix4::multiplyVector(converted, matProj_inverse);
+                    converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
 
-                Color c = light.getPixelColor(converted, n, camera, color, shininess);
+                    Color c = light.getPixelColor(converted, n, camera, color, shininess);
 
-                Pixel pixel = {(int) x, (int) y, zf, c};
-                pixels.emplace_back(pixel);
+                    Pixel pixel = {(int) x, (int) y, zf, c};
+                    pixels.emplace_back(pixel);
+                } else {
+                    Pixel pixel = {(int) x, (int) y, zf, color};
+                    pixels.emplace_back(pixel);
+                }
             }
 
             if (x0 == x1 && y0 == y1) {
@@ -163,6 +168,8 @@ public:
     Matrix4 matCameraView_inverse;
     Matrix4 matProj_inverse;
     Matrix4 matScreen_inverse;
+
+    bool forceObjectColor = false;
 
     explicit Renderer(SDL_Renderer *r) : renderer(r) {
         SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);

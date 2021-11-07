@@ -182,7 +182,10 @@ private:
 
         if (scene.light.model != nullptr) {
             Object lightObject = scene.light.getObject();
+
+            renderer.forceObjectColor = true;
             renderObject(lightObject);
+            renderer.forceObjectColor = false;
         }
     }
 
