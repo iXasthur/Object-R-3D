@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include "Object.h"
+#include "SDL2/SDL_image.h"
 
 class ObjectLoader {
 private:
@@ -24,7 +25,36 @@ private:
         return result;
     }
 
+    static Uint32 getPixel(SDL_Surface *surface, int x, int y) {
+        int bpp = surface->format->BytesPerPixel;
+        /* Here p is the address to the pixel we want to retrieve */
+        Uint8 *p = (Uint8 *) surface->pixels + y * surface->pitch + x * bpp;
+
+        switch (bpp) {
+            case 1:
+                return *p;
+                break;
+            case 2:
+                return *(Uint16 *) p;
+                break;
+            case 3:
+            #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+                return p[0] << 16 | p[1] << 8 | p[2];
+            #else
+                return p[0] | p[1] << 8 | p[2] << 16;
+            #endif
+                break;
+            case 4:
+                return *(Uint32 *) p;
+                break;
+            default:
+                throw std::runtime_error("getPixel bpp is not 1, 2, 3 or 4");
+        }
+    }
+
     static std::vector<Polygon> loadModel(const std::string &path) {
+        std::cout << "Loading " << path << std::endl;
+
         std::vector<Polygon> polygons;
 
         std::vector<Vector3> positions;
@@ -122,6 +152,32 @@ private:
         return polygons;
     }
 
+    static Texture loadTexture(const std::string &path) {
+        std::cout << "Loading " << path << std::endl;
+
+        SDL_Surface *image = IMG_Load(path.c_str());
+
+        if(image == nullptr) {
+            printf("IMG_Load: %s\n", IMG_GetError());
+            return {};
+        }
+
+        std::vector<std::vector<Color>> img = {};
+
+        for(int i = 0; i < image->w - 1; i++) {
+            img.emplace_back();
+            for (int j = 0; j < image->h - 1; j++) {
+                SDL_Color rgb;
+                SDL_GetRGB(getPixel(image, i, j), image->format, &rgb.r, &rgb.g, &rgb.b);
+                img[i].emplace_back(Color(rgb.r, rgb.g, rgb.b, 255));
+            }
+        }
+
+        Texture texture;
+        texture.img = img;
+        return texture;
+    }
+
 public:
     static Object loadObject(const std::string &dirpath) {
         std::string name = dirpath;
@@ -138,6 +194,9 @@ public:
         Object obj;
         obj.name = name;
         obj.polygons = ObjectLoader::loadModel(dirpath + "/model.obj");
+        obj.albedoMap = ObjectLoader::loadTexture(dirpath + "/albedoMap.png");
+        obj.normalMap = ObjectLoader::loadTexture(dirpath + "/normalMap.png");
+        obj.specularMap = ObjectLoader::loadTexture(dirpath + "/specularMap.png");
 
         return obj;
     }

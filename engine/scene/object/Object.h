@@ -8,6 +8,7 @@
 #include <vector>
 #include "primitives3/Polygon.h"
 #include "../../utils/Color.h"
+#include "Texture.h"
 
 class Object {
 public:
@@ -16,6 +17,10 @@ public:
     std::string name;
 
     Color color = Color(255, 255, 255, 255);
+
+    Texture albedoMap = {};
+    Texture normalMap = {};
+    Texture specularMap = {};
 
     Object() = default;
 
