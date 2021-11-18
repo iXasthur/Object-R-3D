@@ -170,8 +170,6 @@ public:
     Matrix4 matProj_inverse;
     Matrix4 matScreen_inverse;
 
-    bool forceObjectColor = false;
-
     explicit Renderer(SDL_Renderer *r) : renderer(r) {
         SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
     }
