@@ -21,8 +21,8 @@ public:
     }
 
     [[nodiscard]] Color getPixelF(float xf, float yf) const {
-        int x = (int) std::round(xf * (float) img[0].size());
-        int y = (int) img.size() - (int) std::round(yf * (float) img.size());
+        int x = (int) std::round(xf * (float) (img[0].size() - 1));
+        int y = (int) (img.size() - 1) - (int) std::round(yf * (float) (img.size() - 1));
         return img[x][y];
     }
 

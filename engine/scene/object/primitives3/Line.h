@@ -87,7 +87,13 @@ public:
     }
 
     [[nodiscard]] Vector3 getInterpolatedTexture(float x, float y, float z) const {
-        return getInterpolated(v0.texture, v1.texture, x, y, z);
+        auto interpolated = getInterpolated(v0.texture, v1.texture, x, y, z);
+        float *components[2] = {&interpolated.x, &interpolated.y};
+        for (auto &component: components) {
+            if (*component > 1) *component = 1;
+            if (*component < 0) *component = 0;
+        }
+        return interpolated;
     }
 
     [[nodiscard]] Vector3 getInterpolated(const Vector3 &arg0, const Vector3 &arg1, float x, float y, float z) const {

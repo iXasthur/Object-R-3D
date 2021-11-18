@@ -24,11 +24,12 @@ public:
     int B;
     int A;
 
+    explicit Color() : R(0), G(0), B(0), A(255) {
+
+    }
+
     Color(int r, int g, int b, int a) : R(r), G(g), B(b), A(a) {
-//        Rf = (float) R / 255.0f;
-//        Gf = (float) G / 255.0f;
-//        Bf = (float) B / 255.0f;
-//        Af = (float) A / 255.0f;
+
     }
 
     [[nodiscard]] Color exposedRGB(Color color) const {

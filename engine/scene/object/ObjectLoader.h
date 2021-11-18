@@ -198,15 +198,7 @@ public:
         obj.normalMap = ObjectLoader::loadTexture(dirpath + "/normal_map.png");
         obj.specularMap = ObjectLoader::loadTexture(dirpath + "/specular_map.png");
 
-        if (obj.albedoMap.isEmpty()) {
-            obj.albedoMap = Texture::generate(100, Color(255, 255, 255, 255));
-        }
-
-        // TODO: Autogenerate normal map
-
-        if (obj.specularMap.isEmpty()) {
-            obj.specularMap = Texture::generate(100, Color(7, 7, 7, 255));
-        }
+        // Generate maps if empty ?
 
         return obj;
     }

@@ -53,30 +53,61 @@ private:
             int y = y0;
             float zf = vLine.getZtXY((float) x, (float) y);
 
-            Vector3 tx = vLine.getInterpolatedTexture((float) x, (float) y, zf);
-
-            if (std::isnan(zf) || std::isnan(tx.x) || std::isnan(tx.y) || std::isnan(tx.z)) {
+            if (std::isnan(zf)) {
 //                zf = std::numeric_limits<float>::lowest();
-//                Color c = {0, 255, 0, 255};
+//                Color c = {255, 0, 0, 255};
 //                Pixel pixel = {(int) x, (int) y, zf, c};
 //                pixels.emplace_back(pixel);
             } else {
-                Color nt = scene.object.normalMap.getPixelF(tx.x, tx.y);
-                Color st = scene.object.specularMap.getPixelF(tx.x, tx.y);
+                Vector3 tx = vLine.getInterpolatedTexture((float) x, (float) y, zf);
 
-                Color txA = scene.object.albedoMap.getPixelF(tx.x, tx.y);
-                Vector3 txN = {(nt.R * 2 - 255), (nt.G * 2 - 255), (nt.B * 2 - 255)};
-                auto txS = (float) (st.R + st.G + st.B);
+                if (std::isnan(tx.x) || std::isnan(tx.y) || std::isnan(tx.z)) {
+//                    zf = std::numeric_limits<float>::lowest();
+//                    Color c = {0, 255, 0, 255};
+//                    Pixel pixel = {(int) x, (int) y, zf, c};
+//                    pixels.emplace_back(pixel);
+                } else {
+                    Vector3 normal;
+                    if (scene.object.normalMap.isEmpty()) {
+                        normal = vLine.getInterpolatedNormal((float) x, (float) y, zf);
+                    } else {
+                        Color normalTx = scene.object.normalMap.getPixelF(tx.x, tx.y);
+                        normal = {(normalTx.R * 2 - 255), (normalTx.G * 2 - 255), (normalTx.B * 2 - 255)}; // Will be normalized in getPixelColor(...)
+                    }
 
-                Vector3 converted = {(float) x, (float) y, zf};
-                converted = Matrix4::multiplyVector(converted, matScreen_inverse);
-                converted = Matrix4::multiplyVector(converted, matProj_inverse);
-                converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
+                    if (std::isnan(normal.x) || std::isnan(normal.y) || std::isnan(normal.z)) {
+//                        zf = std::numeric_limits<float>::lowest();
+//                        Color c = {0, 0, 255, 255};
+//                        Pixel pixel = {(int) x, (int) y, zf, c};
+//                        pixels.emplace_back(pixel);
+                    } else {
+                        Color color;
+                        float shininess;
 
-                Color c = scene.light.getPixelColor(converted, scene.camera, txA, txN, txS);
+                        if (scene.object.albedoMap.isEmpty()) {
+                            color = {255, 255, 255, 255};
+                        } else {
+                            color = scene.object.albedoMap.getPixelF(tx.x, tx.y);
+                        }
 
-                Pixel pixel = {(int) x, (int) y, zf, c};
-                pixels.emplace_back(pixel);
+                        if (scene.object.specularMap.isEmpty()) {
+                            shininess = 20;
+                        } else {
+                            Color shininessTx = scene.object.specularMap.getPixelF(tx.x, tx.y);
+                            shininess = (float) (shininessTx.R + shininessTx.G + shininessTx.B);
+                        }
+
+                        Vector3 converted = {(float) x, (float) y, zf};
+                        converted = Matrix4::multiplyVector(converted, matScreen_inverse);
+                        converted = Matrix4::multiplyVector(converted, matProj_inverse);
+                        converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
+
+                        Color c = scene.light.getPixelColor(converted, scene.camera, color, normal, shininess);
+
+                        Pixel pixel = {(int) x, (int) y, zf, c};
+                        pixels.emplace_back(pixel);
+                    }
+                }
             }
 
             if (x0 == x1 && y0 == y1) {
@@ -125,14 +156,24 @@ private:
         while (scanlineY <= scanlineEnd) {
             float x02 = l02_2d.getXtY(scanlineY);
             float z02 = l02_3d.getZtXY(x02, scanlineY);
-            Vector3 n02 = Vector3::nan();
+            Vector3 n02;
+            if (scene.object.normalMap.isEmpty()) {
+                n02 = l02_3d.getInterpolatedNormal(x02, scanlineY, z02);
+            } else {
+                n02 = Vector3::nan();
+            }
             Vector3 t02 = l02_3d.getInterpolatedTexture(x02, scanlineY, z02);
             Vertex v02 = {{x02, scanlineY, z02}, t02, n02};
 
             if (scanlineY < splitY) {
                 float x01 = l01_2d.getXtY(scanlineY);
                 float z01 = l01_3d.getZtXY(x01, scanlineY);
-                Vector3 n01 = Vector3::nan();
+                Vector3 n01;
+                if (scene.object.normalMap.isEmpty()) {
+                    n01 = l01_3d.getInterpolatedNormal(x01, scanlineY, z01);
+                } else {
+                    n01 = Vector3::nan();
+                }
                 Vector3 t01 = l01_3d.getInterpolatedTexture(x01, scanlineY, z01);
                 Vertex v01 = {{x01, scanlineY, z01}, t01, n01};
                 Line line = {v01, v02};
@@ -142,7 +183,12 @@ private:
             } else {
                 float x12 = l12_2d.getXtY(scanlineY);
                 float z12 = l12_3d.getZtXY(x12, scanlineY);
-                Vector3 n12 = Vector3::nan();
+                Vector3 n12;
+                if (scene.object.normalMap.isEmpty()) {
+                    n12 = l12_3d.getInterpolatedNormal(x12, scanlineY, z12);
+                } else {
+                    n12 = Vector3::nan();
+                }
                 Vector3 t12 = l12_3d.getInterpolatedTexture(x12, scanlineY, z12);
                 Vertex v12 = {{x12, scanlineY, z12}, t12, n12};
                 Line line = {v12, v02};
