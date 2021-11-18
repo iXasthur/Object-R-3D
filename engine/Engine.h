@@ -8,6 +8,7 @@
 #include <array>
 #include <algorithm>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include "scene/Scene.h"
 #include "utils/Matrix4.h"
 #include "renderer/Renderer.h"
@@ -332,6 +333,13 @@ public:
     bool start(const char* title, int startWidth, int startHeight) {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             printf("Error initializing SDL_INIT_VIDEO! SDL_Error: %s\n", SDL_GetError());
+            return false;
+        }
+
+        int imgFlags = IMG_INIT_PNG;
+        if(!(IMG_Init(imgFlags) & imgFlags))
+        {
+            printf("Error initializing IMG_INIT_PNG! IMG_Error: %s\n", IMG_GetError());
             return false;
         }
 

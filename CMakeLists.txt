@@ -3,14 +3,19 @@ project(Tamara_3D)
 
 set(CMAKE_CXX_STANDARD 20)
 
+if(APPLE)
+    message(FATAL_ERROR "APPLE not configured")
+endif()
+
 if(WIN32) # Windows
-    set(SDL2_DIR C:/SDL2-2.0.16/x86_64-w64-mingw32)
+    set(SDL2_DIR C:/SDL2/x86_64-w64-mingw32) # SDL2-2.0.16 + SDL2_image-2.0.5
 else(APPLE) # M1 Homebrew SDL2
-    set(SDL2_DIR /opt/homebrew/Cellar/sdl2/2.0.16)
+#    set(SDL2_DIR /opt/homebrew/Cellar/sdl2/2.0.16)
 endif()
 
 set(SDL2_LIB_DIR ${SDL2_DIR}/lib)
 include_directories(${SDL2_DIR}/include)
+
 add_definitions(-DSDL_MAIN_HANDLED)
 
 add_executable(
@@ -40,11 +45,23 @@ add_executable(
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
+
 find_package(Threads REQUIRED)
-target_link_libraries(${PROJECT_NAME} Threads::Threads)
 
 if(WIN32) # Windows
-    target_link_libraries(${PROJECT_NAME} ${SDL2_LIB_DIR}/libSDL2.dll.a ${SDL2_LIB_DIR}/libSDL2main.a)
+    target_link_libraries(
+            ${PROJECT_NAME}
+            Threads::Threads
+            ${SDL2_LIB_DIR}/libSDL2.dll.a
+            ${SDL2_LIB_DIR}/libSDL2main.a
+            ${SDL2_LIB_DIR}/libSDL2_image.dll.a
+            ${SDL2_LIB_DIR}/libSDL2_image.a
+    )
 elseif(APPLE) # M1 Homebrew SDL2
-    target_link_libraries(${PROJECT_NAME} ${SDL2_LIB_DIR}/libSDL2-2.0.0.dylib ${SDL2_LIB_DIR}/libSDL2main.a)
+#    target_link_libraries(
+#            ${PROJECT_NAME}
+#            ${SDL2_LIB_DIR}/libSDL2-2.0.0.dylib
+#            ${SDL2_LIB_DIR}/libSDL2main.a
+#            ...
+#    )
 endif()
