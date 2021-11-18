@@ -116,6 +116,7 @@ public:
         } else {
             return Vector3::nan();
         }
+        
         Vector3 in0 = Vector3::mul(Vector3::div(v0.texture, z0), t);
         Vector3 in1 = Vector3::mul(Vector3::div(v1.texture, z1), q);
         Vector3 interpolated = Vector3::add(in0, in1);
