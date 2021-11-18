@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 #include "../../utils/Color.h"
+#include "../../utils/Vector3.h"
 
 class Texture {
 public:
@@ -17,6 +18,12 @@ public:
 
     [[nodiscard]] bool isEmpty() const {
         return img.empty();
+    }
+
+    [[nodiscard]] Color getPixel(float xf, float yf) const {
+        int x = (int)std::round(xf);
+        int y = (int)std::round(yf);
+        return img[x][y];
     }
 };
 
