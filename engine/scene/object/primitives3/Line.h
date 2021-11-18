@@ -87,13 +87,38 @@ public:
     }
 
     [[nodiscard]] Vector3 getInterpolatedTexture(float x, float y, float z) const {
-        auto interpolated = getInterpolated(v0.texture, v1.texture, x, y, z);
+        Vector3 interpolated = getInterpolated(v0.texture, v1.texture, x, y, z);
         float *components[2] = {&interpolated.x, &interpolated.y};
         for (auto &component: components) {
             if (*component > 1) *component = 1;
             if (*component < 0) *component = 0;
         }
         return interpolated;
+
+//        float x0 = v0.position.x;
+//        float x1 = v1.position.x;
+//        float y0 = v0.position.y;
+//        float y1 = v1.position.y;
+//        float z0 = v0.position.z;
+//        float z1 = v1.position.z;
+//
+//        float t;
+//        if (z0 != z1) {
+//            t = (z - z1) / (z0 - z1);
+//        } else {
+//            return Vector3::nan();
+//        }
+//
+//        Vector3 in0 = Vector3::mul(Vector3::div(v0.texture, z0), t);
+//        Vector3 in1 = Vector3::mul(Vector3::div(v1.texture, z1), (1 - t));
+//        Vector3 interpolated = Vector3::div(Vector3::add(in0, in1), ((1 - t) * (1 / z0)) + (t * (1 / z1)));
+//
+//        float *components[2] = {&interpolated.x, &interpolated.y};
+//        for (auto &component: components) {
+//            if (*component > 1) *component = 1;
+//            if (*component < 0) *component = 0;
+//        }
+//        return interpolated;
     }
 
     [[nodiscard]] Vector3 getInterpolated(const Vector3 &arg0, const Vector3 &arg1, float x, float y, float z) const {
