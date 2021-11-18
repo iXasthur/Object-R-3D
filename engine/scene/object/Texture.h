@@ -20,10 +20,25 @@ public:
         return img.empty();
     }
 
-    [[nodiscard]] Color getPixel(float xf, float yf) const {
-        int x = (int)std::round(xf);
-        int y = (int)std::round(yf);
+    [[nodiscard]] Color getPixelF(float xf, float yf) const {
+        int x = (int) std::round(xf * (float) img[0].size());
+        int y = (int) img.size() - (int) std::round(yf * (float) img.size());
         return img[x][y];
+    }
+
+    static Texture generate(int size, Color color) {
+        std::vector<std::vector<Color>> img = {};
+
+        for(int i = 0; i < size; i++) {
+            img.emplace_back();
+            for (int j = 0; j < size - 1; j++) {
+                img[i].emplace_back(color);
+            }
+        }
+
+        Texture texture;
+        texture.img = img;
+        return texture;
     }
 };
 

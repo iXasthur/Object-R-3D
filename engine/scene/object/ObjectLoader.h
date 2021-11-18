@@ -194,9 +194,19 @@ public:
         Object obj;
         obj.name = name;
         obj.polygons = ObjectLoader::loadModel(dirpath + "/model.obj");
-        obj.albedoMap = ObjectLoader::loadTexture(dirpath + "/albedoMap.png");
-        obj.normalMap = ObjectLoader::loadTexture(dirpath + "/normalMap.png");
-        obj.specularMap = ObjectLoader::loadTexture(dirpath + "/specularMap.png");
+        obj.albedoMap = ObjectLoader::loadTexture(dirpath + "/albedo_map.png");
+        obj.normalMap = ObjectLoader::loadTexture(dirpath + "/normal_map.png");
+        obj.specularMap = ObjectLoader::loadTexture(dirpath + "/specular_map.png");
+
+        if (obj.albedoMap.isEmpty()) {
+            obj.albedoMap = Texture::generate(100, Color(255, 255, 255, 255));
+        }
+
+        // TODO: Autogenerate normal map
+
+        if (obj.specularMap.isEmpty()) {
+            obj.specularMap = Texture::generate(100, Color(7, 7, 7, 255));
+        }
 
         return obj;
     }

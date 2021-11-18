@@ -16,7 +16,7 @@ private:
 public:
     float fFOV = 90.0f;
     float fFar = 100.0f;
-    float fNear = 1.0f;
+    float fNear = 0.1f;
 
     Vector3 position;
     EulerAngle eulerRotation;

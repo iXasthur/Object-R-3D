@@ -17,7 +17,7 @@ private:
     SDL_Rect screenRect = {0, 0, 0, 0};
     std::vector<std::vector<float>> zBuffer = std::vector<std::vector<float>>(0, std::vector<float>(0));
 
-    std::vector<Pixel> processLine(const Line &line, const Scene &scene) {
+    std::vector<Pixel> processTexturedLine(const Line &line, const Scene &scene) {
         std::vector<Pixel> pixels;
 
         Vertex vf0 = line.v0;
@@ -52,33 +52,31 @@ private:
             int x = x0;
             int y = y0;
             float zf = vLine.getZtXY((float) x, (float) y);
-            Vector3 n = vLine.getInterpolatedNormal((float) x, (float) y, zf);
 
-            if (std::isnan(zf)) {
-//                zf = std::numeric_limits<float>::lowest();
-//                Color c = {255, 0, 0, 255};
-//                Pixel pixel = {(int) x, (int) y, zf, c};
-//                pixels.emplace_back(pixel);
-            } else if (std::isnan(n.x) || std::isnan(n.y) || std::isnan(n.z)) {
+            Vector3 tx = vLine.getInterpolatedTexture((float) x, (float) y, zf);
+
+            if (std::isnan(zf) || std::isnan(tx.x) || std::isnan(tx.y) || std::isnan(tx.z)) {
 //                zf = std::numeric_limits<float>::lowest();
 //                Color c = {0, 255, 0, 255};
 //                Pixel pixel = {(int) x, (int) y, zf, c};
 //                pixels.emplace_back(pixel);
             } else {
-                if (!forceObjectColor) {
-                    Vector3 converted = {(float) x, (float) y, zf};
-                    converted = Matrix4::multiplyVector(converted, matScreen_inverse);
-                    converted = Matrix4::multiplyVector(converted, matProj_inverse);
-                    converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
+                Color nt = scene.object.normalMap.getPixelF(tx.x, tx.y);
+                Color st = scene.object.specularMap.getPixelF(tx.x, tx.y);
 
-                    Color c = scene.light.getPixelColor(converted, n, scene.camera, scene.object.color, 20);
+                Color txA = scene.object.albedoMap.getPixelF(tx.x, tx.y);
+                Vector3 txN = {(nt.R * 2 - 255), (nt.G * 2 - 255), (nt.B * 2 - 255)};
+                auto txS = (float) (st.R + st.G + st.B);
 
-                    Pixel pixel = {(int) x, (int) y, zf, c};
-                    pixels.emplace_back(pixel);
-                } else {
-                    Pixel pixel = {(int) x, (int) y, zf, scene.object.color};
-                    pixels.emplace_back(pixel);
-                }
+                Vector3 converted = {(float) x, (float) y, zf};
+                converted = Matrix4::multiplyVector(converted, matScreen_inverse);
+                converted = Matrix4::multiplyVector(converted, matProj_inverse);
+                converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
+
+                Color c = scene.light.getPixelColor(converted, scene.camera, txA, txN, txS);
+
+                Pixel pixel = {(int) x, (int) y, zf, c};
+                pixels.emplace_back(pixel);
             }
 
             if (x0 == x1 && y0 == y1) {
@@ -98,7 +96,7 @@ private:
         return pixels;
     }
 
-    std::vector<Pixel> drawPhongTriangle(const Polygon &screenPolygon, const Scene &scene) {
+    std::vector<Pixel> processTexturedTriangle(const Polygon &screenPolygon, const Scene &scene) {
         std::vector<Pixel> pixels;
 
         std::array<Vertex, 3> vertices = screenPolygon.vertices;
@@ -127,29 +125,29 @@ private:
         while (scanlineY <= scanlineEnd) {
             float x02 = l02_2d.getXtY(scanlineY);
             float z02 = l02_3d.getZtXY(x02, scanlineY);
-            Vector3 n02 = l02_3d.getInterpolatedNormal(x02, scanlineY, z02);
+            Vector3 n02 = Vector3::nan();
             Vector3 t02 = l02_3d.getInterpolatedTexture(x02, scanlineY, z02);
             Vertex v02 = {{x02, scanlineY, z02}, t02, n02};
 
             if (scanlineY < splitY) {
                 float x01 = l01_2d.getXtY(scanlineY);
                 float z01 = l01_3d.getZtXY(x01, scanlineY);
-                Vector3 n01 = l01_3d.getInterpolatedNormal(x01, scanlineY, z01);
-                Vector3 t01 = l02_3d.getInterpolatedTexture(x01, scanlineY, z01);
+                Vector3 n01 = Vector3::nan();
+                Vector3 t01 = l01_3d.getInterpolatedTexture(x01, scanlineY, z01);
                 Vertex v01 = {{x01, scanlineY, z01}, t01, n01};
                 Line line = {v01, v02};
 
-                auto ps = processLine(line, scene);
+                auto ps = processTexturedLine(line, scene);
                 pixels.insert(pixels.end(), ps.begin(), ps.end());
             } else {
                 float x12 = l12_2d.getXtY(scanlineY);
                 float z12 = l12_3d.getZtXY(x12, scanlineY);
-                Vector3 n12 = l12_3d.getInterpolatedNormal(x12, scanlineY, z12);
+                Vector3 n12 = Vector3::nan();
                 Vector3 t12 = l12_3d.getInterpolatedTexture(x12, scanlineY, z12);
                 Vertex v12 = {{x12, scanlineY, z12}, t12, n12};
                 Line line = {v12, v02};
 
-                auto ps = processLine(line, scene);
+                auto ps = processTexturedLine(line, scene);
                 pixels.insert(pixels.end(), ps.begin(), ps.end());
             }
 
@@ -159,8 +157,8 @@ private:
         return pixels;
     }
 
-    std::vector<Pixel> drawTriangle(const Polygon &screenPolygon, const Scene &scene) {
-        return drawPhongTriangle(screenPolygon, scene);
+    std::vector<Pixel> processTriangle(const Polygon &screenPolygon, const Scene &scene) {
+        return processTexturedTriangle(screenPolygon, scene);
     }
 
 public:
@@ -210,7 +208,7 @@ public:
             return {};
         }
 
-        return drawTriangle(screenPolygon, scene);
+        return processTriangle(screenPolygon, scene);
     }
 
     void drawPixels(const std::vector<Pixel> &pixels) {

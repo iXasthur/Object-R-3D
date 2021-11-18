@@ -14,6 +14,10 @@ public:
     float y;
     float z;
 
+    Vector3(int x, int y, int z) : x((float) x), y((float) y), z((float) z) {
+
+    }
+
     Vector3(float x, float y, float z) : x(x), y(y), z(z) {
 
     }

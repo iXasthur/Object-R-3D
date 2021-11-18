@@ -16,8 +16,6 @@ public:
     std::vector<Polygon> polygons;
     std::string name;
 
-    Color color = Color(255, 255, 255, 255);
-
     Texture albedoMap = {};
     Texture normalMap = {};
     Texture specularMap = {};

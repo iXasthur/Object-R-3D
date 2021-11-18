@@ -27,7 +27,7 @@ public:
 
     }
 
-    [[nodiscard]] Color getPixelColor(const Vector3 &position, const Vector3 &normal, const Camera &camera, const Color &color, const float shininess) const {
+    [[nodiscard]] Color getPixelColor(const Vector3 &position, const Camera &camera, const Color &color, const Vector3 &normal, const float shininess) const {
         Vector3 lookDirection = Vector3::sub(position, camera.position);
 
         Color a = ambient.getPixelColor();
