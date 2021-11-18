@@ -40,7 +40,7 @@ private:
 
         return clippedFar;
     }
-//
+
 //    [[nodiscard]] std::vector<Polygon> clipPolygonByScreen(const Polygon &polygon) const {
 //        std::list<Polygon> listTriangles;
 //
@@ -126,7 +126,7 @@ private:
                         Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
                         Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
 
-                        auto ps = renderer.processPolygon(screenPolygon, scene.camera, scene.light, obj.color, obj.shininess);
+                        auto ps = renderer.processPolygon(screenPolygon, scene);
                         pixels.insert(pixels.end(), ps.begin(), ps.end());
                     }
 
@@ -171,22 +171,10 @@ private:
 
             i++;
         }
-
     }
 
     void renderScene() {
-//        auto dt = (float) frameDeltaTime / 1000.0f;
-//        scene.light.position = Matrix4::multiplyVector(scene.light.position, Matrix4::makeRotationY(dt));
-
         renderObject(scene.object);
-
-        if (scene.light.model != nullptr) {
-            Object lightObject = scene.light.getObject();
-
-            renderer.forceObjectColor = true;
-            renderObject(lightObject);
-            renderer.forceObjectColor = false;
-        }
     }
 
     void processInputFast() {
@@ -374,7 +362,7 @@ public:
         s += "camera: " + scene.camera.position.toString() + ", ";
         s += "fov: " + fov + ", ";
         s += "euler: " + scene.camera.eulerRotation.toString() + ", ";
-        s += "light: " + scene.light.position.toString();
+        s += "light: " + scene.light.direction.toString();
         return s;
     }
 };

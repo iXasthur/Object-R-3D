@@ -21,7 +21,6 @@ add_executable(
         engine/scene/camera/Camera.h
         engine/scene/object/primitives3/Polygon.h
         engine/utils/Vector3.h
-        engine/utils/Vector4.h
         engine/Engine.h
         engine/utils/Color.h
         engine/utils/EulerAngle.h

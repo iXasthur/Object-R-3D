@@ -16,7 +16,6 @@ public:
     std::string name;
 
     Color color = Color(255, 255, 255, 255);
-    float shininess = 20.0f;
 
     Object() = default;
 

@@ -12,42 +12,28 @@
 
 class Light {
 public:
-    Vector3 position;
-
-    Object *model;
+    Vector3 direction;
 
     AmbientLight ambient;
     DiffuseLight diffuse;
     SpecularLight specular;
 
     Light(
-            const Vector3 &position,
+            const Vector3 &direction,
             const AmbientLight &ambient,
             const DiffuseLight &diffuse,
             const SpecularLight &specular
-    ) : position(position), model(nullptr), ambient(ambient), diffuse(diffuse), specular(specular) {
+    ) : direction(direction), ambient(ambient), diffuse(diffuse), specular(specular) {
 
     }
 
     [[nodiscard]] Color getPixelColor(const Vector3 &position, const Vector3 &normal, const Camera &camera, const Color &color, const float shininess) const {
         Vector3 lookDirection = Vector3::sub(position, camera.position);
-        Vector3 lightDirection = Vector3::sub(position, this->position);
 
         Color a = ambient.getPixelColor();
-        Color d = diffuse.getPixelColor(normal, lightDirection);
-        Color s = specular.getPixelColor(normal, shininess, lookDirection, lightDirection);
+        Color d = diffuse.getPixelColor(normal, direction);
+        Color s = specular.getPixelColor(normal, shininess, lookDirection, direction);
         return color.exposedRGB(a.plusRGB(d).plusRGB(s));
-    }
-
-    [[nodiscard]] Object getObject() const {
-        if (model == nullptr) {
-            throw std::runtime_error("Light has no model");
-        }
-
-        Object obj = *model;
-        obj.position = position;
-        obj.color = ambient.getPixelColor().plusRGB(diffuse.getPixelColor({0, 1, 0}, {0, -1, 0}));
-        return obj;
     }
 };
 

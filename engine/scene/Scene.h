@@ -19,7 +19,7 @@ public:
     Object object;
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
-            {3.0f, 3.0f, 3.0f},
+            {-3.0f, -3.0f, -3.0f},
             {0.05f, {255, 255, 255, 255}},
             {1.0f, {255, 255, 255, 255}}, // Amethyst 155, 89, 182
             {0.4f, {255, 255, 255, 255}}
@@ -28,19 +28,11 @@ public:
     Scene() {
         std::string dir = "../objects/";
 
-        // "cube.obj", "stone.obj", "deer.obj", "monkey.obj", "sphere.obj", "shovel.obj"
-
-        std::string name = "shovel.obj";
-        Object obj = *ObjectLoader::loadObjModel(dir + name);
+        std::string name = "head";
+        Object obj = ObjectLoader::loadObjModel(dir + name + "/model.obj");
         obj.centerPolygonVertices();
         obj.resizeToHeight(2);
         object = obj;
-
-        Object *lo = ObjectLoader::loadObjModel(dir + "sphere.obj");
-        lo->color = {255, 255, 255, 255};
-        lo->centerPolygonVertices();
-        lo->resizeToHeight(0.2);
-        light.model = lo;
 
         resetCamera();
     };
@@ -48,25 +40,6 @@ public:
     void resetCamera() {
         camera = Camera({0 , 0, 2}, {0, 0, 0});
     }
-
-//    void add(const Object &obj) {
-//        objects.emplace_back(obj);
-//        reorderObjects(2);
-//    }
-//
-//    void reorderObjects(float delimiterSize) {
-//        Vector3 pos;
-//        for (int i = 0; i < objects.size(); ++i) {
-//            if (i > 0) {
-//                Vector3 lastDim = objects[i - 1].dimension();
-//                Vector3 dim = objects[i].dimension();
-//                pos.x += lastDim.x / 2 + dim.x / 2;
-//                pos.x += delimiterSize;
-//            }
-//
-//            objects[i].position.x = pos.x;
-//        }
-//    }
 };
 
 

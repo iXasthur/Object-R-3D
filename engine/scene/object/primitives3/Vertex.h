@@ -11,14 +11,15 @@
 class Vertex {
 public:
     Vector3 position;
+    Vector3 texture;
     Vector3 normal;
 
-    Vertex(const Vector3 &position, const Vector3 &normal) : position(position), normal(normal) {}
+    Vertex(const Vector3 &position, const Vector3 &texture, const Vector3 &normal) : position(position), texture(texture), normal(normal) {}
 
     Vertex() = default;
 
     [[nodiscard]] Vertex matrixMultiplied(const Matrix4 &m) const {
-        return {Matrix4::multiplyVector(position, m), normal};
+        return {Matrix4::multiplyVector(position, m), texture, normal};
     }
 };
 

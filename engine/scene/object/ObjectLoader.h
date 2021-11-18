@@ -25,22 +25,24 @@ private:
     }
 
 public:
-    static Object* loadObjModel(const std::string &filename) {
-        Object *obj = new Object();
-        obj->name = filename;
+    static Object loadObjModel(const std::string &filename) {
+        auto obj = Object();
+        obj.name = filename;
 
-        int find = obj->name.find_last_of('/');
+        unsigned long long find = obj.name.find_last_of('/');
         if (find != std::string::npos) {
-            obj->name = obj->name.substr(find + 1);
+            obj.name = obj.name.substr(find + 1);
         }
 
-        find = obj->name.find_last_of('\\');
+        find = obj.name.find_last_of('\\');
         if (find != std::string::npos) {
-            obj->name = obj->name.substr(find + 1);
+            obj.name = obj.name.substr(find + 1);
         }
 
         std::vector<Polygon> polygons;
+
         std::vector<Vector3> positions;
+        std::vector<Vector3> textures;
         std::vector<Vector3> normals;
 
         std::ifstream in(filename, std::ios::in);
@@ -56,6 +58,15 @@ public:
                     v >> vertex.z;
 
                     positions.push_back(vertex);
+                } else if (line.substr(0, 3) == "vt ") {
+                    std::istringstream v(line.substr(3));
+                    Vector3 texture;
+
+                    v >> texture.x;
+                    v >> texture.y;
+                    v >> texture.z;
+
+                    textures.push_back(texture);
                 } else if (line.substr(0, 3) == "vn ") {
                     std::istringstream v(line.substr(3));
                     Vector3 normal;
@@ -69,9 +80,9 @@ public:
                     std::vector<std::string> faceStrs = splitString(line, ' ');
                     faceStrs.erase(faceStrs.begin());
 
-                    std::vector<int> f;
-                    std::vector<int> t;
-                    std::vector<int> n;
+                    std::vector<Vector3> p;
+                    std::vector<Vector3> t;
+                    std::vector<Vector3> n;
 
                     for (auto &faceStr : faceStrs) {
                         std::vector<std::string> faceElementStrs = splitString(faceStr, '/');
@@ -84,15 +95,15 @@ public:
 
                                 switch (j) {
                                     case 0: {
-                                        f.emplace_back(fv);
+                                        p.emplace_back(positions[fv - 1]);
                                         break;
                                     }
                                     case 1: {
-                                        t.emplace_back(fv);
+                                        t.emplace_back(textures[fv - 1]);
                                         break;
                                     }
                                     case 2: {
-                                        n.emplace_back(fv);
+                                        n.emplace_back(normals[fv - 1]);
                                         break;
                                     }
                                     default: {
@@ -103,50 +114,18 @@ public:
                         }
                     }
 
-                    std::array<Vector3, 3> pPositions;
-                    std::array<Vector3, 3> pNormals;
-                    if (f.size() == 3) {
-                        pPositions[0] = positions[f[0] - 1];
-                        pPositions[1] = positions[f[1] - 1];
-                        pPositions[2] = positions[f[2] - 1];
+                    if(p.size() != t.size() && t.size() != n.size()) {
+                        throw std::runtime_error("Invalid model opened");
+                    }
 
-                        if (!normals.empty()) {
-                            pNormals[0] = normals[n[0] - 1];
-                            pNormals[1] = normals[n[1] - 1];
-                            pNormals[2] = normals[n[2] - 1];
-                            polygons.emplace_back(Polygon(pPositions, pNormals));
-                        } else {
-                            polygons.emplace_back(Polygon(pPositions));
-                        }
+                    std::vector<Vertex> vertices;
+                    for(int i = 0; i < p.size(); i++) {
+                        Vertex vertex = {p[i], t[i], n[i]};
+                        vertices.emplace_back(vertex);
+                    }
 
-                    } else if (f.size() == 4) {
-                        pPositions[0] = positions[f[0] - 1];
-                        pPositions[1] = positions[f[1] - 1];
-                        pPositions[2] = positions[f[2] - 1];
-
-                        if (!normals.empty()) {
-                            pNormals[0] = normals[n[0] - 1];
-                            pNormals[1] = normals[n[1] - 1];
-                            pNormals[2] = normals[n[2] - 1];
-                            polygons.emplace_back(Polygon(pPositions, pNormals));
-                        } else {
-                            polygons.emplace_back(Polygon(pPositions));
-                        }
-
-                        pPositions[0] = positions[f[0] - 1];
-                        pPositions[1] = positions[f[2] - 1];
-                        pPositions[2] = positions[f[3] - 1];
-
-                        if (!normals.empty()) {
-                            pNormals[0] = normals[n[0] - 1];
-                            pNormals[1] = normals[n[2] - 1];
-                            pNormals[2] = normals[n[3] - 1];
-                            polygons.emplace_back(Polygon(pPositions, pNormals));
-                        } else {
-                            polygons.emplace_back(Polygon(pPositions));
-                        }
-                    } else {
-                        std::cerr << "Object face must have 3 or 4 positions" << std::endl;
+                    for(const Polygon &polygon : Polygon::triangulate(vertices)) {
+                        polygons.emplace_back(polygon);
                     }
                 }
             }
@@ -154,7 +133,7 @@ public:
             std::cerr << "Cannot open " << filename << std::endl;
         }
 
-        obj->polygons = polygons;
+        obj.polygons = polygons;
         return obj;
     }
 };

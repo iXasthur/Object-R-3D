@@ -30,7 +30,8 @@ public:
 
         Vector3 position = Vector3::add(lineStart, lineToIntersect);
         Vector3 normal = getInterpolatedNormal(position.x, position.y, position.z);
-        return {position, normal};
+        Vector3 texture = getInterpolatedTexture(position.x, position.y, position.z);
+        return {position, texture, normal};
     }
 
     [[nodiscard]] float getXtYZ(float targetY, float targetZ) const {
@@ -45,8 +46,6 @@ public:
             float t = (targetZ - v0.position.z) / r.z;
             return v0.position.x + t * r.x;
         }
-
-//        std::cout << "getXtYZ == nan" << std::endl;
 
         return std::numeric_limits<float>::quiet_NaN();
     }
@@ -64,8 +63,6 @@ public:
             return v0.position.y + t * r.y;
         }
 
-//        std::cout << "getYtXZ == nan" << std::endl;
-
         return std::numeric_limits<float>::quiet_NaN();
     }
 
@@ -82,15 +79,18 @@ public:
             return v0.position.z + t * r.z;
         }
 
-//        std::cout << "getZtXY == nan" << std::endl;
-
         return std::numeric_limits<float>::quiet_NaN();
     }
 
     [[nodiscard]] Vector3 getInterpolatedNormal(float x, float y, float z) const {
-        Vector3 n0 = v0.normal;
-        Vector3 n1 = v1.normal;
+        return getInterpolated(v0.normal, v1.normal, x, y, z);
+    }
 
+    [[nodiscard]] Vector3 getInterpolatedTexture(float x, float y, float z) const {
+        return getInterpolated(v0.texture, v1.texture, x, y, z);
+    }
+
+    [[nodiscard]] Vector3 getInterpolated(const Vector3 &arg0, const Vector3 &arg1, float x, float y, float z) const {
         float x0 = v0.position.x;
         float x1 = v1.position.x;
         float y0 = v0.position.y;
@@ -101,32 +101,19 @@ public:
         Vector3 in0;
         Vector3 in1;
         if (y0 != y1) {
-            in0 = Vector3::mul(n0, (y - y1) / (y0 - y1));
-            in1 = Vector3::mul(n1, (y0 - y) / (y0 - y1));
+            in0 = Vector3::mul(arg0, (y - y1) / (y0 - y1));
+            in1 = Vector3::mul(arg1, (y0 - y) / (y0 - y1));
         } else if (x0 != x1) {
-            in0 = Vector3::mul(n0, (x - x1) / (x0 - x1));
-            in1 = Vector3::mul(n1, (x0 - x) / (x0 - x1));
+            in0 = Vector3::mul(arg0, (x - x1) / (x0 - x1));
+            in1 = Vector3::mul(arg1, (x0 - x) / (x0 - x1));
         } else if (z0 != z1) {
-            in0 = Vector3::mul(n0, (z - z1) / (z0 - z1));
-            in1 = Vector3::mul(n1, (z0 - z) / (z0 - z1));
+            in0 = Vector3::mul(arg0, (z - z1) / (z0 - z1));
+            in1 = Vector3::mul(arg1, (z0 - z) / (z0 - z1));
         } else {
-//            std::cout << "getInterpolatedNormalXY == nan" << std::endl;
             return Vector3::nan();
         }
 
-        Vector3 in = Vector3::add(in0, in1);
-
-//        std::cout << "-----" << std::endl;
-//        std::cout << n0.toString() << "       ";
-//        std::cout << in.toString() << "       ";
-//        std::cout << n1.toString() << "       ";
-//        std::cout << std::endl;
-
-        return in;
-    }
-
-    static Vector3 convert(const Line &from, const Line &to, const Vector3 &position) {
-        return Vector3::div(Vector3::add(to.v0.position, to.v1.position), 2);
+        return Vector3::add(in0, in1);
     }
 };
 

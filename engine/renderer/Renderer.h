@@ -17,7 +17,7 @@ private:
     SDL_Rect screenRect = {0, 0, 0, 0};
     std::vector<std::vector<float>> zBuffer = std::vector<std::vector<float>>(0, std::vector<float>(0));
 
-    std::vector<Pixel> processLine(const Line &line, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+    std::vector<Pixel> processLine(const Line &line, const Scene &scene) {
         std::vector<Pixel> pixels;
 
         Vertex vf0 = line.v0;
@@ -71,12 +71,12 @@ private:
                     converted = Matrix4::multiplyVector(converted, matProj_inverse);
                     converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
 
-                    Color c = light.getPixelColor(converted, n, camera, color, shininess);
+                    Color c = scene.light.getPixelColor(converted, n, scene.camera, scene.object.color, 20);
 
                     Pixel pixel = {(int) x, (int) y, zf, c};
                     pixels.emplace_back(pixel);
                 } else {
-                    Pixel pixel = {(int) x, (int) y, zf, color};
+                    Pixel pixel = {(int) x, (int) y, zf, scene.object.color};
                     pixels.emplace_back(pixel);
                 }
             }
@@ -98,7 +98,7 @@ private:
         return pixels;
     }
 
-    std::vector<Pixel> drawPhongTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+    std::vector<Pixel> drawPhongTriangle(const Polygon &screenPolygon, const Scene &scene) {
         std::vector<Pixel> pixels;
 
         std::array<Vertex, 3> vertices = screenPolygon.vertices;
@@ -128,25 +128,28 @@ private:
             float x02 = l02_2d.getXtY(scanlineY);
             float z02 = l02_3d.getZtXY(x02, scanlineY);
             Vector3 n02 = l02_3d.getInterpolatedNormal(x02, scanlineY, z02);
-            Vertex v02 = {{x02, scanlineY, z02}, n02};
+            Vector3 t02 = l02_3d.getInterpolatedTexture(x02, scanlineY, z02);
+            Vertex v02 = {{x02, scanlineY, z02}, t02, n02};
 
             if (scanlineY < splitY) {
                 float x01 = l01_2d.getXtY(scanlineY);
                 float z01 = l01_3d.getZtXY(x01, scanlineY);
                 Vector3 n01 = l01_3d.getInterpolatedNormal(x01, scanlineY, z01);
-                Vertex v01 = {{x01, scanlineY, z01}, n01};
+                Vector3 t01 = l02_3d.getInterpolatedTexture(x01, scanlineY, z01);
+                Vertex v01 = {{x01, scanlineY, z01}, t01, n01};
                 Line line = {v01, v02};
 
-                auto ps = processLine(line, camera, light, color, shininess);
+                auto ps = processLine(line, scene);
                 pixels.insert(pixels.end(), ps.begin(), ps.end());
             } else {
                 float x12 = l12_2d.getXtY(scanlineY);
                 float z12 = l12_3d.getZtXY(x12, scanlineY);
                 Vector3 n12 = l12_3d.getInterpolatedNormal(x12, scanlineY, z12);
-                Vertex v12 = {{x12, scanlineY, z12}, n12};
+                Vector3 t12 = l12_3d.getInterpolatedTexture(x12, scanlineY, z12);
+                Vertex v12 = {{x12, scanlineY, z12}, t12, n12};
                 Line line = {v12, v02};
 
-                auto ps = processLine(line, camera, light, color, shininess);
+                auto ps = processLine(line, scene);
                 pixels.insert(pixels.end(), ps.begin(), ps.end());
             }
 
@@ -156,8 +159,8 @@ private:
         return pixels;
     }
 
-    std::vector<Pixel> drawTriangle(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
-        return drawPhongTriangle(screenPolygon, camera, light, color, shininess);
+    std::vector<Pixel> drawTriangle(const Polygon &screenPolygon, const Scene &scene) {
+        return drawPhongTriangle(screenPolygon, scene);
     }
 
 public:
@@ -202,12 +205,12 @@ public:
         SDL_RenderClear(renderer);
     }
 
-    std::vector<Pixel> processPolygon(const Polygon &screenPolygon, const Camera &camera, const Light &light, const Color &color, const float shininess) {
+    std::vector<Pixel> processPolygon(const Polygon &screenPolygon, const Scene &scene) {
         if (screenPolygon.isFlat()) {
             return {};
         }
 
-        return drawTriangle(screenPolygon, camera, light, color, shininess);
+        return drawTriangle(screenPolygon, scene);
     }
 
     void drawPixels(const std::vector<Pixel> &pixels) {
