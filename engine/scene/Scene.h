@@ -29,7 +29,7 @@ public:
         std::string dir = "../objects/";
 
         std::string name = "head";
-        Object obj = ObjectLoader::loadObjModel(dir + name + "/model.obj");
+        Object obj = ObjectLoader::loadObject(dir + name);
         obj.centerPolygonVertices();
         obj.resizeToHeight(2);
         object = obj;

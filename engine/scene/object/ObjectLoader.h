@@ -24,28 +24,14 @@ private:
         return result;
     }
 
-public:
-    static Object loadObjModel(const std::string &filename) {
-        auto obj = Object();
-        obj.name = filename;
-
-        unsigned long long find = obj.name.find_last_of('/');
-        if (find != std::string::npos) {
-            obj.name = obj.name.substr(find + 1);
-        }
-
-        find = obj.name.find_last_of('\\');
-        if (find != std::string::npos) {
-            obj.name = obj.name.substr(find + 1);
-        }
-
+    static std::vector<Polygon> loadModel(const std::string &path) {
         std::vector<Polygon> polygons;
 
         std::vector<Vector3> positions;
         std::vector<Vector3> textures;
         std::vector<Vector3> normals;
 
-        std::ifstream in(filename, std::ios::in);
+        std::ifstream in(path, std::ios::in);
         if (in) {
             std::string line;
             while (std::getline(in, line)) {
@@ -130,10 +116,29 @@ public:
                 }
             }
         } else {
-            std::cerr << "Cannot open " << filename << std::endl;
+            throw std::runtime_error("Cannot open " + path);
         }
 
-        obj.polygons = polygons;
+        return polygons;
+    }
+
+public:
+    static Object loadObject(const std::string &dirpath) {
+        std::string name = dirpath;
+        unsigned long long find = name.find_last_of('/');
+        if (find != std::string::npos) {
+            name = name.substr(find + 1);
+        }
+
+        find = name.find_last_of('\\');
+        if (find != std::string::npos) {
+            name = name.substr(find + 1);
+        }
+
+        Object obj;
+        obj.name = name;
+        obj.polygons = ObjectLoader::loadModel(dirpath + "/model.obj");
+
         return obj;
     }
 };
