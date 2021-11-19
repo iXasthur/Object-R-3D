@@ -121,7 +121,7 @@ public:
 
         Vector3 interpolated;
 
-        if (!perspectiveCorrect) {
+        if (perspectiveCorrect) {
             Vector3 in0 = Vector3::mul(Vector3::div(v0.texture, z0), t);
             Vector3 in1 = Vector3::mul(Vector3::div(v1.texture, z1), q);
             interpolated = Vector3::div(Vector3::add(in0, in1), (t / z0) + (q / z1));
