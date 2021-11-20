@@ -58,7 +58,7 @@ private:
         Vector3 verticalInterpolated = verticalLine.getInterpolatedNormal(xf - x0f, yf - y0f, 0);
 
         if (std::isnan(verticalInterpolated.x) || std::isnan(verticalInterpolated.y) || std::isnan(verticalInterpolated.z)) {
-            return img[(int) std::round(xf)][(int) std::round(yf)];
+            return getPixelF_linear(xf, yf);
         }
 
         Color color = {(int) std::round(verticalInterpolated.x), (int) std::round(verticalInterpolated.y), (int) std::round(verticalInterpolated.z), 0};
