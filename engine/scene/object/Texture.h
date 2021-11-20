@@ -11,7 +11,7 @@
 #include "../../utils/Vector3.h"
 
 class Texture {
-protected:
+private:
     [[nodiscard]] Color getPixelF_bilinear(float xf, float yf) const {
         int w = (int) img[0].size();
         int h = (int) img.size();
