@@ -122,12 +122,12 @@ public:
         Vector3 interpolated;
 
         if (perspectiveCorrect) {
-            Vector3 in0 = Vector3::mul(Vector3::div(v0.texture, z0), t);
-            Vector3 in1 = Vector3::mul(Vector3::div(v1.texture, z1), q);
+            Vector3 in0 = Vector3::mul(Vector3::div(arg0, z0), t);
+            Vector3 in1 = Vector3::mul(Vector3::div(arg1, z1), q);
             interpolated = Vector3::div(Vector3::add(in0, in1), (t / z0) + (q / z1));
         } else {
-            Vector3 in0 = Vector3::mul(v0.texture, t);
-            Vector3 in1 = Vector3::mul(v1.texture, q);
+            Vector3 in0 = Vector3::mul(arg0, t);
+            Vector3 in1 = Vector3::mul(arg1, q);
             interpolated = Vector3::add(in0, in1);
         }
 

@@ -41,7 +41,7 @@ private:
         for (int i = 0; i < 2; ++i) {
             for (int j = 0; j < 2; ++j) {
                 Vector3 vector = {colors[i][j].R, colors[i][j].G, colors[i][j].B};
-                colorsV[i][j] = {{i, j, 0}, vector, {}};
+                colorsV[i][j] = {{i, j, 0}, {}, vector};
             }
         }
 
@@ -51,8 +51,8 @@ private:
         Vector3 topInterpolated = lineTop.getInterpolatedNormal(xf - x0f, lineTop.v0.position.y, 0);
         Vector3 botInterpolated = lineBot.getInterpolatedNormal(xf - x0f, lineBot.v0.position.y, 0);
 
-        Vertex topInterpolatedV = {{xf - x0f, lineTop.v0.position.y, 0.0f}, topInterpolated, {}};
-        Vertex botInterpolatedV = {{xf - x0f, lineBot.v0.position.y, 0.0f}, botInterpolated, {}};
+        Vertex topInterpolatedV = {{xf - x0f, lineTop.v0.position.y, 0.0f}, {}, topInterpolated};
+        Vertex botInterpolatedV = {{xf - x0f, lineBot.v0.position.y, 0.0f}, {}, botInterpolated};
 
         Line verticalLine = {topInterpolatedV, botInterpolatedV};
         Vector3 verticalInterpolated = verticalLine.getInterpolatedNormal(xf - x0f, yf - y0f, 0);
