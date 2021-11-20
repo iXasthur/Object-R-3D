@@ -173,6 +173,8 @@ private:
             }
         }
 
+        SDL_FreeSurface(image);
+
         Texture texture;
         texture.img = img;
         return texture;
