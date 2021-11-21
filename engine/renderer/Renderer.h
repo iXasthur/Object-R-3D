@@ -292,8 +292,6 @@ public:
             }
         }
 
-        // z sort everything
-
         for (const auto &[key, value] : pxMap) {
             std::vector<Pixel> pixels = {};
             for (const auto &item : value) {
