@@ -267,7 +267,6 @@ private:
 
         frameDeltaTime = 1000 / targetFps;
 
-        Uint32 start;
         SDL_Event windowEvent;
         while (isRunning) {
             while (SDL_PollEvent(&windowEvent)) {
@@ -283,7 +282,7 @@ private:
                     }
                 }
             }
-            start = SDL_GetTicks();
+            Uint32 start = SDL_GetTicks();
 
             processInputFast();
 
@@ -312,10 +311,12 @@ private:
 
             // Renders window
             SDL_RenderPresent(sdl_renderer);
-            frameDeltaTime = SDL_GetTicks() - start;
-            if (1000 / targetFps > frameDeltaTime) {
-                SDL_Delay(1000 / targetFps - frameDeltaTime);
+
+            Uint32 end = SDL_GetTicks();
+            if (1000 / targetFps > end - start) {
+                SDL_Delay(1000 / targetFps - (end - start));
             }
+            frameDeltaTime = SDL_GetTicks() - start;
         }
 
         SDL_DestroyRenderer(sdl_renderer);
@@ -326,7 +327,7 @@ private:
     }
 
 public:
-    const int targetFps = 60;
+    const int targetFps = 120;
 
     Engine() = default;
 
@@ -370,7 +371,8 @@ public:
         s += "camera: " + scene.camera.position.toString() + ", ";
         s += "fov: " + fov + ", ";
         s += "euler: " + scene.camera.eulerRotation.toString() + ", ";
-        s += "light: " + scene.light.direction.toString();
+        s += "light: " + scene.light.direction.toString() + ", ";
+        s += "fps: " + std::to_string(1000.0f / (float) frameDeltaTime);
         return s;
     }
 };
