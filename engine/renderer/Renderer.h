@@ -326,40 +326,6 @@ public:
             SDL_SetRenderDrawColor(renderer, blended.R, blended.G, blended.B, blended.A);
             SDL_RenderDrawPoint(renderer, key.first, key.second);
         }
-
-//        for (const auto &pixel : pixels) {
-//            SDL_Point point = {(int) pixel.x, (int) pixel.y};
-//            float zf = pixel.z;
-//
-//            if (SDL_PointInRect(&point, &screenRect)) {
-//                if (zf < zBuffer[point.y][point.x]) {
-//                    Color blended = backgroundColor;
-//
-//                    float a0 = (float) pixel.color.A / 255.0f;
-//                    float a1 = (float) blended.A / 255.0f;
-//                    float r0 = (float) pixel.color.R / 255.0f;
-//                    float r1 = (float) blended.R / 255.0f;
-//                    float g0 = (float) pixel.color.G / 255.0f;
-//                    float g1 = (float) blended.G / 255.0f;
-//                    float b0 = (float) pixel.color.B / 255.0f;
-//                    float b1 = (float) blended.B / 255.0f;
-//
-//                    float a01 = ((1 - a0) * a1) + a0;
-//                    float r01 = (((1 - a0) * a1 * r1) + (a0 * r0)) / a01;
-//                    float g01 = (((1 - a0) * a1 * g1) + (a0 * g0)) / a01;
-//                    float b01 = (((1 - a0) * a1 * b1) + (a0 * b0)) / a01;
-//                    blended = {(int) (r01 * 255.0f), (int) (g01 * 255.0f), (int) (b01 * 255.0f), (int) (a01 * 255.0f)};
-//
-//                    SDL_SetRenderDrawColor(renderer, blended.R, blended.G, blended.B, blended.A);
-//                    SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
-//
-////                    SDL_SetRenderDrawColor(renderer, pixel.color.R, pixel.color.G, pixel.color.B, pixel.color.A);
-////                    SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
-//
-//                    zBuffer[point.y][point.x] = zf;
-//                }
-//            }
-//        }
     }
 
 };
