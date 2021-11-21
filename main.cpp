@@ -1,4 +1,3 @@
-#include <SDL.h>
 #include "engine/Engine.h"
 
 int main(int argc, char** argv) {

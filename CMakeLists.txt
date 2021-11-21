@@ -43,6 +43,7 @@ add_executable(
         engine/scene/object/primitives2/Line2D.h
         engine/scene/object/primitives2/Pixel.h
         engine/scene/object/Texture.h
+        engine/scene/object/Material.h
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)

@@ -10,6 +10,7 @@
 #include <fstream>
 #include "Object.h"
 #include "SDL_image.h"
+#include "Material.h"
 
 class ObjectLoader {
 private:
@@ -180,6 +181,68 @@ private:
         return texture;
     }
 
+    static std::vector<Material> loadMtl(const std::string &path) {
+        std::cout << "Loading " << path << std::endl;
+
+        std::vector<Material> materials;
+
+        std::ifstream in(path, std::ios::in);
+        if (in) {
+            std::string line;
+            while (std::getline(in, line)) {
+                if (line.substr(0, 7) == "newmtl ") {
+                    materials.emplace_back(Material());
+                    std::istringstream v(line.substr(7));
+                    v >> materials[materials.size() - 1].name;
+                } else if (line.substr(0, 3) == "Ka ") {
+                    std::istringstream v(line.substr(3));
+
+                    float rf, gf, bf;
+                    v >> rf;
+                    v >> gf;
+                    v >> bf;
+
+                    materials[materials.size() - 1].ambientColor.R = (int) (rf * 255.0f);
+                    materials[materials.size() - 1].ambientColor.G = (int) (gf * 255.0f);
+                    materials[materials.size() - 1].ambientColor.B = (int) (bf * 255.0f);
+                } else if (line.substr(0, 3) == "Kd ") {
+                    std::istringstream v(line.substr(3));
+
+                    float rf, gf, bf;
+                    v >> rf;
+                    v >> gf;
+                    v >> bf;
+
+                    materials[materials.size() - 1].diffuseColor.R = (int) (rf * 255.0f);
+                    materials[materials.size() - 1].diffuseColor.G = (int) (gf * 255.0f);
+                    materials[materials.size() - 1].diffuseColor.B = (int) (bf * 255.0f);
+                } else if (line.substr(0, 3) == "Ks ") {
+                    std::istringstream v(line.substr(3));
+
+                    float rf, gf, bf;
+                    v >> rf;
+                    v >> gf;
+                    v >> bf;
+
+                    materials[materials.size() - 1].specularColor.R = (int) (rf * 255.0f);
+                    materials[materials.size() - 1].specularColor.G = (int) (gf * 255.0f);
+                    materials[materials.size() - 1].specularColor.B = (int) (bf * 255.0f);
+                } else if (line.substr(0, 3) == "Ni ") {
+                    std::istringstream v(line.substr(3));
+                    v >> materials[materials.size() - 1].shininess;
+                } else if (line.substr(0, 2) == "d ") {
+                    std::istringstream v(line.substr(2));
+                    v >> materials[materials.size() - 1].opacity;
+                }
+            }
+        } else {
+            printf("Cannot open %s", path.c_str());
+            return {{}};
+        }
+
+        return materials;
+    }
+
 public:
     static Object loadObject(const std::string &dirpath) {
         std::string name = dirpath;
@@ -201,6 +264,7 @@ public:
         obj.specularMap = ObjectLoader::loadTexture(dirpath + "/specular_map.png");
 
         // Generate maps if empty ?
+        obj.material = loadMtl(dirpath + "/material.mtl")[0];
 
         return obj;
     }

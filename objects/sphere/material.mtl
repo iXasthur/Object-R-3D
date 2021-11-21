@@ -1,0 +1,10 @@
+# Blender MTL File: 'IBL Studio Setup.blend'
+# Material Count: 2
+
+newmtl Sphere
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 20.000000
+d 0.2000000

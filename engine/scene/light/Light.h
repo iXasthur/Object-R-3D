@@ -27,13 +27,13 @@ public:
 
     }
 
-    [[nodiscard]] Color getPixelColor(const Vector3 &position, const Camera &camera, const Color &color, const Vector3 &normal, const float shininess) const {
+    [[nodiscard]] Color getPixelColor(const Vector3 &position, const Camera &camera, const Color &ambientColor, const Color &diffuseColor, const Color &specularColor, const Vector3 &normal, const float shininess) const {
         Vector3 lookDirection = Vector3::sub(position, camera.position);
 
-        Color a = ambient.getPixelColor();
-        Color d = diffuse.getPixelColor(normal, direction);
-        Color s = specular.getPixelColor(normal, shininess, lookDirection, direction);
-        return color.exposedRGB(a.plusRGB(d).plusRGB(s));
+        Color a = ambientColor.exposedRGB(ambient.getPixelColor());
+        Color d = diffuseColor.exposedRGB(diffuse.getPixelColor(normal, direction));
+        Color s = specularColor.exposedRGB(specular.getPixelColor(normal, shininess, lookDirection, direction));
+        return a.plusRGB(d).plusRGB(s);
     }
 };
 

@@ -9,12 +9,15 @@
 #include "primitives3/Polygon.h"
 #include "../../utils/Color.h"
 #include "Texture.h"
+#include "Material.h"
 
 class Object {
 public:
     Vector3 position;
     std::vector<Polygon> polygons;
     std::string name;
+
+    Material material = {};
 
     Texture albedoMap = {};
     Texture normalMap = {};

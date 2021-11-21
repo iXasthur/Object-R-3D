@@ -7,6 +7,8 @@
 
 #include <SDL.h>
 #include <cmath>
+#include <map>
+#include <algorithm>
 #include "../utils/Color.h"
 #include "../scene/object/primitives3/Line.h"
 #include "../scene/object/primitives2/Pixel.h"
@@ -15,6 +17,7 @@ class Renderer {
 private:
     SDL_Renderer *renderer = nullptr;
     SDL_Rect screenRect = {0, 0, 0, 0};
+    Color backgroundColor = {0, 0, 0, 255};
     std::vector<std::vector<float>> zBuffer = std::vector<std::vector<float>>(0, std::vector<float>(0));
 
     std::vector<Pixel> processTexturedLine(const Line &line, const Scene &scene) {
@@ -81,17 +84,27 @@ private:
 //                        Pixel pixel = {(int) x, (int) y, zf, c};
 //                        pixels.emplace_back(pixel);
                     } else {
-                        Color color;
+                        Color ambientColor;
+                        Color diffuseColor;
+                        Color specularColor;
                         float shininess;
+                        float opacity;
 
                         if (scene.object.albedoMap.isEmpty()) {
-                            color = {255, 255, 255, 255};
+                            ambientColor = scene.object.material.ambientColor;
+                            diffuseColor = scene.object.material.diffuseColor;
+                            specularColor = scene.object.material.specularColor;
+                            opacity = scene.object.material.opacity;
                         } else {
-                            color = scene.object.albedoMap.getPixelF(tx.x, tx.y);
+                            Color txColor = scene.object.albedoMap.getPixelF(tx.x, tx.y);
+                            ambientColor = txColor;
+                            diffuseColor = txColor;
+                            specularColor = txColor;
+                            opacity = 1;
                         }
 
                         if (scene.object.specularMap.isEmpty()) {
-                            shininess = 20;
+                            shininess = scene.object.material.shininess;
                         } else {
                             Color shininessTx = scene.object.specularMap.getPixelF(tx.x, tx.y);
                             shininess = (float) (shininessTx.R + shininessTx.G + shininessTx.B);
@@ -102,7 +115,8 @@ private:
                         converted = Matrix4::multiplyVector(converted, matProj_inverse);
                         converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
 
-                        Color c = scene.light.getPixelColor(converted, scene.camera, color, normal, shininess);
+                        Color c = scene.light.getPixelColor(converted, scene.camera, ambientColor, diffuseColor, specularColor, normal, shininess);
+                        c.A = (int) (opacity * 255.0f);
 
                         Pixel pixel = {(int) x, (int) y, zf, c};
                         pixels.emplace_back(pixel);
@@ -230,6 +244,9 @@ public:
 
     void updateScreen(const Color &color, const Matrix4 &matCameraView, const Matrix4 &matProj, const Matrix4 &matScreen) {
         SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
+
+        backgroundColor = color;
+
         zBuffer = std::vector<std::vector<float>>(screenRect.h, std::vector<float>(screenRect.w));
         for (int i = 0; i < screenRect.h; ++i) {
             std::fill(zBuffer[i].begin(), zBuffer[i].end(), std::numeric_limits<float>::max());
@@ -262,8 +279,29 @@ public:
 
             if (SDL_PointInRect(&point, &screenRect)) {
                 if (zf < zBuffer[point.y][point.x]) {
-                    SDL_SetRenderDrawColor(renderer, pixel.color.R, pixel.color.G, pixel.color.B, pixel.color.A);
+                    Color blended = backgroundColor;
+
+                    float a0 = (float) pixel.color.A / 255.0f;
+                    float a1 = (float) blended.A / 255.0f;
+                    float r0 = (float) pixel.color.R / 255.0f;
+                    float r1 = (float) blended.R / 255.0f;
+                    float g0 = (float) pixel.color.G / 255.0f;
+                    float g1 = (float) blended.G / 255.0f;
+                    float b0 = (float) pixel.color.B / 255.0f;
+                    float b1 = (float) blended.B / 255.0f;
+
+                    float a01 = ((1 - a0) * a1) + a0;
+                    float r01 = (((1 - a0) * a1 * r1) + (a0 * r0)) / a01;
+                    float g01 = (((1 - a0) * a1 * g1) + (a0 * g0)) / a01;
+                    float b01 = (((1 - a0) * a1 * b1) + (a0 * b0)) / a01;
+                    blended = {(int) (r01 * 255.0f), (int) (g01 * 255.0f), (int) (b01 * 255.0f), (int) (a01 * 255.0f)};
+
+                    SDL_SetRenderDrawColor(renderer, blended.R, blended.G, blended.B, blended.A);
                     SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
+
+//                    SDL_SetRenderDrawColor(renderer, pixel.color.R, pixel.color.G, pixel.color.B, pixel.color.A);
+//                    SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
+
                     zBuffer[point.y][point.x] = zf;
                 }
             }
