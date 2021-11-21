@@ -327,7 +327,7 @@ private:
     }
 
 public:
-    const int targetFps = 120;
+    const int targetFps = 60;
 
     Engine() = default;
 
