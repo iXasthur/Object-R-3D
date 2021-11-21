@@ -8,16 +8,20 @@
 #include <SDL.h>
 #include <cmath>
 #include <map>
+#include <set>
 #include <algorithm>
 #include "../utils/Color.h"
 #include "../scene/object/primitives3/Line.h"
 #include "../scene/object/primitives2/Pixel.h"
+#include "../../lib/thread-pool-2.0.0/thread_pool.hpp"
 
 class Renderer {
 private:
     SDL_Renderer *renderer = nullptr;
     SDL_Rect screenRect = {0, 0, 0, 0};
     Color backgroundColor = {0, 0, 0, 255};
+
+    std::vector<std::vector<std::vector<std::pair<int, Pixel>>>> drawBuffer = std::vector<std::vector<std::vector<std::pair<int, Pixel>>>>(0, std::vector<std::vector<std::pair<int, Pixel>>>(0, std::vector<std::pair<int, Pixel>>(0)));
 
     std::vector<Pixel> processTexturedLine(const Line &line, const Scene &scene, const int objIndex) {
         std::vector<Pixel> pixels;
@@ -246,6 +250,10 @@ public:
 
         backgroundColor = color;
 
+        if ((drawBuffer.size() != 2) || (drawBuffer[0].size() != screenRect.h) || (drawBuffer[0][0].size() != screenRect.w)) {
+            drawBuffer = std::vector<std::vector<std::vector<std::pair<int, Pixel>>>>(2, std::vector<std::vector<std::pair<int, Pixel>>>(screenRect.h, std::vector<std::pair<int, Pixel>>(screenRect.w)));
+        }
+
         this->matCameraView = matCameraView;
         this->matProj = matProj;
         this->matScreen = matScreen;
@@ -266,7 +274,65 @@ public:
         return processTriangle(screenPolygon, scene, objIndex);
     }
 
-    void drawPixels(const std::vector<std::vector<Pixel>> &scenePixels) {
+    void drawScenePixels(const std::vector<std::vector<Pixel>> &scenePixels, thread_pool &threads) {
+        static int iteration = 0; iteration++;
+
+        for (int i = 0; i < scenePixels.size(); ++i) {
+            for (const auto &objPixel : scenePixels[i]) {
+                if (drawBuffer[i][objPixel.y][objPixel.x].first != iteration) {
+                    drawBuffer[i][objPixel.y][objPixel.x] = {iteration, objPixel};
+                } else {
+                    if (objPixel.z < drawBuffer[i][objPixel.y][objPixel.x].second.z) {
+                        drawBuffer[i][objPixel.y][objPixel.x].second = objPixel;
+                    }
+                }
+            }
+        }
+
+        for (int x = 0; x < drawBuffer[0][0].size(); ++x) {
+            for (int y = 0; y < drawBuffer[0].size(); ++y) {
+                std::vector<Pixel> pixels = {};
+
+                for (int i = 0; i < drawBuffer.size(); ++i) {
+                    if (drawBuffer[i][y][x].first == iteration) {
+                        pixels.emplace_back(drawBuffer[i][y][x].second);
+                    }
+                }
+
+                if (pixels.empty()) {
+                    continue;
+                }
+
+                std::sort(pixels.begin(), pixels.end(), [&](const Pixel &p0, const Pixel &p1) {
+                    return p0.z > p1.z;
+                });
+
+                Color blended = backgroundColor;
+
+                for (const auto &pixel: pixels) {
+                    float a0 = (float) pixel.color.A / 255.0f;
+                    float a1 = (float) blended.A / 255.0f;
+                    float r0 = (float) pixel.color.R / 255.0f;
+                    float r1 = (float) blended.R / 255.0f;
+                    float g0 = (float) pixel.color.G / 255.0f;
+                    float g1 = (float) blended.G / 255.0f;
+                    float b0 = (float) pixel.color.B / 255.0f;
+                    float b1 = (float) blended.B / 255.0f;
+
+                    float a01 = ((1 - a0) * a1) + a0;
+                    float r01 = (((1 - a0) * a1 * r1) + (a0 * r0)) / a01;
+                    float g01 = (((1 - a0) * a1 * g1) + (a0 * g0)) / a01;
+                    float b01 = (((1 - a0) * a1 * b1) + (a0 * b0)) / a01;
+                    blended = {(int) (r01 * 255.0f), (int) (g01 * 255.0f), (int) (b01 * 255.0f), (int) (a01 * 255.0f)};
+                }
+
+                SDL_SetRenderDrawColor(renderer, blended.R, blended.G, blended.B, blended.A);
+                SDL_RenderDrawPoint(renderer, x, y);
+            }
+        }
+    }
+
+    void drawScenePixels_MAP(const std::vector<std::vector<Pixel>> &scenePixels) {
         std::map<std::pair<int, int>, std::map<int, Pixel>> pxMap;
 
         for (int objIndex = 0; objIndex < scenePixels.size(); objIndex++) {

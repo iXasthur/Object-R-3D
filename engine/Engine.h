@@ -7,19 +7,21 @@
 
 #include <array>
 #include <algorithm>
+#include <cmath>
+#include <list>
+#include <iomanip>
+#include <future>
 #include <SDL.h>
 #include <SDL_image.h>
 #include "scene/Scene.h"
 #include "utils/Matrix4.h"
 #include "renderer/Renderer.h"
-#include <cmath>
-#include <list>
-#include <iomanip>
-#include <thread>
-#include <future>
+#include "../lib/thread-pool-2.0.0/thread_pool.hpp"
 
 class Engine {
 private:
+    thread_pool threads;
+
     SDL_Window *window = nullptr;
     Renderer renderer = Renderer(nullptr);
 
@@ -107,71 +109,40 @@ private:
     std::vector<Pixel> processObject(const Object &obj, const int objIndex) {
         Matrix4 matMove = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
-        auto task = [this, &obj, &matMove, &objIndex](int start_polygon, int end_polygon, std::promise<std::vector<Pixel>> && ret) {
-            std::vector<Pixel> pixels;
+        std::vector<std::vector<Pixel>> polygonPixels(obj.polygons.size());
 
-            for (int i = start_polygon; i <= end_polygon; i++) {
-                const Polygon &polygon = obj.polygons[i];
+        auto polygonTask = [this, &obj, &matMove, &objIndex, &polygonPixels](const int &i) {
+            const Polygon &polygon = obj.polygons[i];
 
-                Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
-                Polygon translated = polygon.matrixMultiplied(matMove);
-                Vector3 translatedCenter = translated.getCenter();
-                Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
+            Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
+            Polygon translated = polygon.matrixMultiplied(matMove);
+            Vector3 translatedCenter = translated.getCenter();
+            Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 
-                if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
-                    Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
+            if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
+                Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
 
-                    for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-                        Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
-                        Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
+                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
+                    Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
+                    Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
 
-                        auto ps = renderer.processPolygon(screenPolygon, scene, objIndex);
-                        pixels.insert(pixels.end(), ps.begin(), ps.end());
-                    }
-
+                    auto ps = renderer.processPolygon(screenPolygon, scene, objIndex);
+                    polygonPixels[i].insert(polygonPixels[i].end(), ps.begin(), ps.end());
                 }
             }
-
-            ret.set_value(pixels);
         };
 
-        int threads_count = (int) std::thread::hardware_concurrency();
-        int polygons_count = (int) obj.polygons.size();
-        int thread_polygons_count = std::ceil((float) polygons_count / (float) threads_count);
+        std::vector<std::future<bool>> futures = std::vector<std::future<bool>>(obj.polygons.size());
 
-        std::vector<std::future<std::vector<Pixel>>> futures;
-
-        int start = 0;
-        int end = thread_polygons_count;
-        while (start <= polygons_count - 1) {
-            std::promise<std::vector<Pixel>> thread_promise;
-            futures.emplace_back(thread_promise.get_future());
-            auto thread = std::thread(task, start, end, std::move(thread_promise));
-            thread.detach();
-
-            start += thread_polygons_count;
-            end += thread_polygons_count;
-
-            if (end > polygons_count - 1) {
-                end = polygons_count - 1;
-            }
+        for (int i = 0; i < obj.polygons.size(); i++) {
+            futures[i] = threads.submit(polygonTask, i);
         }
 
         std::vector<Pixel> pixels;
 
-        int i = 0;
-        while (!futures.empty()) {
-            if (i > futures.size() - 1) {
-                i = 0;
-            }
-
-            if (futures[i].wait_for(std::literals::chrono_literals::operator""ns(0ull)) == std::future_status::ready) {
-                auto ps = futures[i].get();
-                pixels.insert(pixels.end(), ps.begin(), ps.end());
-                futures.erase(futures.begin() + i);
-            }
-
-            i++;
+        for (int i = 0; i < obj.polygons.size(); ++i) {
+            futures[i].wait();
+            pixels.insert(pixels.end(), polygonPixels[i].begin(), polygonPixels[i].end());
         }
 
         return pixels;
@@ -182,7 +153,8 @@ private:
         for (int i = 0; i < scene.objects.size(); i++) {
             scenePixels.emplace_back(processObject(scene.objects[i], i));
         }
-        renderer.drawPixels(scenePixels);
+//        renderer.drawScenePixels_MAP(scenePixels);
+        renderer.drawScenePixels(scenePixels, threads);
     }
 
     void processInputFast() {
