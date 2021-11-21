@@ -1,5 +1,4 @@
-#include <iostream>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "engine/Engine.h"
 
 int main(int argc, char** argv) {

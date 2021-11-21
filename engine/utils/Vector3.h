@@ -7,6 +7,7 @@
 
 #include <array>
 #include <cmath>
+#include <string>
 
 class Vector3 {
 public:

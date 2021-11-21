@@ -7,8 +7,8 @@
 
 #include <array>
 #include <algorithm>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 #include "scene/Scene.h"
 #include "utils/Matrix4.h"
 #include "renderer/Renderer.h"

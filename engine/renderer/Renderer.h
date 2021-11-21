@@ -5,7 +5,7 @@
 #ifndef TAMARA_3D_RENDERER_H
 #define TAMARA_3D_RENDERER_H
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <cmath>
 #include "../utils/Color.h"
 #include "../scene/object/primitives3/Line.h"

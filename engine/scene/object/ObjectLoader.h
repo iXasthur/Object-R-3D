@@ -9,7 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include "Object.h"
-#include "SDL2/SDL_image.h"
+#include "SDL_image.h"
 
 class ObjectLoader {
 private:

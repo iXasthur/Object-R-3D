@@ -12,7 +12,7 @@
 #include "Vertex.h"
 #include "Line.h"
 #include "../primitives2/Line2D.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 class Polygon {
 public:
