@@ -153,7 +153,6 @@ private:
         for (int i = 0; i < scene.objects.size(); i++) {
             scenePixels.emplace_back(processObject(scene.objects[i], i));
         }
-//        renderer.drawScenePixels_MAP(scenePixels);
         renderer.drawScenePixels(scenePixels, threads);
     }
 
@@ -282,7 +281,7 @@ private:
             // Updates properties of the screen
             // Gets real size of the window (fix for macOS/resizing)
             // + Background (Clears with color)
-            renderer.updateScreen({20, 20, 20, 255}, matCameraView, matProj, matScreen);
+            renderer.updateScreen({20, 20, 20, 255}, (int) scene.objects.size(), matCameraView, matProj, matScreen);
 
             renderScene();
 

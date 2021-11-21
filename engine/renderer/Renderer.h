@@ -245,13 +245,13 @@ public:
         return (float) screenRect.h / (float) screenRect.w;
     }
 
-    void updateScreen(const Color &color, const Matrix4 &matCameraView, const Matrix4 &matProj, const Matrix4 &matScreen) {
+    void updateScreen(const Color &color, int sceneCount, const Matrix4 &matCameraView, const Matrix4 &matProj, const Matrix4 &matScreen) {
         SDL_GetRendererOutputSize(renderer, &screenRect.w, &screenRect.h);
 
         backgroundColor = color;
 
-        if ((drawBuffer.size() != 2) || (drawBuffer[0].size() != screenRect.h) || (drawBuffer[0][0].size() != screenRect.w)) {
-            drawBuffer = std::vector<std::vector<std::vector<std::pair<int, Pixel>>>>(2, std::vector<std::vector<std::pair<int, Pixel>>>(screenRect.h, std::vector<std::pair<int, Pixel>>(screenRect.w)));
+        if ((drawBuffer.size() != sceneCount) || (drawBuffer[0].size() != screenRect.h) || (drawBuffer[0][0].size() != screenRect.w)) {
+            drawBuffer = std::vector<std::vector<std::vector<std::pair<int, Pixel>>>>(sceneCount, std::vector<std::vector<std::pair<int, Pixel>>>(screenRect.h, std::vector<std::pair<int, Pixel>>(screenRect.w)));
         }
 
         this->matCameraView = matCameraView;
@@ -289,27 +289,49 @@ public:
             }
         }
 
+        // Visual artefacts
+//        for (int layer = 0; layer < scenePixels.size(); layer++) {
+//            threads.parallelize_loop(0, scenePixels[layer].size(), [this, &layer, &scenePixels](const int &a, const int &b){
+//                for (int i = a; i < b; i++) {
+//                    Pixel objPixel = scenePixels[layer][i];
+//                    if (drawBuffer[layer][objPixel.y][objPixel.x].first != iteration) {
+//                        drawBuffer[layer][objPixel.y][objPixel.x] = {iteration, objPixel};
+//                    } else {
+//                        if (objPixel.z < drawBuffer[layer][objPixel.y][objPixel.x].second.z) {
+//                            drawBuffer[layer][objPixel.y][objPixel.x].second = objPixel;
+//                        }
+//                    }
+//                }
+//            });
+//        }
+
+        std::vector<Pixel> pixels(drawBuffer.size());
+        int pixelsCount = 0;
+
         for (int x = 0; x < drawBuffer[0][0].size(); ++x) {
             for (int y = 0; y < drawBuffer[0].size(); ++y) {
-                std::vector<Pixel> pixels = {};
+                pixelsCount = 0;
 
                 for (int i = 0; i < drawBuffer.size(); ++i) {
                     if (drawBuffer[i][y][x].first == iteration) {
-                        pixels.emplace_back(drawBuffer[i][y][x].second);
+                        pixels[pixelsCount] = drawBuffer[i][y][x].second;
+                        pixelsCount++;
                     }
                 }
 
-                if (pixels.empty()) {
+                if (pixelsCount == 0) {
                     continue;
                 }
 
-                std::sort(pixels.begin(), pixels.end(), [&](const Pixel &p0, const Pixel &p1) {
+                std::sort(pixels.begin(), pixels.begin() + pixelsCount, [&](const Pixel &p0, const Pixel &p1) {
                     return p0.z > p1.z;
                 });
 
                 Color blended = backgroundColor;
 
-                for (const auto &pixel: pixels) {
+                for(int i = 0; i < pixelsCount; ++i) {
+                    auto pixel = pixels[i];
+
                     float a0 = (float) pixel.color.A / 255.0f;
                     float a1 = (float) blended.A / 255.0f;
                     float r0 = (float) pixel.color.R / 255.0f;
