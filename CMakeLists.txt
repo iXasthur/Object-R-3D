@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 if(WIN32) # Windows
     set(SDL2_DIR C:/SDL2/x86_64-w64-mingw32)
-    set(SDL2_IMG_DIR C:/SDL2-IMG/x86_64-w64-mingw32)
+    set(SDL2_IMG_DIR C:/SDL2/x86_64-w64-mingw32)
 else(APPLE) # M1 Homebrew SDL2
     set(SDL2_DIR /opt/homebrew/Cellar/sdl2/2.0.16)
     set(SDL2_IMG_DIR /opt/homebrew/Cellar/sdl2_image/2.0.5)
