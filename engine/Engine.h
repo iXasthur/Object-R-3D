@@ -104,12 +104,10 @@ private:
 //        return v;
 //    }
 
-    void renderObject(const Object &obj) {
-        std::vector<Pixel> pixels;
-
+    std::vector<Pixel> processObject(const Object &obj, const int objIndex) {
         Matrix4 matMove = Matrix4::makeMove(obj.position.x, obj.position.y, obj.position.z);
 
-        auto task = [&obj, &matMove, this](int start_polygon, int end_polygon, std::promise<std::vector<Pixel>> && ret) {
+        auto task = [this, &obj, &matMove, &objIndex](int start_polygon, int end_polygon, std::promise<std::vector<Pixel>> && ret) {
             std::vector<Pixel> pixels;
 
             for (int i = start_polygon; i <= end_polygon; i++) {
@@ -127,7 +125,7 @@ private:
                         Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
                         Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
 
-                        auto ps = renderer.processPolygon(screenPolygon, scene);
+                        auto ps = renderer.processPolygon(screenPolygon, scene, objIndex);
                         pixels.insert(pixels.end(), ps.begin(), ps.end());
                     }
 
@@ -159,6 +157,8 @@ private:
             }
         }
 
+        std::vector<Pixel> pixels;
+
         int i = 0;
         while (!futures.empty()) {
             if (i > futures.size() - 1) {
@@ -166,16 +166,23 @@ private:
             }
 
             if (futures[i].wait_for(std::literals::chrono_literals::operator""ns(0ull)) == std::future_status::ready) {
-                renderer.drawPixels(futures[i].get());
+                auto ps = futures[i].get();
+                pixels.insert(pixels.end(), ps.begin(), ps.end());
                 futures.erase(futures.begin() + i);
             }
 
             i++;
         }
+
+        return pixels;
     }
 
     void renderScene() {
-        renderObject(scene.object);
+        std::vector<std::vector<Pixel>> scenePixels;
+        for (int i = 0; i < scene.objects.size(); i++) {
+            scenePixels.emplace_back(processObject(scene.objects[i], i));
+        }
+        renderer.drawPixels(scenePixels);
     }
 
     void processInputFast() {
@@ -367,12 +374,21 @@ public:
         std::string fov = std::to_string(scene.camera.fFOV);
         fov = fov.substr(0, fov.find('.') + 3);
 
-        std::string s = scene.object.name + "; ";
+        std::string s;
+        for (const Object &obj : scene.objects) {
+            s += obj.name + ", ";
+        }
+
+        if (!scene.objects.empty()) {
+            s[s.size() - 2] = ';';
+        }
+
         s += "camera: " + scene.camera.position.toString() + ", ";
         s += "fov: " + fov + ", ";
         s += "euler: " + scene.camera.eulerRotation.toString() + ", ";
         s += "light: " + scene.light.direction.toString() + ", ";
         s += "fps: " + std::to_string(1000.0f / (float) frameDeltaTime);
+
         return s;
     }
 };

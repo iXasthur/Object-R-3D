@@ -9,10 +9,12 @@
 
 class Pixel {
 public:
-    int x;
-    int y;
-    float z;
-    Color color;
+    int x = 0;
+    int y = 0;
+    float z = 0;
+    Color color = {0, 0, 0, 255};
+
+    Pixel() = default;
 
     Pixel(int x, int y, float z, const Color &color) : x(x), y(y), z(z), color(color) {}
 };

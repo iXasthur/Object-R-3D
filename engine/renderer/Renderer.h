@@ -18,9 +18,8 @@ private:
     SDL_Renderer *renderer = nullptr;
     SDL_Rect screenRect = {0, 0, 0, 0};
     Color backgroundColor = {0, 0, 0, 255};
-    std::vector<std::vector<float>> zBuffer = std::vector<std::vector<float>>(0, std::vector<float>(0));
 
-    std::vector<Pixel> processTexturedLine(const Line &line, const Scene &scene) {
+    std::vector<Pixel> processTexturedLine(const Line &line, const Scene &scene, const int objIndex) {
         std::vector<Pixel> pixels;
 
         Vertex vf0 = line.v0;
@@ -71,10 +70,10 @@ private:
 //                    pixels.emplace_back(pixel);
                 } else {
                     Vector3 normal;
-                    if (scene.object.normalMap.isEmpty()) {
+                    if (scene.objects[objIndex].normalMap.isEmpty()) {
                         normal = vLine.getInterpolatedNormal((float) x, (float) y, zf);
                     } else {
-                        Color normalTx = scene.object.normalMap.getPixelF(tx.x, tx.y);
+                        Color normalTx = scene.objects[objIndex].normalMap.getPixelF(tx.x, tx.y);
                         normal = {(normalTx.R * 2 - 255), (normalTx.G * 2 - 255), (normalTx.B * 2 - 255)}; // Will be normalized in getPixelColor(...)
                     }
 
@@ -90,23 +89,23 @@ private:
                         float shininess;
                         float opacity;
 
-                        if (scene.object.albedoMap.isEmpty()) {
-                            ambientColor = scene.object.material.ambientColor;
-                            diffuseColor = scene.object.material.diffuseColor;
-                            specularColor = scene.object.material.specularColor;
-                            opacity = scene.object.material.opacity;
+                        if (scene.objects[objIndex].albedoMap.isEmpty()) {
+                            ambientColor = scene.objects[objIndex].material.ambientColor;
+                            diffuseColor = scene.objects[objIndex].material.diffuseColor;
+                            specularColor = scene.objects[objIndex].material.specularColor;
+                            opacity = scene.objects[objIndex].material.opacity;
                         } else {
-                            Color txColor = scene.object.albedoMap.getPixelF(tx.x, tx.y);
+                            Color txColor = scene.objects[objIndex].albedoMap.getPixelF(tx.x, tx.y);
                             ambientColor = txColor;
                             diffuseColor = txColor;
                             specularColor = txColor;
                             opacity = 1;
                         }
 
-                        if (scene.object.specularMap.isEmpty()) {
-                            shininess = scene.object.material.shininess;
+                        if (scene.objects[objIndex].specularMap.isEmpty()) {
+                            shininess = scene.objects[objIndex].material.shininess;
                         } else {
-                            Color shininessTx = scene.object.specularMap.getPixelF(tx.x, tx.y);
+                            Color shininessTx = scene.objects[objIndex].specularMap.getPixelF(tx.x, tx.y);
                             shininess = (float) (shininessTx.R + shininessTx.G + shininessTx.B);
                         }
 
@@ -141,7 +140,7 @@ private:
         return pixels;
     }
 
-    std::vector<Pixel> processTexturedTriangle(const Polygon &screenPolygon, const Scene &scene) {
+    std::vector<Pixel> processTexturedTriangle(const Polygon &screenPolygon, const Scene &scene, const int objIndex) {
         std::vector<Pixel> pixels;
 
         std::array<Vertex, 3> vertices = screenPolygon.vertices;
@@ -171,7 +170,7 @@ private:
             float x02 = l02_2d.getXtY(scanlineY);
             float z02 = l02_3d.getZtXY(x02, scanlineY);
             Vector3 n02;
-            if (scene.object.normalMap.isEmpty()) {
+            if (scene.objects[objIndex].normalMap.isEmpty()) {
                 n02 = l02_3d.getInterpolatedNormal(x02, scanlineY, z02);
             } else {
                 n02 = Vector3::nan();
@@ -183,7 +182,7 @@ private:
                 float x01 = l01_2d.getXtY(scanlineY);
                 float z01 = l01_3d.getZtXY(x01, scanlineY);
                 Vector3 n01;
-                if (scene.object.normalMap.isEmpty()) {
+                if (scene.objects[objIndex].normalMap.isEmpty()) {
                     n01 = l01_3d.getInterpolatedNormal(x01, scanlineY, z01);
                 } else {
                     n01 = Vector3::nan();
@@ -192,13 +191,13 @@ private:
                 Vertex v01 = {{x01, scanlineY, z01}, t01, n01};
                 Line line = {v01, v02};
 
-                auto ps = processTexturedLine(line, scene);
+                auto ps = processTexturedLine(line, scene, objIndex);
                 pixels.insert(pixels.end(), ps.begin(), ps.end());
             } else {
                 float x12 = l12_2d.getXtY(scanlineY);
                 float z12 = l12_3d.getZtXY(x12, scanlineY);
                 Vector3 n12;
-                if (scene.object.normalMap.isEmpty()) {
+                if (scene.objects[objIndex].normalMap.isEmpty()) {
                     n12 = l12_3d.getInterpolatedNormal(x12, scanlineY, z12);
                 } else {
                     n12 = Vector3::nan();
@@ -207,7 +206,7 @@ private:
                 Vertex v12 = {{x12, scanlineY, z12}, t12, n12};
                 Line line = {v12, v02};
 
-                auto ps = processTexturedLine(line, scene);
+                auto ps = processTexturedLine(line, scene, objIndex);
                 pixels.insert(pixels.end(), ps.begin(), ps.end());
             }
 
@@ -217,8 +216,8 @@ private:
         return pixels;
     }
 
-    std::vector<Pixel> processTriangle(const Polygon &screenPolygon, const Scene &scene) {
-        return processTexturedTriangle(screenPolygon, scene);
+    std::vector<Pixel> processTriangle(const Polygon &screenPolygon, const Scene &scene, const int objIndex) {
+        return processTexturedTriangle(screenPolygon, scene, objIndex);
     }
 
 public:
@@ -247,11 +246,6 @@ public:
 
         backgroundColor = color;
 
-        zBuffer = std::vector<std::vector<float>>(screenRect.h, std::vector<float>(screenRect.w));
-        for (int i = 0; i < screenRect.h; ++i) {
-            std::fill(zBuffer[i].begin(), zBuffer[i].end(), std::numeric_limits<float>::max());
-        }
-
         this->matCameraView = matCameraView;
         this->matProj = matProj;
         this->matScreen = matScreen;
@@ -264,48 +258,108 @@ public:
         SDL_RenderClear(renderer);
     }
 
-    std::vector<Pixel> processPolygon(const Polygon &screenPolygon, const Scene &scene) {
+    std::vector<Pixel> processPolygon(const Polygon &screenPolygon, const Scene &scene, const int objIndex) {
         if (screenPolygon.isFlat()) {
             return {};
         }
 
-        return processTriangle(screenPolygon, scene);
+        return processTriangle(screenPolygon, scene, objIndex);
     }
 
-    void drawPixels(const std::vector<Pixel> &pixels) {
-        for (const auto &pixel : pixels) {
-            SDL_Point point = {(int) pixel.x, (int) pixel.y};
-            float zf = pixel.z;
+    void drawPixels(const std::vector<std::vector<Pixel>> &scenePixels) {
+        std::map<std::pair<int, int>, std::map<int, Pixel>> pxMap;
 
-            if (SDL_PointInRect(&point, &screenRect)) {
-                if (zf < zBuffer[point.y][point.x]) {
-                    Color blended = backgroundColor;
+        for (int objIndex = 0; objIndex < scenePixels.size(); objIndex++) {
+            for (const auto &objPixel : scenePixels[objIndex]) {
+                SDL_Point point = {(int) objPixel.x, (int) objPixel.y};
+                float zf = objPixel.z;
 
-                    float a0 = (float) pixel.color.A / 255.0f;
-                    float a1 = (float) blended.A / 255.0f;
-                    float r0 = (float) pixel.color.R / 255.0f;
-                    float r1 = (float) blended.R / 255.0f;
-                    float g0 = (float) pixel.color.G / 255.0f;
-                    float g1 = (float) blended.G / 255.0f;
-                    float b0 = (float) pixel.color.B / 255.0f;
-                    float b1 = (float) blended.B / 255.0f;
-
-                    float a01 = ((1 - a0) * a1) + a0;
-                    float r01 = (((1 - a0) * a1 * r1) + (a0 * r0)) / a01;
-                    float g01 = (((1 - a0) * a1 * g1) + (a0 * g0)) / a01;
-                    float b01 = (((1 - a0) * a1 * b1) + (a0 * b0)) / a01;
-                    blended = {(int) (r01 * 255.0f), (int) (g01 * 255.0f), (int) (b01 * 255.0f), (int) (a01 * 255.0f)};
-
-                    SDL_SetRenderDrawColor(renderer, blended.R, blended.G, blended.B, blended.A);
-                    SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
-
-//                    SDL_SetRenderDrawColor(renderer, pixel.color.R, pixel.color.G, pixel.color.B, pixel.color.A);
-//                    SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
-
-                    zBuffer[point.y][point.x] = zf;
+                if (SDL_PointInRect(&point, &screenRect)) {
+                    std::pair<int, int> pos = {objPixel.x, objPixel.y};
+                    if (pxMap.find(pos) == pxMap.end()) {
+                        pxMap[pos] = {};
+                        pxMap[pos][objIndex] = objPixel;
+                    } else {
+                        if (pxMap[pos].find(objIndex) == pxMap[pos].end()) {
+                            pxMap[pos][objIndex] = objPixel;
+                        } else {
+                            if (zf < pxMap[pos][objIndex].z) {
+                                pxMap[pos][objIndex] = objPixel;
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        // z sort everything
+
+        for (const auto &[key, value] : pxMap) {
+            std::vector<Pixel> pixels = {};
+            for (const auto &item : value) {
+                pixels.emplace_back(item.second);
+            }
+
+            std::sort(pixels.begin(), pixels.end(), [&](const Pixel &p0, const Pixel &p1) {
+                return p0.z > p1.z;
+            });
+
+            Color blended = backgroundColor;
+
+            for (const auto &pixel : pixels) {
+                float a0 = (float) pixel.color.A / 255.0f;
+                float a1 = (float) blended.A / 255.0f;
+                float r0 = (float) pixel.color.R / 255.0f;
+                float r1 = (float) blended.R / 255.0f;
+                float g0 = (float) pixel.color.G / 255.0f;
+                float g1 = (float) blended.G / 255.0f;
+                float b0 = (float) pixel.color.B / 255.0f;
+                float b1 = (float) blended.B / 255.0f;
+
+                float a01 = ((1 - a0) * a1) + a0;
+                float r01 = (((1 - a0) * a1 * r1) + (a0 * r0)) / a01;
+                float g01 = (((1 - a0) * a1 * g1) + (a0 * g0)) / a01;
+                float b01 = (((1 - a0) * a1 * b1) + (a0 * b0)) / a01;
+                blended = {(int) (r01 * 255.0f), (int) (g01 * 255.0f), (int) (b01 * 255.0f), (int) (a01 * 255.0f)};
+            }
+
+            SDL_SetRenderDrawColor(renderer, blended.R, blended.G, blended.B, blended.A);
+            SDL_RenderDrawPoint(renderer, key.first, key.second);
+        }
+
+//        for (const auto &pixel : pixels) {
+//            SDL_Point point = {(int) pixel.x, (int) pixel.y};
+//            float zf = pixel.z;
+//
+//            if (SDL_PointInRect(&point, &screenRect)) {
+//                if (zf < zBuffer[point.y][point.x]) {
+//                    Color blended = backgroundColor;
+//
+//                    float a0 = (float) pixel.color.A / 255.0f;
+//                    float a1 = (float) blended.A / 255.0f;
+//                    float r0 = (float) pixel.color.R / 255.0f;
+//                    float r1 = (float) blended.R / 255.0f;
+//                    float g0 = (float) pixel.color.G / 255.0f;
+//                    float g1 = (float) blended.G / 255.0f;
+//                    float b0 = (float) pixel.color.B / 255.0f;
+//                    float b1 = (float) blended.B / 255.0f;
+//
+//                    float a01 = ((1 - a0) * a1) + a0;
+//                    float r01 = (((1 - a0) * a1 * r1) + (a0 * r0)) / a01;
+//                    float g01 = (((1 - a0) * a1 * g1) + (a0 * g0)) / a01;
+//                    float b01 = (((1 - a0) * a1 * b1) + (a0 * b0)) / a01;
+//                    blended = {(int) (r01 * 255.0f), (int) (g01 * 255.0f), (int) (b01 * 255.0f), (int) (a01 * 255.0f)};
+//
+//                    SDL_SetRenderDrawColor(renderer, blended.R, blended.G, blended.B, blended.A);
+//                    SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
+//
+////                    SDL_SetRenderDrawColor(renderer, pixel.color.R, pixel.color.G, pixel.color.B, pixel.color.A);
+////                    SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);
+//
+//                    zBuffer[point.y][point.x] = zf;
+//                }
+//            }
+//        }
     }
 
 };

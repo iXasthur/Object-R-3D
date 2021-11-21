@@ -16,7 +16,8 @@
 
 class Scene {
 public:
-    Object object;
+    std::vector<Object> objects{};
+
     Camera camera = Camera({0, 0, 0}, {0, 0, 0});
     Light light = Light(
             {-3.0f, -3.0f, -3.0f},
@@ -28,17 +29,38 @@ public:
     Scene() {
         std::string dir = "../objects/";
 
-        std::string name = "head";
-        Object obj = ObjectLoader::loadObject(dir + name);
-        obj.centerPolygonVertices();
-        obj.resizeToHeight(2);
-        object = obj;
+        std::vector<std::string> names = {"head", "sphere"};
+        for (const auto &name : names) {
+            Object obj = ObjectLoader::loadObject(dir + name);
+            obj.centerPolygonVertices();
+            obj.resizeToHeight(2);
+            add(obj);
+        }
 
         resetCamera();
     };
 
     void resetCamera() {
         camera = Camera({0 , 0, 2}, {0, 0, 0});
+    }
+
+    void add(const Object &obj) {
+        objects.emplace_back(obj);
+        reorderObjects(2);
+    }
+
+    void reorderObjects(float delimiterSize) {
+        Vector3 pos;
+        for (int i = 0; i < objects.size(); ++i) {
+            if (i > 0) {
+                Vector3 lastDim = objects[i - 1].dimension();
+                Vector3 dim = objects[i].dimension();
+                pos.x += lastDim.x / 2 + dim.x / 2;
+                pos.x += delimiterSize;
+            }
+
+            objects[i].position.x = pos.x;
+        }
     }
 };
 
