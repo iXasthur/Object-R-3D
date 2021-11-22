@@ -310,8 +310,6 @@ public:
 //            });
 //        }
 
-//        std::vector<Pixel> drawPixels(drawBuffer[0].size() * drawBuffer[0].size());
-
 
 
 //        std::vector<Pixel> pixels(drawBuffer.size());
