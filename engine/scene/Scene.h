@@ -29,6 +29,7 @@ public:
     Scene() {
         std::string dir = "../objects/";
 
+//        std::vector<std::string> names = {"sphere-r", "sphere-g", "sphere-b"};
         std::vector<std::string> names = {"head", "sphere"};
         for (const auto &name : names) {
             Object obj = ObjectLoader::loadObject(dir + name);
@@ -41,7 +42,7 @@ public:
     };
 
     void resetCamera() {
-        camera = Camera({0 , 0, 2}, {0, 0, 0});
+        camera = Camera({0 , 0, 3}, {0, 0, 0});
     }
 
     void add(const Object &obj) {
@@ -60,6 +61,10 @@ public:
             }
 
             objects[i].position.x = pos.x;
+        }
+
+        for (int i = 0; i < objects.size(); ++i) {
+            objects[i].position.x -= pos.x / 2;
         }
     }
 };

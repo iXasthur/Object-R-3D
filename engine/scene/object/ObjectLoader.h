@@ -227,7 +227,7 @@ private:
                     materials[materials.size() - 1].specularColor.R = (int) (rf * 255.0f);
                     materials[materials.size() - 1].specularColor.G = (int) (gf * 255.0f);
                     materials[materials.size() - 1].specularColor.B = (int) (bf * 255.0f);
-                } else if (line.substr(0, 3) == "Ni ") {
+                } else if (line.substr(0, 3) == "Ns ") {
                     std::istringstream v(line.substr(3));
                     v >> materials[materials.size() - 1].shininess;
                 } else if (line.substr(0, 2) == "d ") {
