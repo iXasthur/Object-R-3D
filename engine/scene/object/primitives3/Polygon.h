@@ -91,8 +91,7 @@ public:
         Vector3 pn = Vector3::normalize(plane.n);
 
         // Return signed shortest distance from point to plane, plane normal must be normalised
-        auto dist = [&](const Vertex &p)
-        {
+        auto dist = [&](const Vertex &p) {
             return (pn.x * p.position.x + pn.y * p.position.y + pn.z * p.position.z - Vector3::dotProduct(pn, plane.p));
         };
 
@@ -117,16 +116,14 @@ public:
         // smaller output triangles if required. There are four possible
         // outcomes...
 
-        if (nInsidePointCount == 0)
-        {
+        if (nInsidePointCount == 0) {
             // All points lie on the outside of plane, so clip whole triangle
             // It ceases to exist
 
             return {}; // No returned triangles are valid
         }
 
-        if (nInsidePointCount == 3)
-        {
+        if (nInsidePointCount == 3) {
             // All points lie on the inside of plane, so do nothing
             // and allow the triangle to simply pass through
 
@@ -155,8 +152,7 @@ public:
             return {out}; // Return the newly formed single triangle
         }
 
-        if (nInsidePointCount == 2 && nOutsidePointCount == 1)
-        {
+        if (nInsidePointCount == 2 && nOutsidePointCount == 1) {
             // Triangle should be clipped. As two points lie inside the plane,
             // the clipped triangle becomes a "quad". Fortunately, we can
             // represent a quad with two new triangles

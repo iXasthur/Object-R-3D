@@ -67,24 +67,16 @@ private:
 //                // comment is almost completely and utterly justified
 //                switch (p) {
 //                    case 0:
-//                        clipped = test.clipAgainstPlane(
-//                                {0.0f, 0.0f, 0.0f},
-//                                {0.0f, 1.0f, 0.0f});
+//                        clipped = test.clipAgainstPlane({{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}});
 //                        break;
 //                    case 1:
-//                        clipped = test.clipAgainstPlane(
-//                                {0.0f, (float) renderer.getScreenRect().h - 1.0f, 0.0f},
-//                                {0.0f, -1.0f, 0.0f});
+//                        clipped = test.clipAgainstPlane({{0.0f, (float) renderer.getScreenRect().h - 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}});
 //                        break;
 //                    case 2:
-//                        clipped = test.clipAgainstPlane(
-//                                {0.0f, 0.0f, 0.0f},
-//                                {1.0f, 0.0f, 0.0f});
+//                        clipped = test.clipAgainstPlane({{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}});
 //                        break;
 //                    case 3:
-//                        clipped = test.clipAgainstPlane(
-//                                {(float) renderer.getScreenRect().w - 1.0f, 0.0f, 0.0f},
-//                                {-1.0f, 0.0f, 0.0f});
+//                        clipped = test.clipAgainstPlane({{(float) renderer.getScreenRect().w - 1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}});
 //                        break;
 //                    default:
 //                        break;
@@ -93,7 +85,7 @@ private:
 //                // Clipping may yield a variable number of triangles, so
 //                // add these new ones to the back of the queue for subsequent
 //                // clipping against next planes
-//                for (auto &w : clipped) {
+//                for (auto &w: clipped) {
 //                    listTriangles.push_back(w);
 //                }
 //
@@ -125,6 +117,11 @@ private:
                 for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
                     Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
                     Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
+
+//                    for (const auto &clippedScreen: clipPolygonByScreen(screenPolygon)) {
+//                        auto ps = renderer.processPolygon(clippedScreen, scene, objIndex);
+//                        polygonPixels[i].insert(polygonPixels[i].end(), ps.begin(), ps.end());
+//                    }
 
                     auto ps = renderer.processPolygon(screenPolygon, scene, objIndex);
                     polygonPixels[i].insert(polygonPixels[i].end(), ps.begin(), ps.end());

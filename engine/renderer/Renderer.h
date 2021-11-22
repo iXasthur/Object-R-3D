@@ -278,6 +278,8 @@ public:
         static int iteration = 0;
         iteration++;
 
+
+
         for (int i = 0; i < scenePixels.size(); ++i) {
             for (const auto &objPixel: scenePixels[i]) {
                 if (drawBuffer[i][objPixel.y][objPixel.x].first != iteration) {
@@ -289,6 +291,8 @@ public:
                 }
             }
         }
+
+
 
         // Visual artefacts
 //        for (int layer = 0; layer < scenePixels.size(); layer++) {
@@ -308,6 +312,58 @@ public:
 
 //        std::vector<Pixel> drawPixels(drawBuffer[0].size() * drawBuffer[0].size());
 
+
+
+//        std::vector<Pixel> pixels(drawBuffer.size());
+//        int pixelsCount = 0;
+//
+//        for (int x = 0; x < drawBuffer[0][0].size(); x++) {
+//            for (int y = 0; y < drawBuffer[0].size(); ++y) {
+//                pixelsCount = 0;
+//
+//                for (const auto &layer : drawBuffer) {
+//                    if (layer[y][x].first == iteration) {
+//                        pixels[pixelsCount] = layer[y][x].second;
+//                        pixelsCount++;
+//                    }
+//                }
+//
+//                if (pixelsCount == 0) {
+//                    continue;
+//                }
+//
+//                std::sort(pixels.begin(), pixels.begin() + pixelsCount, [&](const Pixel &p0, const Pixel &p1) {
+//                    return p0.z > p1.z;
+//                });
+//
+//                Color blended = backgroundColor;
+//
+//                for (int i = 0; i < pixelsCount; ++i) {
+//                    auto pixel = pixels[i];
+//
+//                    float a0 = (float) pixel.color.A / 255.0f;
+//                    float a1 = (float) blended.A / 255.0f;
+//                    float r0 = (float) pixel.color.R / 255.0f;
+//                    float r1 = (float) blended.R / 255.0f;
+//                    float g0 = (float) pixel.color.G / 255.0f;
+//                    float g1 = (float) blended.G / 255.0f;
+//                    float b0 = (float) pixel.color.B / 255.0f;
+//                    float b1 = (float) blended.B / 255.0f;
+//
+//                    float a01 = ((1 - a0) * a1) + a0;
+//                    float r01 = (((1 - a0) * a1 * r1) + (a0 * r0)) / a01;
+//                    float g01 = (((1 - a0) * a1 * g1) + (a0 * g0)) / a01;
+//                    float b01 = (((1 - a0) * a1 * b1) + (a0 * b0)) / a01;
+//                    blended = {(int) (r01 * 255.0f), (int) (g01 * 255.0f), (int) (b01 * 255.0f), (int) (a01 * 255.0f)};
+//                }
+//
+//                SDL_SetRenderDrawColor(renderer, blended.R, blended.G, blended.B, blended.A);
+//                SDL_RenderDrawPoint(renderer, x, y);
+//            }
+//        }
+
+
+
         auto drawTask = [this](const int &a, const int &b) {
             std::vector<Pixel> drawPixels;
 
@@ -318,7 +374,7 @@ public:
                 for (int y = 0; y < drawBuffer[0].size(); ++y) {
                     pixelsCount = 0;
 
-                    for (const auto &layer : drawBuffer) {
+                    for (const auto &layer: drawBuffer) {
                         if (layer[y][x].first == iteration) {
                             pixels[pixelsCount] = layer[y][x].second;
                             pixelsCount++;
@@ -383,7 +439,7 @@ public:
             }
         }
 
-        for (auto &future : futures) {
+        for (auto &future: futures) {
             for (const auto &pixel: future.get()) {
                 SDL_SetRenderDrawColor(renderer, pixel.color.R, pixel.color.G, pixel.color.B, pixel.color.A);
                 SDL_RenderDrawPoint(renderer, pixel.x, pixel.y);

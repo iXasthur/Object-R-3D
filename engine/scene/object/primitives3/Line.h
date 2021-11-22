@@ -30,7 +30,7 @@ public:
 
         Vector3 position = Vector3::add(lineStart, lineToIntersect);
         Vector3 normal = getInterpolatedNormal(position.x, position.y, position.z);
-        Vector3 texture = getInterpolatedTexture(position.x, position.y, position.z);
+        Vector3 texture = getInterpolatedTexture(position.x, position.y, position.z, false);
         return {position, texture, normal};
     }
 
@@ -86,8 +86,8 @@ public:
         return getInterpolated(v0.normal, v1.normal, x, y, z, false);
     }
 
-    [[nodiscard]] Vector3 getInterpolatedTexture(float x, float y, float z) const {
-        Vector3 interpolated = getInterpolated(v0.texture, v1.texture, x, y, z, true);
+    [[nodiscard]] Vector3 getInterpolatedTexture(float x, float y, float z, bool perspectiveCorrect = true) const {
+        Vector3 interpolated = getInterpolated(v0.texture, v1.texture, x, y, z, perspectiveCorrect);
         float *components[2] = {&interpolated.x, &interpolated.y};
         for (auto &component: components) {
             if (*component > 1) *component = 1;
