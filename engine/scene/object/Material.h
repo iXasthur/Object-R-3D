@@ -16,6 +16,7 @@ public:
     Color specularColor = {255, 255, 255 ,255}; // Ks
     float shininess = 20; // Ns
     float opacity = 1; // d
+    int illum = 2; // illum
 };
 
 

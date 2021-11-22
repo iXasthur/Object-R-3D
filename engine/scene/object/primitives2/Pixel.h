@@ -12,7 +12,7 @@ public:
     int x = 0;
     int y = 0;
     float z = 0;
-    Color color = {0, 0, 0, -1};
+    Color color = {0, 0, 0, 0};
 
     Pixel() = default;
 

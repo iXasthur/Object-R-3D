@@ -233,6 +233,9 @@ private:
                 } else if (line.substr(0, 2) == "d ") {
                     std::istringstream v(line.substr(2));
                     v >> materials[materials.size() - 1].opacity;
+                } else if (line.substr(0, 6) == "illum ") {
+                    std::istringstream v(line.substr(6));
+                    v >> materials[materials.size() - 1].illum;
                 }
             }
         } else {

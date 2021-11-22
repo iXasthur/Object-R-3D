@@ -118,7 +118,22 @@ private:
                         converted = Matrix4::multiplyVector(converted, matProj_inverse);
                         converted = Matrix4::multiplyVector(converted, matCameraView_inverse);
 
-                        Color c = scene.light.getPixelColor(converted, scene.camera, ambientColor, diffuseColor, specularColor, normal, shininess);
+                        Color c;
+                        switch (scene.objects[objIndex].material.illum) {
+                            case 0:
+                                c = diffuseColor;
+                                break;
+                            case 1:
+                                c = scene.light.getPixelColor(converted, scene.camera, ambientColor, diffuseColor, {0, 0, 0, 0}, normal, shininess);
+                                break;
+                            case 2:
+                                c = scene.light.getPixelColor(converted, scene.camera, ambientColor, diffuseColor, specularColor, normal, shininess);
+                                break;
+                            default:
+                                throw std::runtime_error("unknown mtl illum");
+                                break;
+                        }
+
                         c.A = (int) (opacity * 255.0f);
 
                         Pixel pixel = {(int) x, (int) y, zf, c};
