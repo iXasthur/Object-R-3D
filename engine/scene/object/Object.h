@@ -17,6 +17,8 @@ public:
     std::vector<Polygon> polygons;
     std::string name;
 
+    EulerAngle rotation;
+
     Material material = {};
 
     Texture albedoMap = {};

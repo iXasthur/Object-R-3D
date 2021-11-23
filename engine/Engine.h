@@ -106,8 +106,13 @@ private:
         auto polygonTask = [this, &obj, &matMove, &objIndex, &polygonPixels](const int &i) {
             const Polygon &polygon = obj.polygons[i];
 
-            Vector3 normal = Vector3::normalize(polygon.getFaceNormal());
-            Polygon translated = polygon.matrixMultiplied(matMove);
+            Polygon rotated = polygon;
+            rotated = rotated.matrixMultiplied(Matrix4::makeRotationX(-obj.rotation.x));
+            rotated = rotated.matrixMultiplied(Matrix4::makeRotationY(-obj.rotation.y));
+            rotated = rotated.matrixMultiplied(Matrix4::makeRotationZ(-obj.rotation.z));
+
+            Vector3 normal = Vector3::normalize(rotated.getFaceNormal());
+            Polygon translated = rotated.matrixMultiplied(matMove);
             Vector3 translatedCenter = translated.getCenter();
             Vector3 vCameraRay = Vector3::sub(translatedCenter, scene.camera.position);
 
@@ -141,6 +146,7 @@ private:
     void renderScene() {
         std::vector<std::vector<Pixel>> scenePixels;
         for (int i = 0; i < scene.objects.size(); i++) {
+//            scene.objects[i].rotation.y += (float) frameDeltaTime / 1000.0f;
             scenePixels.emplace_back(processObject(scene.objects[i], i));
         }
         renderer.drawScenePixels(scenePixels, threads);

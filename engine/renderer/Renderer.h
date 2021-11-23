@@ -80,6 +80,9 @@ private:
                         Color normalTx = scene.objects[objIndex].normalMap.getPixelF(tx.x, tx.y);
                         normal = {(normalTx.R * 2 - 255), (normalTx.G * 2 - 255), (normalTx.B * 2 - 255)}; // Will be normalized in getPixelColor(...)
                     }
+                    normal = Matrix4::multiplyVector(normal, Matrix4::makeRotationX(-scene.objects[objIndex].rotation.x));
+                    normal = Matrix4::multiplyVector(normal, Matrix4::makeRotationY(-scene.objects[objIndex].rotation.y));
+                    normal = Matrix4::multiplyVector(normal, Matrix4::makeRotationZ(-scene.objects[objIndex].rotation.z));
 
                     if (std::isnan(normal.x) || std::isnan(normal.y) || std::isnan(normal.z)) {
 //                        zf = std::numeric_limits<float>::lowest();
