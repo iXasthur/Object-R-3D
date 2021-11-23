@@ -353,8 +353,8 @@ public:
 
         s += "camera: " + scene.camera.position.toString() + ", ";
         s += "fov: " + fov + ", ";
-        s += "euler: " + scene.camera.eulerRotation.toString() + ", ";
-        s += "light: " + scene.light.direction.toString() + ", ";
+//        s += "euler: " + scene.camera.eulerRotation.toString() + ", ";
+//        s += "light: " + scene.light.direction.toString() + ", ";
         s += "fps: " + std::to_string(1000.0f / (float) frameDeltaTime);
 
         return s;
