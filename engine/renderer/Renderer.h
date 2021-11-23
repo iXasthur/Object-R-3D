@@ -65,7 +65,7 @@ private:
 //                Pixel pixel = {(int) x, (int) y, zf, c};
 //                pixels.emplace_back(pixel);
             } else {
-                Vector3 tx = vLine.getInterpolatedTexture((float) x, (float) y, zf);
+                Vector3 tx = vLine.getInterpolatedTexture((float) x, (float) y, zf, true, matProj_inverse, matScreen_inverse);
 
                 if (std::isnan(tx.x) || std::isnan(tx.y) || std::isnan(tx.z)) {
 //                    zf = std::numeric_limits<float>::lowest();
@@ -194,7 +194,7 @@ private:
             } else {
                 n02 = Vector3::nan();
             }
-            Vector3 t02 = l02_3d.getInterpolatedTexture(x02, scanlineY, z02);
+            Vector3 t02 = l02_3d.getInterpolatedTexture(x02, scanlineY, z02, true, matProj_inverse, matScreen_inverse);
             Vertex v02 = {{x02, scanlineY, z02}, t02, n02};
 
             if (scanlineY < splitY) {
@@ -206,7 +206,7 @@ private:
                 } else {
                     n01 = Vector3::nan();
                 }
-                Vector3 t01 = l01_3d.getInterpolatedTexture(x01, scanlineY, z01);
+                Vector3 t01 = l01_3d.getInterpolatedTexture(x01, scanlineY, z01, true, matProj_inverse, matScreen_inverse);
                 Vertex v01 = {{x01, scanlineY, z01}, t01, n01};
                 Line line = {v01, v02};
 
@@ -221,7 +221,7 @@ private:
                 } else {
                     n12 = Vector3::nan();
                 }
-                Vector3 t12 = l12_3d.getInterpolatedTexture(x12, scanlineY, z12);
+                Vector3 t12 = l12_3d.getInterpolatedTexture(x12, scanlineY, z12, true, matProj_inverse, matScreen_inverse);
                 Vertex v12 = {{x12, scanlineY, z12}, t12, n12};
                 Line line = {v12, v02};
 

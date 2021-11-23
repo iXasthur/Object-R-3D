@@ -31,39 +31,49 @@ public:
     Scene() {
         std::string dir = "../objects/";
 
-        #ifdef TEST_SCENE_0
-            std::vector<std::string> names = {"head", "sphere"};
-            for (const auto &name : names) {
-                Object obj = ObjectLoader::loadObject(dir + name);
-                obj.centerPolygonVertices();
-                obj.resizeToHeight(2);
-                add(obj);
-            }
-        #else
-            #ifdef TEST_SCENE_1
-                std::vector<std::string> names = {"sphere", "sphere-i1", "sphere-i0"};
-                for (const auto &name : names) {
-                    Object obj = ObjectLoader::loadObject(dir + name);
-                    obj.centerPolygonVertices();
-                    obj.resizeToHeight(2);
-                    add(obj);
-                }
-            #else
-                #ifdef TEST_SCENE_2
-                    std::vector<std::string> names = {"sphere-r", "sphere-g", "sphere-b"};
-                    for (const auto &name : names) {
-                        Object obj = ObjectLoader::loadObject(dir + name);
-                        obj.centerPolygonVertices();
-                        obj.resizeToHeight(2);
-                        add(obj);
-                    }
-                    float d = 1;
-                    objects[0].position = {-d/2.0f, -d/2.0f, 0.0f};
-                    objects[1].position = {d/2.0f, -d/2.0f, 0.0f};
-                    objects[2].position = {0.0f, d/2.0f, 0.0f};
-                #endif
-            #endif
-        #endif
+#ifdef TEST_SCENE_0
+        std::vector<std::string> names = {"cube"};
+        for (const auto &name : names) {
+            Object obj = ObjectLoader::loadObject(dir + name);
+            obj.centerPolygonVertices();
+            obj.resizeToHeight(2);
+            add(obj);
+        }
+#else
+#ifdef TEST_SCENE_1
+        std::vector<std::string> names = {"head", "sphere"};
+        for (const auto &name : names) {
+            Object obj = ObjectLoader::loadObject(dir + name);
+            obj.centerPolygonVertices();
+            obj.resizeToHeight(2);
+            add(obj);
+        }
+#else
+#ifdef TEST_SCENE_2
+        std::vector<std::string> names = {"sphere", "sphere-i1", "sphere-i0"};
+        for (const auto &name : names) {
+            Object obj = ObjectLoader::loadObject(dir + name);
+            obj.centerPolygonVertices();
+            obj.resizeToHeight(2);
+            add(obj);
+        }
+#else
+#ifdef TEST_SCENE_3
+        std::vector<std::string> names = {"sphere-r", "sphere-g", "sphere-b"};
+        for (const auto &name : names) {
+            Object obj = ObjectLoader::loadObject(dir + name);
+            obj.centerPolygonVertices();
+            obj.resizeToHeight(2);
+            add(obj);
+        }
+        float d = 1;
+        objects[0].position = {-d/2.0f, -d/2.0f, 0.0f};
+        objects[1].position = {d/2.0f, -d/2.0f, 0.0f};
+        objects[2].position = {0.0f, d/2.0f, 0.0f};
+#endif
+#endif
+#endif
+#endif
 
         resetCamera();
     };

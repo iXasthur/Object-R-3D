@@ -29,20 +29,20 @@ private:
 
     Uint32 frameDeltaTime = 0;
 
-    [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
-        Plane nearPlane = Plane({0.0f, 0.0f, scene.camera.fNear}, {0.0f, 0.0f, 1.0f});
-        Plane farPlane = Plane({0.0f, 0.0f, scene.camera.fFar}, {0.0f, 0.0f, -1.0f});
-
-        std::vector<Polygon> clippedNear = polygon.clipAgainstPlane(nearPlane);
-
-        std::vector<Polygon> clippedFar;
-        for (const auto &p: clippedNear) {
-            std::vector<Polygon> clipped = polygon.clipAgainstPlane(farPlane);
-            clippedFar.insert(std::end(clippedFar), std::begin(clipped), std::end(clipped));
-        }
-
-        return clippedFar;
-    }
+//    [[nodiscard]] std::vector<Polygon> clipPolygonByCamera(const Polygon &polygon) const {
+//        Plane nearPlane = Plane({0.0f, 0.0f, scene.camera.fNear}, {0.0f, 0.0f, 1.0f});
+//        Plane farPlane = Plane({0.0f, 0.0f, scene.camera.fFar}, {0.0f, 0.0f, -1.0f});
+//
+//        std::vector<Polygon> clippedNear = polygon.clipAgainstPlane(nearPlane);
+//
+//        std::vector<Polygon> clippedFar;
+//        for (const auto &p: clippedNear) {
+//            std::vector<Polygon> clipped = polygon.clipAgainstPlane(farPlane);
+//            clippedFar.insert(std::end(clippedFar), std::begin(clipped), std::end(clipped));
+//        }
+//
+//        return clippedFar;
+//    }
 
 //    [[nodiscard]] std::vector<Polygon> clipPolygonByScreen(const Polygon &polygon) const {
 //        std::list<Polygon> listTriangles;
@@ -114,18 +114,11 @@ private:
             if (Vector3::dotProduct(normal, vCameraRay) < 0.0f) {
                 Polygon viewed = translated.matrixMultiplied(renderer.matCameraView);
 
-                for (const auto &clippedViewed: clipPolygonByCamera(viewed)) {
-                    Polygon projected = clippedViewed.matrixMultiplied(renderer.matProj);
-                    Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
+                Polygon projected = viewed.matrixMultiplied(renderer.matProj);
+                Polygon screenPolygon = projected.matrixMultiplied(renderer.matScreen);
 
-//                    for (const auto &clippedScreen: clipPolygonByScreen(screenPolygon)) {
-//                        auto ps = renderer.processPolygon(clippedScreen, scene, objIndex);
-//                        polygonPixels[i].insert(polygonPixels[i].end(), ps.begin(), ps.end());
-//                    }
-
-                    auto ps = renderer.processPolygon(screenPolygon, scene, objIndex);
-                    polygonPixels[i].insert(polygonPixels[i].end(), ps.begin(), ps.end());
-                }
+                auto ps = renderer.processPolygon(screenPolygon, scene, objIndex);
+                polygonPixels[i].insert(polygonPixels[i].end(), ps.begin(), ps.end());
             }
         };
 
