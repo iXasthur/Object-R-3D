@@ -21,10 +21,6 @@ public:
 
     Material material = {};
 
-    Texture albedoMap = {};
-    Texture normalMap = {};
-    Texture specularMap = {};
-
     Object() = default;
 
     void resizeToHeight(float h) {

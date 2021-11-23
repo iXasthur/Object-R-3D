@@ -73,11 +73,9 @@ private:
 //                    Pixel pixel = {(int) x, (int) y, zf, c};
 //                    pixels.emplace_back(pixel);
                 } else {
-                    Vector3 normal;
-                    if (scene.objects[objIndex].normalMap.isEmpty()) {
-                        normal = vLine.getInterpolatedNormal((float) x, (float) y, zf);
-                    } else {
-                        Color normalTx = scene.objects[objIndex].normalMap.getPixelF(tx.x, tx.y);
+                    Vector3 normal = vLine.getInterpolatedNormal((float) x, (float) y, zf);
+                    if (!scene.objects[objIndex].material.normalMap.isEmpty()) {
+                        Color normalTx = scene.objects[objIndex].material.normalMap.getPixelF(tx.x, tx.y);
                         normal = {(normalTx.R * 2 - 255), (normalTx.G * 2 - 255), (normalTx.B * 2 - 255)}; // Will be normalized in getPixelColor(...)
                     }
                     normal = Matrix4::multiplyVector(normal, Matrix4::makeRotationX(-scene.objects[objIndex].rotation.x));
@@ -90,29 +88,22 @@ private:
 //                        Pixel pixel = {(int) x, (int) y, zf, c};
 //                        pixels.emplace_back(pixel);
                     } else {
-                        Color ambientColor;
-                        Color diffuseColor;
-                        Color specularColor;
-                        float shininess;
-                        float opacity;
+                        Color diffuseColor = scene.objects[objIndex].material.diffuseColor;
+                        Color ambientColor = scene.objects[objIndex].material.ambientColor;
+                        Color specularColor = scene.objects[objIndex].material.specularColor;
+                        float shininess = scene.objects[objIndex].material.shininess;
+                        float opacity = scene.objects[objIndex].material.opacity;
 
-                        if (scene.objects[objIndex].albedoMap.isEmpty()) {
-                            ambientColor = scene.objects[objIndex].material.ambientColor;
-                            diffuseColor = scene.objects[objIndex].material.diffuseColor;
-                            specularColor = scene.objects[objIndex].material.specularColor;
-                            opacity = scene.objects[objIndex].material.opacity;
-                        } else {
-                            Color txColor = scene.objects[objIndex].albedoMap.getPixelF(tx.x, tx.y);
-                            ambientColor = txColor;
-                            diffuseColor = txColor;
-                            specularColor = txColor;
-                            opacity = 1;
+                        if (!scene.objects[objIndex].material.diffuseMap.isEmpty()) {
+                            diffuseColor = diffuseColor.exposedRGB(scene.objects[objIndex].material.diffuseMap.getPixelF(tx.x, tx.y));
                         }
 
-                        if (scene.objects[objIndex].specularMap.isEmpty()) {
-                            shininess = scene.objects[objIndex].material.shininess;
-                        } else {
-                            Color shininessTx = scene.objects[objIndex].specularMap.getPixelF(tx.x, tx.y);
+                        if (!scene.objects[objIndex].material.ambientMap.isEmpty()) {
+                            ambientColor = ambientColor.exposedRGB(scene.objects[objIndex].material.ambientMap.getPixelF(tx.x, tx.y));
+                        }
+
+                        if (!scene.objects[objIndex].material.specularMap.isEmpty()) {
+                            Color shininessTx = scene.objects[objIndex].material.specularMap.getPixelF(tx.x, tx.y);
                             shininess = (float) (shininessTx.R + shininessTx.G + shininessTx.B);
                         }
 
@@ -191,24 +182,14 @@ private:
         while (scanlineY <= scanlineEnd) {
             float x02 = l02_2d.getXtY(scanlineY);
             float z02 = l02_3d.getZtXY(x02, scanlineY);
-            Vector3 n02;
-            if (scene.objects[objIndex].normalMap.isEmpty()) {
-                n02 = l02_3d.getInterpolatedNormal(x02, scanlineY, z02);
-            } else {
-                n02 = Vector3::nan();
-            }
+            Vector3 n02 = l02_3d.getInterpolatedNormal(x02, scanlineY, z02);
             Vector3 t02 = l02_3d.getInterpolatedTexture(x02, scanlineY, z02, true, matProj_inverse, matScreen_inverse);
             Vertex v02 = {{x02, scanlineY, z02}, t02, n02};
 
             if (scanlineY < splitY) {
                 float x01 = l01_2d.getXtY(scanlineY);
                 float z01 = l01_3d.getZtXY(x01, scanlineY);
-                Vector3 n01;
-                if (scene.objects[objIndex].normalMap.isEmpty()) {
-                    n01 = l01_3d.getInterpolatedNormal(x01, scanlineY, z01);
-                } else {
-                    n01 = Vector3::nan();
-                }
+                Vector3 n01 = l01_3d.getInterpolatedNormal(x01, scanlineY, z01);
                 Vector3 t01 = l01_3d.getInterpolatedTexture(x01, scanlineY, z01, true, matProj_inverse, matScreen_inverse);
                 Vertex v01 = {{x01, scanlineY, z01}, t01, n01};
                 Line line = {v01, v02};
@@ -218,12 +199,7 @@ private:
             } else {
                 float x12 = l12_2d.getXtY(scanlineY);
                 float z12 = l12_3d.getZtXY(x12, scanlineY);
-                Vector3 n12;
-                if (scene.objects[objIndex].normalMap.isEmpty()) {
-                    n12 = l12_3d.getInterpolatedNormal(x12, scanlineY, z12);
-                } else {
-                    n12 = Vector3::nan();
-                }
+                Vector3 n12 = l12_3d.getInterpolatedNormal(x12, scanlineY, z12);
                 Vector3 t12 = l12_3d.getInterpolatedTexture(x12, scanlineY, z12, true, matProj_inverse, matScreen_inverse);
                 Vertex v12 = {{x12, scanlineY, z12}, t12, n12};
                 Line line = {v12, v02};

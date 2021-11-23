@@ -53,10 +53,131 @@ private:
         }
     }
 
-    static std::vector<Polygon> loadModel(const std::string &path) {
+    static Texture loadTexture(const std::string &dirpath, const std::string &filename) {
+        std::string path = dirpath + '/' + filename;
+
         std::cout << "Loading " << path << std::endl;
 
-        std::vector<Polygon> polygons;
+        SDL_Surface *image = IMG_Load(path.c_str());
+
+        if(image == nullptr) {
+            printf("IMG_Load: %s\n", IMG_GetError());
+            return {};
+        }
+
+        std::vector<std::vector<Color>> img = {};
+
+        for(int i = 0; i < image->w - 1; i++) {
+            img.emplace_back();
+            for (int j = 0; j < image->h - 1; j++) {
+                SDL_Color rgb;
+                SDL_GetRGB(getPixel(image, i, j), image->format, &rgb.r, &rgb.g, &rgb.b);
+                img[i].emplace_back(Color(rgb.r, rgb.g, rgb.b, 255));
+            }
+        }
+
+        SDL_FreeSurface(image);
+
+        Texture texture;
+        texture.img = img;
+        return texture;
+    }
+
+    static std::vector<Material> loadMtl(const std::string &dirpath, const std::string &filename) {
+        std::string path = dirpath + '/' + filename;
+
+        std::cout << "Loading " << path << std::endl;
+
+        std::vector<Material> materials;
+
+        std::ifstream in(path, std::ios::in);
+        if (in) {
+            std::string line;
+            while (std::getline(in, line)) {
+                if (line.substr(0, 7) == "newmtl ") {
+                    materials.emplace_back(Material());
+                    std::istringstream v(line.substr(7));
+                    v >> materials[materials.size() - 1].name;
+                } else if (line.substr(0, 3) == "Ka ") {
+                    std::istringstream v(line.substr(3));
+
+                    float rf, gf, bf;
+                    v >> rf;
+                    v >> gf;
+                    v >> bf;
+
+                    materials[materials.size() - 1].ambientColor.R = (int) (rf * 255.0f);
+                    materials[materials.size() - 1].ambientColor.G = (int) (gf * 255.0f);
+                    materials[materials.size() - 1].ambientColor.B = (int) (bf * 255.0f);
+                } else if (line.substr(0, 3) == "Kd ") {
+                    std::istringstream v(line.substr(3));
+
+                    float rf, gf, bf;
+                    v >> rf;
+                    v >> gf;
+                    v >> bf;
+
+                    materials[materials.size() - 1].diffuseColor.R = (int) (rf * 255.0f);
+                    materials[materials.size() - 1].diffuseColor.G = (int) (gf * 255.0f);
+                    materials[materials.size() - 1].diffuseColor.B = (int) (bf * 255.0f);
+                } else if (line.substr(0, 3) == "Ks ") {
+                    std::istringstream v(line.substr(3));
+
+                    float rf, gf, bf;
+                    v >> rf;
+                    v >> gf;
+                    v >> bf;
+
+                    materials[materials.size() - 1].specularColor.R = (int) (rf * 255.0f);
+                    materials[materials.size() - 1].specularColor.G = (int) (gf * 255.0f);
+                    materials[materials.size() - 1].specularColor.B = (int) (bf * 255.0f);
+                } else if (line.substr(0, 3) == "Ns ") {
+                    std::istringstream v(line.substr(3));
+                    v >> materials[materials.size() - 1].shininess;
+                } else if (line.substr(0, 2) == "d ") {
+                    std::istringstream v(line.substr(2));
+                    v >> materials[materials.size() - 1].opacity;
+                } else if (line.substr(0, 6) == "illum ") {
+                    std::istringstream v(line.substr(6));
+                    v >> materials[materials.size() - 1].illum;
+                } else if (line.substr(0, 7) == "map_Kd ") {
+                    std::istringstream v(line.substr(7));
+                    std::string txFile;
+                    v >> txFile;
+                    materials[materials.size() - 1].diffuseMap = loadTexture(dirpath, txFile);
+                } else if (line.substr(0, 7) == "map_Ka ") {
+                    std::istringstream v(line.substr(7));
+                    std::string txFile;
+                    v >> txFile;
+                    materials[materials.size() - 1].ambientMap = loadTexture(dirpath, txFile);
+                } else if (line.substr(0, 5) == "norm ") {
+                    std::istringstream v(line.substr(5));
+                    std::string txFile;
+                    v >> txFile;
+                    materials[materials.size() - 1].normalMap = loadTexture(dirpath, txFile);
+                } else if (line.substr(0, 7) == "map_Ns ") {
+                    std::istringstream v(line.substr(7));
+                    std::string txFile;
+                    v >> txFile;
+                    materials[materials.size() - 1].specularMap = loadTexture(dirpath, txFile);
+                }
+            }
+        } else {
+            printf("Cannot open %s", path.c_str());
+            return {{}};
+        }
+
+        return materials;
+    }
+
+    static std::vector<Object> loadObj(const std::string &dirpath, const std::string &filename) {
+        std::string path = dirpath + '/' + filename;
+
+        std::cout << "Loading " << path << std::endl;
+
+        std::vector<Object> objects;
+
+        std::vector<Material> materials;
 
         std::vector<Vector3> positions;
         std::vector<Vector3> textures;
@@ -66,7 +187,26 @@ private:
         if (in) {
             std::string line;
             while (std::getline(in, line)) {
-                if (line.substr(0, 2) == "v ") {
+                if (line.substr(0, 2) == "o ") {
+                    objects.emplace_back(Object());
+                    std::istringstream v(line.substr(2));
+                    v >> objects[objects.size() - 1].name;
+                } else if (line.substr(0, 7) == "mtllib ") {
+                    std::istringstream v(line.substr(7));
+                    std::string mtlFile;
+                    v >> mtlFile;
+                    materials = loadMtl(dirpath, mtlFile);
+                } else if (line.substr(0, 7) == "usemtl ") {
+                    std::istringstream v(line.substr(7));
+                    std::string mtlName;
+                    v >> mtlName;
+                    for (const auto &material : materials) {
+                        if (mtlName == material.name) {
+                            objects[objects.size() - 1].material = material;
+                            break;
+                        }
+                    }
+                } else if (line.substr(0, 2) == "v ") {
                     std::istringstream v(line.substr(2));
                     Vector3 vertex;
 
@@ -142,7 +282,7 @@ private:
                     }
 
                     for(const Polygon &polygon : Polygon::triangulate(vertices)) {
-                        polygons.emplace_back(polygon);
+                        objects[objects.size() - 1].polygons.emplace_back(polygon);
                     }
                 }
             }
@@ -150,126 +290,12 @@ private:
             throw std::runtime_error("Cannot open " + path);
         }
 
-        return polygons;
-    }
-
-    static Texture loadTexture(const std::string &path) {
-        std::cout << "Loading " << path << std::endl;
-
-        SDL_Surface *image = IMG_Load(path.c_str());
-
-        if(image == nullptr) {
-            printf("IMG_Load: %s\n", IMG_GetError());
-            return {};
-        }
-
-        std::vector<std::vector<Color>> img = {};
-
-        for(int i = 0; i < image->w - 1; i++) {
-            img.emplace_back();
-            for (int j = 0; j < image->h - 1; j++) {
-                SDL_Color rgb;
-                SDL_GetRGB(getPixel(image, i, j), image->format, &rgb.r, &rgb.g, &rgb.b);
-                img[i].emplace_back(Color(rgb.r, rgb.g, rgb.b, 255));
-            }
-        }
-
-        SDL_FreeSurface(image);
-
-        Texture texture;
-        texture.img = img;
-        return texture;
-    }
-
-    static std::vector<Material> loadMtl(const std::string &path) {
-        std::cout << "Loading " << path << std::endl;
-
-        std::vector<Material> materials;
-
-        std::ifstream in(path, std::ios::in);
-        if (in) {
-            std::string line;
-            while (std::getline(in, line)) {
-                if (line.substr(0, 7) == "newmtl ") {
-                    materials.emplace_back(Material());
-                    std::istringstream v(line.substr(7));
-                    v >> materials[materials.size() - 1].name;
-                } else if (line.substr(0, 3) == "Ka ") {
-                    std::istringstream v(line.substr(3));
-
-                    float rf, gf, bf;
-                    v >> rf;
-                    v >> gf;
-                    v >> bf;
-
-                    materials[materials.size() - 1].ambientColor.R = (int) (rf * 255.0f);
-                    materials[materials.size() - 1].ambientColor.G = (int) (gf * 255.0f);
-                    materials[materials.size() - 1].ambientColor.B = (int) (bf * 255.0f);
-                } else if (line.substr(0, 3) == "Kd ") {
-                    std::istringstream v(line.substr(3));
-
-                    float rf, gf, bf;
-                    v >> rf;
-                    v >> gf;
-                    v >> bf;
-
-                    materials[materials.size() - 1].diffuseColor.R = (int) (rf * 255.0f);
-                    materials[materials.size() - 1].diffuseColor.G = (int) (gf * 255.0f);
-                    materials[materials.size() - 1].diffuseColor.B = (int) (bf * 255.0f);
-                } else if (line.substr(0, 3) == "Ks ") {
-                    std::istringstream v(line.substr(3));
-
-                    float rf, gf, bf;
-                    v >> rf;
-                    v >> gf;
-                    v >> bf;
-
-                    materials[materials.size() - 1].specularColor.R = (int) (rf * 255.0f);
-                    materials[materials.size() - 1].specularColor.G = (int) (gf * 255.0f);
-                    materials[materials.size() - 1].specularColor.B = (int) (bf * 255.0f);
-                } else if (line.substr(0, 3) == "Ns ") {
-                    std::istringstream v(line.substr(3));
-                    v >> materials[materials.size() - 1].shininess;
-                } else if (line.substr(0, 2) == "d ") {
-                    std::istringstream v(line.substr(2));
-                    v >> materials[materials.size() - 1].opacity;
-                } else if (line.substr(0, 6) == "illum ") {
-                    std::istringstream v(line.substr(6));
-                    v >> materials[materials.size() - 1].illum;
-                }
-            }
-        } else {
-            printf("Cannot open %s", path.c_str());
-            return {{}};
-        }
-
-        return materials;
+        return objects;
     }
 
 public:
-    static Object loadObject(const std::string &dirpath) {
-        std::string name = dirpath;
-        unsigned long long find = name.find_last_of('/');
-        if (find != std::string::npos) {
-            name = name.substr(find + 1);
-        }
-
-        find = name.find_last_of('\\');
-        if (find != std::string::npos) {
-            name = name.substr(find + 1);
-        }
-
-        Object obj;
-        obj.name = name;
-        obj.polygons = ObjectLoader::loadModel(dirpath + "/model.obj");
-        obj.albedoMap = ObjectLoader::loadTexture(dirpath + "/albedo_map.png");
-        obj.normalMap = ObjectLoader::loadTexture(dirpath + "/normal_map.png");
-        obj.specularMap = ObjectLoader::loadTexture(dirpath + "/specular_map.png");
-
-        // Generate maps if empty ?
-        obj.material = loadMtl(dirpath + "/material.mtl")[0];
-
-        return obj;
+    static std::vector<Object> loadObjFile(const std::string &dirpath) {
+        return loadObj(dirpath, "model.obj");
     }
 };
 

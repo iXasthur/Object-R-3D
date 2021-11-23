@@ -17,6 +17,11 @@ public:
     float shininess = 20; // Ns
     float opacity = 1; // d
     int illum = 2; // illum
+
+    Texture diffuseMap = {};
+    Texture ambientMap = {};
+    Texture normalMap = {};
+    Texture specularMap = {};
 };
 
 
