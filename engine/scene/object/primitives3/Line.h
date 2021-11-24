@@ -86,6 +86,7 @@ public:
         return getInterpolated(v0.normal, v1.normal, x, y, z, false, {}, {});
     }
 
+    // Called with screen coordinates
     [[nodiscard]] Vector3 getInterpolatedTexture(float x, float y, float z, bool perspectiveCorrect, const Matrix4 &matProj_inverse, const Matrix4 &matScreen_inverse) const {
         Vector3 interpolated = getInterpolated(v0.texture, v1.texture, x, y, z, perspectiveCorrect, matProj_inverse, matScreen_inverse);
         float *components[2] = {&interpolated.x, &interpolated.y};
