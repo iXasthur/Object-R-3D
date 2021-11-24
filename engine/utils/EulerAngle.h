@@ -2,8 +2,8 @@
 // Created by iXasthur on 15.11.2020.
 //
 
-#ifndef V_3D_EULERANGLE_H
-#define V_3D_EULERANGLE_H
+#ifndef OBJECT_R_3D_EULERANGLE_H
+#define OBJECT_R_3D_EULERANGLE_H
 
 
 class EulerAngle {
@@ -35,4 +35,4 @@ public:
 };
 
 
-#endif //V_3D_EULERANGLE_H
+#endif //OBJECT_R_3D_EULERANGLE_H

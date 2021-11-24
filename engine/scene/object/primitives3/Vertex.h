@@ -2,8 +2,8 @@
 // Created by iXasthur on 12.10.2021.
 //
 
-#ifndef TAMARA_3D_VERTEX_H
-#define TAMARA_3D_VERTEX_H
+#ifndef OBJECT_R_3D_VERTEX_H
+#define OBJECT_R_3D_VERTEX_H
 
 #include "../../../utils/Vector3.h"
 #include "../../../utils/Matrix4.h"
@@ -24,4 +24,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_VERTEX_H
+#endif //OBJECT_R_3D_VERTEX_H

@@ -2,8 +2,8 @@
 // Created by iXasthur on 14.11.2020.
 //
 
-#ifndef V_3D_OBJECT_H
-#define V_3D_OBJECT_H
+#ifndef OBJECT_R_3D_OBJECT_H
+#define OBJECT_R_3D_OBJECT_H
 
 #include <vector>
 #include "primitives3/Polygon.h"
@@ -124,4 +124,4 @@ public:
 };
 
 
-#endif //V_3D_OBJECT_H
+#endif //OBJECT_R_3D_OBJECT_H

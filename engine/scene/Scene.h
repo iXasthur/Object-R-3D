@@ -2,8 +2,8 @@
 // Created by iXasthur on 14.11.2020.
 //
 
-#ifndef V_3D_SCENE_H
-#define V_3D_SCENE_H
+#ifndef OBJECT_R_3D_SCENE_H
+#define OBJECT_R_3D_SCENE_H
 
 #include <vector>
 #include <array>
@@ -98,4 +98,4 @@ public:
 };
 
 
-#endif //V_3D_SCENE_H
+#endif //OBJECT_R_3D_SCENE_H

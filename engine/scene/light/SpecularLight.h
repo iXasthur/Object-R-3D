@@ -2,8 +2,8 @@
 // Created by iXasthur on 10.10.2021.
 //
 
-#ifndef TAMARA_3D_SPECULARLIGHT_H
-#define TAMARA_3D_SPECULARLIGHT_H
+#ifndef OBJECT_R_3D_SPECULARLIGHT_H
+#define OBJECT_R_3D_SPECULARLIGHT_H
 
 
 class SpecularLight {
@@ -32,4 +32,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_SPECULARLIGHT_H
+#endif //OBJECT_R_3D_SPECULARLIGHT_H

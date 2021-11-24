@@ -2,8 +2,8 @@
 // Created by iXasthur on 12.10.2021.
 //
 
-#ifndef TAMARA_3D_LINE2D_H
-#define TAMARA_3D_LINE2D_H
+#ifndef OBJECT_R_3D_LINE2D_H
+#define OBJECT_R_3D_LINE2D_H
 
 #include "Point2D.h"
 
@@ -44,4 +44,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_LINE2D_H
+#endif //OBJECT_R_3D_LINE2D_H

@@ -2,8 +2,8 @@
 // Created by iXasthur on 15.11.2020.
 //
 
-#ifndef V_3D_VECTOR3_H
-#define V_3D_VECTOR3_H
+#ifndef OBJECT_R_3D_VECTOR3_H
+#define OBJECT_R_3D_VECTOR3_H
 
 #include <array>
 #include <cmath>
@@ -99,4 +99,4 @@ public:
 };
 
 
-#endif //V_3D_VECTOR3_H
+#endif //OBJECT_R_3D_VECTOR3_H

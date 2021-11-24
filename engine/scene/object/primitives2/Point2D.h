@@ -2,8 +2,8 @@
 // Created by iXasthur on 12.10.2021.
 //
 
-#ifndef TAMARA_3D_POINT2D_H
-#define TAMARA_3D_POINT2D_H
+#ifndef OBJECT_R_3D_POINT2D_H
+#define OBJECT_R_3D_POINT2D_H
 
 
 class Point2D {
@@ -22,4 +22,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_POINT2D_H
+#endif //OBJECT_R_3D_POINT2D_H

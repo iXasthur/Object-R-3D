@@ -2,8 +2,8 @@
 // Created by iXasthur on 12.09.2021.
 //
 
-#ifndef TAMARA_3D_MATRIX4_H
-#define TAMARA_3D_MATRIX4_H
+#ifndef OBJECT_R_3D_MATRIX4_H
+#define OBJECT_R_3D_MATRIX4_H
 
 #include "Vector3.h"
 #include "EulerAngle.h"
@@ -323,4 +323,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_MATRIX4_H
+#endif //OBJECT_R_3D_MATRIX4_H

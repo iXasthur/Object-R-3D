@@ -2,8 +2,8 @@
 // Created by iXasthur on 10.10.2021.
 //
 
-#ifndef TAMARA_3D_DIFFUSELIGHT_H
-#define TAMARA_3D_DIFFUSELIGHT_H
+#ifndef OBJECT_R_3D_DIFFUSELIGHT_H
+#define OBJECT_R_3D_DIFFUSELIGHT_H
 
 #include "../../utils/Color.h"
 
@@ -28,4 +28,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_DIFFUSELIGHT_H
+#endif //OBJECT_R_3D_DIFFUSELIGHT_H

@@ -2,8 +2,8 @@
 // Created by iXasthur on 10.10.2021.
 //
 
-#ifndef TAMARA_3D_LIGHT_H
-#define TAMARA_3D_LIGHT_H
+#ifndef OBJECT_R_3D_LIGHT_H
+#define OBJECT_R_3D_LIGHT_H
 
 #include "AmbientLight.h"
 #include "DiffuseLight.h"
@@ -38,4 +38,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_LIGHT_H
+#endif //OBJECT_R_3D_LIGHT_H

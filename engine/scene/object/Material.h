@@ -2,8 +2,8 @@
 // Created by Mikhail on 21.11.2021.
 //
 
-#ifndef TAMARA_3D_MATERIAL_H
-#define TAMARA_3D_MATERIAL_H
+#ifndef OBJECT_R_3D_MATERIAL_H
+#define OBJECT_R_3D_MATERIAL_H
 
 #include <string>
 #include "../../utils/Color.h"
@@ -25,4 +25,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_MATERIAL_H
+#endif //OBJECT_R_3D_MATERIAL_H

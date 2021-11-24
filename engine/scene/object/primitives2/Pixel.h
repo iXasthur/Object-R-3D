@@ -2,8 +2,8 @@
 // Created by iXasthur on 22.10.2021.
 //
 
-#ifndef TAMARA_3D_PIXEL_H
-#define TAMARA_3D_PIXEL_H
+#ifndef OBJECT_R_3D_PIXEL_H
+#define OBJECT_R_3D_PIXEL_H
 
 #include "../../../utils/Color.h"
 
@@ -20,4 +20,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_PIXEL_H
+#endif //OBJECT_R_3D_PIXEL_H

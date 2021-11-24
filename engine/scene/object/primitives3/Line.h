@@ -2,8 +2,8 @@
 // Created by iXasthur on 12.10.2021.
 //
 
-#ifndef TAMARA_3D_LINE_H
-#define TAMARA_3D_LINE_H
+#ifndef OBJECT_R_3D_LINE_H
+#define OBJECT_R_3D_LINE_H
 
 #include "Vertex.h"
 #include "Plane.h"
@@ -147,4 +147,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_LINE_H
+#endif //OBJECT_R_3D_LINE_H

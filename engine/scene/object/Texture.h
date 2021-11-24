@@ -2,8 +2,8 @@
 // Created by Mikhail on 18.11.2021.
 //
 
-#ifndef TAMARA_3D_TEXTURE_H
-#define TAMARA_3D_TEXTURE_H
+#ifndef OBJECT_R_3D_TEXTURE_H
+#define OBJECT_R_3D_TEXTURE_H
 
 #include <utility>
 #include <vector>
@@ -101,4 +101,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_TEXTURE_H
+#endif //OBJECT_R_3D_TEXTURE_H

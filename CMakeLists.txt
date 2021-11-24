@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Tamara_3D)
+project(OBJECT-R-3D)
 
 set(CMAKE_CXX_STANDARD 20)
 

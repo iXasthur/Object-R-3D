@@ -2,8 +2,8 @@
 // Created by iXasthur on 16.11.2020.
 //
 
-#ifndef V_3D_OBJECTLOADER_H
-#define V_3D_OBJECTLOADER_H
+#ifndef OBJECT_R_3D_OBJECTLOADER_H
+#define OBJECT_R_3D_OBJECTLOADER_H
 
 #include <iostream>
 #include <sstream>
@@ -300,4 +300,4 @@ public:
 };
 
 
-#endif //V_3D_OBJECTLOADER_H
+#endif //OBJECT_R_3D_OBJECTLOADER_H

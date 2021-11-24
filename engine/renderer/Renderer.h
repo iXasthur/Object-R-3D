@@ -2,8 +2,8 @@
 // Created by iXasthur on 15.09.2021.
 //
 
-#ifndef TAMARA_3D_RENDERER_H
-#define TAMARA_3D_RENDERER_H
+#ifndef OBJECT_R_3D_RENDERER_H
+#define OBJECT_R_3D_RENDERER_H
 
 #include <SDL.h>
 #include <cmath>
@@ -502,4 +502,4 @@ public:
 };
 
 
-#endif //TAMARA_3D_RENDERER_H
+#endif //OBJECT_R_3D_RENDERER_H

@@ -2,8 +2,8 @@
 // Created by iXasthur on 15.11.2020.
 //
 
-#ifndef V_3D_ENGINE_H
-#define V_3D_ENGINE_H
+#ifndef OBJECT_R_3D_ENGINE_H
+#define OBJECT_R_3D_ENGINE_H
 
 #include <array>
 #include <algorithm>
@@ -361,4 +361,4 @@ public:
 };
 
 
-#endif //V_3D_ENGINE_H
+#endif //OBJECT_R_3D_ENGINE_H
